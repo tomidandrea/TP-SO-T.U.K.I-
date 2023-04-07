@@ -11,6 +11,8 @@
       "program": "${workspaceFolder}/bin/${workspaceFolderBasename}.out",
       "args": [
         // TODO: Agregar los argumentos que se necesiten
+        "${workspaceFolder}/src/consola.config",
+        "${workspaceFolder}/src/consola.log"
       ],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
