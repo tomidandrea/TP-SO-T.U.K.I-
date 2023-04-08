@@ -18,4 +18,3 @@ RemoteSystemsTempFiles/
 !.vscode/c_cpp_properties.json
 !.vscode/launch.json
 !.vscode/tasks.json
-/build/
