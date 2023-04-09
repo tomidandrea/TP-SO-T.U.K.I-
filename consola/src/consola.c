@@ -1,20 +1,20 @@
 #include <consola.h>
 #include <utils/sockets.h>
 
-int main(int argc, char** argv[]) {
+int main(int argc, char* argv[]) {
     t_log* logger;
     t_config* config;
-    int conexion;
+    t_socket conexion;
     char* ip;
     char* puerto;
 
     logger = iniciar_logger();
     config = iniciar_config(argv[1]);
-    log_info(logger, "Inicio consola \n");
+
 
     ip = config_get_string_value(config,"IP_KERNEL");
     puerto = config_get_string_value(config,"PUERTO_KERNEL");
-    conexion = crear_conexion(ip, puerto);
+    conexion = crear_conexion(ip, puerto, logger);
 
 
     return 0;

@@ -17,5 +17,6 @@ typedef struct t_instruccion {
 } t_instruccion;
 
 t_log* iniciar_logger(void);
+t_config* iniciar_config (char*);
 
 #endif

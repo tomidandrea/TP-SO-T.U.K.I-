@@ -21,6 +21,4 @@ typedef struct t_instruccion {
 
 void parsear_instruccion(t_instruccion* instruccion, FILE* archivo, t_log* logger);
 
-int crear_conexion(char* ip, char* puerto);
-
 #endif

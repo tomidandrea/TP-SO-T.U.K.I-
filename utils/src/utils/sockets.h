@@ -1,55 +1,32 @@
 #ifndef SRC_UTILS_SOCKETS_H_
 #define SRC_UTILS_SOCKETS_H_
 
-#include<stdio.h>
-#include<stdlib.h>
 #include<signal.h>
 #include<unistd.h>
 #include<sys/socket.h>
 #include<netdb.h>
-#include<string.h>
 #include<commons/log.h>
 #include<commons/collections/list.h>
+#include<utils/serializacion.h>
 
 #define PUERTO "34315" // Por ahora solo pruebo con KERNEL_PUERTO
-
-typedef enum
-{
-	MENSAJE,
-	PAQUETE
-}op_code;
-
-typedef struct
-{
-	int size;
-	void* stream;
-} t_buffer;
-
-typedef struct
-{
-	op_code codigo_operacion;
-	t_buffer* buffer;
-} t_paquete;
 
 typedef int t_socket;
 
 
 // Utils cliente
-int crear_conexion(char* ip, char* puerto);
-void enviar_mensaje(char* mensaje, int socket_cliente);
-t_paquete* crear_paquete(void);
-t_paquete* crear_super_paquete(void);
-void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
-void enviar_paquete(t_paquete* paquete, int socket_cliente);
-void liberar_conexion(int socket_cliente);
-void eliminar_paquete(t_paquete* paquete);
+t_socket crear_conexion(char*, char*, t_log*);
+void enviar_mensaje(char*, int);
+void enviar_paquete(t_paquete*, int);
+void liberar_conexion(int);
+
 
 //Utils server
-void* recibir_buffer(int*, int);
-t_socket iniciar_servidor(t_log*);
+t_socket iniciar_servidor(char* , t_log*);
 t_socket esperar_cliente(int, t_log*);
-t_list* recibir_paquete(int);
-void recibir_mensaje(int, t_log*);
 int recibir_operacion(int);
+void* recibir_buffer(int*, int);
+void recibir_mensaje(int, t_log*);
+t_list* recibir_paquete(int);
 
 #endif
