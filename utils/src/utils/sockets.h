@@ -31,6 +31,8 @@ typedef struct
 	t_buffer* buffer;
 } t_paquete;
 
+typedef int t_socket;
+
 
 // Utils cliente
 int crear_conexion(char* ip, char* puerto);
@@ -44,8 +46,8 @@ void eliminar_paquete(t_paquete* paquete);
 
 //Utils server
 void* recibir_buffer(int*, int);
-int iniciar_servidor(t_log*);
-int esperar_cliente(int, t_log*);
+t_socket iniciar_servidor(t_log*);
+t_socket esperar_cliente(int, t_log*);
 t_list* recibir_paquete(int);
 void recibir_mensaje(int, t_log*);
 int recibir_operacion(int);

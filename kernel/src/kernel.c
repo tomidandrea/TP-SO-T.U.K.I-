@@ -5,9 +5,8 @@ int main(int argc, char* argv[]) {
     puts("Hello world!!");
     t_log* logger = iniciar_logger();
 
-	int server_fd = iniciar_servidor(logger);
-	log_info(logger, "Servidor listo para recibir al cliente");
-	int cliente_fd = esperar_cliente(server_fd, logger);
+	t_socket server_fd = iniciar_servidor(logger);
+	t_socket cliente_fd = esperar_cliente(server_fd, logger);
 
     return 0;
 }

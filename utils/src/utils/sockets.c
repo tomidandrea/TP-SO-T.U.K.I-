@@ -114,7 +114,7 @@ void liberar_conexion(int socket_cliente)
  * Aca empieza utils de servidor
  */
 
-int iniciar_servidor(t_log* logger) //agrego que mande logger como parametro
+t_socket iniciar_servidor(t_log* logger) //agrego que mande logger como parametro
 {
 	// Quitar esta línea cuando hayamos terminado de implementar la funcion
 	//assert(!"no implementado!");
@@ -144,12 +144,13 @@ int iniciar_servidor(t_log* logger) //agrego que mande logger como parametro
 	listen(socket_servidor, SOMAXCONN);
 
 	freeaddrinfo(servinfo);
-	log_trace(logger, "Listo para escuchar a mi cliente");
+	log_info(logger, "Servidor listo para recibir al cliente");
+	//log_trace(logger, "Listo para escuchar a mi cliente");
 
 	return socket_servidor;
 }
 
-int esperar_cliente(int socket_servidor, t_log* logger) //agrego que mande logger como parametro
+t_socket esperar_cliente(int socket_servidor, t_log* logger) //agrego que mande logger como parametro
 {
 	// Quitar esta línea cuando hayamos terminado de implementar la funcion
 	//assert(!"no implementado!");
