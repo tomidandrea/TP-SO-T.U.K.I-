@@ -24,39 +24,39 @@ void leerParametros(FILE *archivo, int cantParametros,char** parametros){
 	char* string_aux = string_new();
 	for(j=0;j<cantParametros;j++){
 		fscanf(archivo, "%s",string_aux);
- 		strcpy(parametros[j],string_aux);
+ 		parametros[j] = string_duplicate(string_aux);
 	}
 	free(string_aux);
 }
 
 
-void parsear_instrucciones(char* path, t_list* codigo) {
+void parsear_instrucciones(char* path, t_list* instrucciones) {
 
-	// Puntero que nos ayuda a leer cada palabra
-	char *auxP = string_new();
-    int cant; // Cantidad de parametros
+    // Puntero que nos ayuda a leer cada palabra
+	char *operacion = string_new();
+    int cant; // Para la cantidad de parametros
     FILE *archivo;
     archivo= fopen(path,"r");
+
     while(!feof(archivo)){
         //leemos la primer palabra de la instruccion (una operacion)
-        fscanf(archivo, "%s",auxP);
+        fscanf(archivo, "%s",operacion);
         //asignamos la cantidad de parametros que tiene la operacion
-        cant = cantParametros(auxP);
-        char* operacion = auxP;
+        cant = cantParametros(operacion);
+
         t_instruccion* inst = malloc(sizeof(t_instruccion));
-        inst->instruccion = operacion;
-        //en leerParametros directamente modifica las variables de la instruccion
+        inst->instruccion = string_duplicate(operacion);
+        inst->parametros = string_array_new();
+
+        //leemos los parametros de la instruccion
         leerParametros(archivo,cant,inst->parametros);
-        list_add(codigo,inst);
-        char** param = inst->parametros;
-        printf("Instruccion: %s \n",inst->instruccion);
-        for(int i=0; i<cant; i++) {
-        	printf("Parametro %d: %s \n", i, param[i]);
-        }
+
+        list_add(instrucciones,inst);
+
     }
 
     printf("\n------------------\nParser termino bien\n------------------\n\n");
-    free(auxP);
+    free(operacion);
     fclose(archivo);
 
     }

@@ -24,7 +24,7 @@ typedef struct {
 
 typedef struct {
 	char* instruccion;
-	char** parametros;
+	char **parametros;
 
 } t_instruccion;
 

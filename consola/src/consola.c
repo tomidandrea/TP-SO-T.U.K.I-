@@ -18,15 +18,24 @@ int main(int argc, char** argv) {
     //asigno el path de pseudo
     path = string_duplicate(argv[2]);
 
-    t_list* codigo = list_create();
-    parsear_instrucciones(path, codigo);
+    t_list* instrucciones = list_create();
+    parsear_instrucciones(path, instrucciones); //me devuelve la lista con las instrucciones
     free(path);
 
-    int cant = list_size(codigo);
-    	for(int i=0; i<cant; i++){
-    		t_instruccion* inst = list_get(codigo,i);
-    		printf("%s \n", inst->instruccion);
+    //verifico por pantalla las instrucciones de la lista
+    int cant = list_size(instrucciones);
+    printf("Cantidad de instrucciones: %d\n", cant);
+
+    for(int i = 0;i<cant;i++) {
+    	t_instruccion* inst = list_get(instrucciones,i);
+    	printf("%s \n", inst->instruccion);
+    	int cant_parametros = cantParametros(inst->instruccion);
+    	printf("Cantidad de param: %d\n", cant_parametros);
+
+    	for(int i=0; i<cant_parametros; i++) {
+    		printf("Parametro %d: %s \n", i, inst->parametros[i]);
     	}
+    }
 
     ip = config_get_string_value(config,"IP_KERNEL");
     puerto = config_get_string_value(config,"PUERTO_KERNEL");
