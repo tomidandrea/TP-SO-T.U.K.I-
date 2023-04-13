@@ -12,7 +12,7 @@
       "args": [
         // TODO: Agregar los argumentos que se necesiten
         "${workspaceFolder}/src/consola.config",
-        "${workspaceFolder}/src/consola.log"
+        "${workspaceFolder}/src/pseudo.txt"
       ],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",

@@ -21,20 +21,23 @@ int main(int argc, char** argv) {
     parsear_instrucciones(path, instrucciones); //me devuelve la lista con las instrucciones
     free(path);
 
-    //verifico por pantalla las instrucciones de la lista
+    //logeamos la lista de instrucciones
     int cant = list_size(instrucciones);
-    printf("Cantidad de instrucciones: %d\n", cant);
-
-    for(int i = 0;i<cant;i++) {
+        for(int i = 0;i<cant;i++) {
     	t_instruccion* inst = list_get(instrucciones,i);
-    	printf("%s \n", inst->instruccion);
-    	int cant_parametros = cantParametros(inst->instruccion);
-    	printf("Cantidad de param: %d\n", cant_parametros);
+        
+        log_info(logger, "Instruccion: %s", inst->instruccion);
+    	
+        int cant_parametros = cantParametros(inst->instruccion);
 
     	for(int i=0; i<cant_parametros; i++) {
-    		printf("Parametro %d: %s \n", i, inst->parametros[i]);
+    		log_info(logger, "Parametro %d: %s", i, inst->parametros[i]);
     	}
+        printf("------------\n");
     }
+
+    
+
 
     ip = config_get_string_value(config,"IP_KERNEL");
     puerto = config_get_string_value(config,"PUERTO_KERNEL");
