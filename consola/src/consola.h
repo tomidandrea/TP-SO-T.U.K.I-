@@ -11,6 +11,8 @@
 #include<assert.h>
 #include<unistd.h>
 #include<netdb.h>
+#include <utils/serializacion.h>
+
 
 
 t_config* iniciar_config (char* path);
@@ -35,5 +37,9 @@ int cantParametros(char *instruccion);
 void leerParametro(FILE *archivo, int cantParametros,char** parametros);
 
 void parsear_instrucciones(char* path, t_list* codigo);
+
+void serializar_programa(t_list * instrucciones);
+
+int tamanio_de_paquete(t_paquete* paquete);
 
 #endif

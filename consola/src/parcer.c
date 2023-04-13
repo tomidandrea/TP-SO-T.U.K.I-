@@ -53,6 +53,7 @@ void parsear_instrucciones(char* path, t_list* instrucciones) {
 
         list_add(instrucciones,inst);
 
+
     }
 
     printf("\n------------------\nParser termino bien\n------------------\n\n");
