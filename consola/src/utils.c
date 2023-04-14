@@ -1,7 +1,8 @@
 #include <consola.h>
 
 
-void serializar_programa(t_list * instrucciones) {
+
+void enviar_programa(t_list * instrucciones, int conexion) {
 
 	int cant = list_size(instrucciones);                   // saco la camtidad de elementos de la lista para despues poder iterar rn el for hasta esa cantidad
 	char* operacion;                                       // es el nombre de la instruccion (llamado operacion)
@@ -26,24 +27,12 @@ void serializar_programa(t_list * instrucciones) {
 
 	}
 
-	int tamanio_paquete = tamanio_de_paquete(paquete);
+	enviar_paquete(paquete,conexion);                // serializa el paquete y lo envia
 
-	serializar_paquete(paquete,tamanio_paquete);
-
-	eliminar_paquete(paquete);
-
-	//  free de t_instruccion* ???????
-
+	eliminar_paquete(paquete);                //elimina el paquete y todo lo que contiene
 
 }
 
-
-int tamanio_de_paquete(t_paquete* paquete) {
-
-	int tamanio = paquete->buffer->size + sizeof(int) * 2;
-
-		return tamanio;
-}
 
 
 

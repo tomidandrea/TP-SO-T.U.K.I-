@@ -1,5 +1,5 @@
 #include <consola.h>
-#include <utils/sockets.h>
+
 
 int main(int argc, char** argv) {
 
@@ -36,17 +36,12 @@ int main(int argc, char** argv) {
         printf("------------\n");
     }
 
-    
-
 
     ip = config_get_string_value(config,"IP_KERNEL");
     puerto = config_get_string_value(config,"PUERTO_KERNEL");
     conexion = crear_conexion(ip, puerto, logger);
 
-    // serializo la lista de instrucciones
-
-    serializar_programa(instrucciones);
-
+    enviar_programa(instrucciones, conexion);                // serializa y envia a kernel el programa (lista de instrucciones)
 
     return 0;
 }

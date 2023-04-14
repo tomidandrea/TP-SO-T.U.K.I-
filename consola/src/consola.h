@@ -11,7 +11,8 @@
 #include<assert.h>
 #include<unistd.h>
 #include<netdb.h>
-#include <utils/serializacion.h>
+#include <utils/sockets.h>
+
 
 
 
@@ -38,8 +39,7 @@ void leerParametro(FILE *archivo, int cantParametros,char** parametros);
 
 void parsear_instrucciones(char* path, t_list* codigo);
 
-void serializar_programa(t_list * instrucciones);
+void enviar_programa(t_list* instrucciones, int conexion);
 
-int tamanio_de_paquete(t_paquete* paquete);
 
 #endif
