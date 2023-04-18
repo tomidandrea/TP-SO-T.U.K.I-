@@ -11,6 +11,15 @@
 #include<unistd.h>
 #include<netdb.h>
 #include <utils/general.h>
+#include <utils/sockets.h>
+#include<pthread.h>
+
+typedef struct{
+	t_socket cliente;
+	t_log* logger;
+	t_list* lista;
+	//char* server_name;
+} thread_args;
 
 /*typedef struct t_instruccion {
 	char* instruccion;
@@ -19,5 +28,6 @@
 
 t_log* iniciar_logger(void);
 t_config* iniciar_config (char*);
+void atender_cliente(thread_args* argumentos);
 
 #endif
