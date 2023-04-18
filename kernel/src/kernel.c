@@ -1,8 +1,10 @@
 #include <kernel.h>
 #include <utils/sockets.h>
 
+t_log* logger;
+
 int main(int argc, char* argv[]) {
-    t_log* logger = iniciar_logger();
+    logger = iniciar_logger("kernel.log", "KERNEL", true, LOG_LEVEL_DEBUG);
     t_config* config = iniciar_config(argv[1]);;
     //char* ip = config_get_string_value(config,"IP_KERNEL");;
     char* puerto = config_get_string_value(config,"PUERTO_ESCUCHA");
@@ -28,9 +30,7 @@ int main(int argc, char* argv[]) {
 }
 
 void atender_cliente(thread_args* argumentos){
-//(int socket_cliente, t_log* logger, t_list* lista){
 	int socket_cliente = argumentos->cliente;
-	t_log* logger = argumentos->logger;
 	t_list* lista = argumentos->lista;
 		int cod_op = recibir_operacion(socket_cliente); //hace recv del cod_op
 
@@ -60,25 +60,4 @@ void atender_cliente(thread_args* argumentos){
 
 		send(socket_cliente, (void *)RESULT_OK, sizeof(int), NULL);
 		close(socket_cliente);
-}
-
-
-t_log* iniciar_logger(void)
-{
-	char* file = "kernel.log";
-	char *process_name = "KERNEL";
-	bool is_active_console = true;
-	t_log_level level = LOG_LEVEL_DEBUG;
-	t_log* nuevo_logger = log_create(file, process_name,is_active_console, level);
-
-	return nuevo_logger;
-}
-
-t_config* iniciar_config (char* path){
-	t_config* nuevo_config = config_create(path);
-	if(nuevo_config== NULL){
-		printf("No se pudo crear el config\n");
-	}
-
-	return nuevo_config;
 }

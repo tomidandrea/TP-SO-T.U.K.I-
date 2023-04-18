@@ -1,4 +1,4 @@
-#include <consola.h>
+#include <parser.h>
 
 
 void leerParametros(FILE *archivo, int cantParametros,char** parametros){

@@ -32,3 +32,19 @@ int cantParametros(char* instruccion){
     exit(EXIT_FAILURE);
 }
 
+t_log* iniciar_logger(char* file, char *process_name, bool is_active_console, t_log_level level)
+{
+	t_log* nuevo_logger = log_create(file, process_name,is_active_console, level);
+
+	return nuevo_logger;
+}
+
+t_config* iniciar_config (char* path){
+	t_config* nuevo_config = config_create(path);
+	if(nuevo_config== NULL){
+		printf("No se pudo crear el config\n");
+	}
+
+	return nuevo_config;
+}
+
