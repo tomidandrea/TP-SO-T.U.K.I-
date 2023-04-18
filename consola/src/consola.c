@@ -1,21 +1,5 @@
 #include <consola.h>
 
-void logearInstrucciones(t_list* instrucciones, t_log* logger){
-	int cant = list_size(instrucciones);
-	        for(int i = 0;i<cant;i++) {
-	    	t_instruccion* inst = list_get(instrucciones,i);
-
-	        log_info(logger, "Instruccion: %s", inst->instruccion);
-
-	        int cant_parametros = cantParametros(inst->instruccion);
-
-	    	for(int i=0; i<cant_parametros; i++) {
-	    		log_info(logger, "Parametro %d: %s", i, inst->parametros[i]);
-	    	}
-	        printf("------------\n");
-	    }
-}
-
 int main(int argc, char** argv) {
 
     t_log* logger;
@@ -46,6 +30,13 @@ int main(int argc, char** argv) {
 
     // serializa y envia a kernel el programa (lista de instrucciones)
     enviar_programa(instrucciones, conexion);
+
+    int result;
+    recv(conexion, &result, sizeof(int), MSG_WAITALL);
+    if(result == 0){
+    	log_info(logger, "Resultado: Termino todo bien pa");
+    }else
+    	log_info(logger, "Resultado: Rompiste algo");
 
     return 0;
 }

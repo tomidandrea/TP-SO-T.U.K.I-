@@ -131,9 +131,9 @@ void* recibir_buffer(int* size, int socket_cliente)
 {
 	void * buffer;
 
-	recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
-	buffer = malloc(*size);
-	recv(socket_cliente, buffer, *size, MSG_WAITALL);
+		recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
+		buffer = malloc(*size);
+		recv(socket_cliente, buffer, *size, MSG_WAITALL);
 
 	return buffer;
 }
@@ -154,7 +154,11 @@ t_list* recibir_paquete(int socket_cliente)
 	t_list* valores = list_create();
 	int tamanio;
 
+	printf("hola, recibiendo paquete\n");
+
 	buffer = recibir_buffer(&size, socket_cliente);
+
+	printf("recibiendo buffer\n");
 	while(desplazamiento < size)
 	{
 		memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
