@@ -2,10 +2,11 @@
 #include <utils/sockets.h>
 
 t_log* logger;
+t_config* config;
 
 int main(int argc, char* argv[]) {
     logger = iniciar_logger("kernel.log", "KERNEL", true, LOG_LEVEL_DEBUG);
-    t_config* config = iniciar_config(argv[1]);;
+    config = iniciar_config(argv[1]);
     //char* ip = config_get_string_value(config,"IP_KERNEL");;
     char* puerto = config_get_string_value(config,"PUERTO_ESCUCHA");
 
@@ -41,6 +42,7 @@ void atender_cliente(thread_args* argumentos){
 				case PAQUETE:
 					lista = recibir_paquete(socket_cliente); //hace recv de la lista
 					log_info(logger, "Me llego un paquete\n");
+					mandarCpu();
 					//list_iterate(lista, (void*) iterator);
 					//int cant = list_size(lista);
 							/*for(int i = 0;i<cant;i++) {
@@ -60,4 +62,10 @@ void atender_cliente(thread_args* argumentos){
 
 		send(socket_cliente, (void *)RESULT_OK, sizeof(int), NULL);
 		close(socket_cliente);
+}
+
+void mandarCpu(){
+	char* ip = config_get_string_value(config,"IP_CPU");
+	char* puerto = config_get_string_value(config,"PUERTO_CPU");
+	t_socket conexion = crear_conexion(ip, puerto, logger);
 }
