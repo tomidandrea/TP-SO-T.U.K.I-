@@ -1,5 +1,20 @@
 #include <consola.h>
 
+void logearInstrucciones(t_list* instrucciones, t_log* logger){
+	int cant = list_size(instrucciones);
+	        for(int i = 0;i<cant;i++) {
+	    	t_instruccion* inst = list_get(instrucciones,i);
+
+	        log_info(logger, "Instruccion: %s", inst->instruccion);
+
+	        int cant_parametros = cantParametros(inst->instruccion);
+
+	    	for(int i=0; i<cant_parametros; i++) {
+	    		log_info(logger, "Parametro %d: %s", i, inst->parametros[i]);
+	    	}
+	        printf("------------\n");
+	    }
+}
 
 int main(int argc, char** argv) {
 
@@ -22,26 +37,15 @@ int main(int argc, char** argv) {
     free(path);
 
     //logeamos la lista de instrucciones
-    int cant = list_size(instrucciones);
-        for(int i = 0;i<cant;i++) {
-    	t_instruccion* inst = list_get(instrucciones,i);
-        
-        log_info(logger, "Instruccion: %s", inst->instruccion);
-    	
-        int cant_parametros = cantParametros(inst->instruccion);
-
-    	for(int i=0; i<cant_parametros; i++) {
-    		log_info(logger, "Parametro %d: %s", i, inst->parametros[i]);
-    	}
-        printf("------------\n");
-    }
+    logearInstrucciones(instrucciones, logger);
 
 
     ip = config_get_string_value(config,"IP_KERNEL");
     puerto = config_get_string_value(config,"PUERTO_KERNEL");
     conexion = crear_conexion(ip, puerto, logger);
 
-    enviar_programa(instrucciones, conexion);                // serializa y envia a kernel el programa (lista de instrucciones)
+    // serializa y envia a kernel el programa (lista de instrucciones)
+    enviar_programa(instrucciones, conexion);
 
     return 0;
 }

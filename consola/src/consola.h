@@ -19,6 +19,7 @@
 t_config* iniciar_config (char* path);
 t_log* iniciar_logger(void);
 
+void logearInstrucciones(t_list* instrucciones, t_log* logger);
 
 typedef struct {
 	char *operacion;
@@ -32,7 +33,7 @@ typedef struct {
 } t_instruccion;
 
 #define CANT_IDENTIFICADORES (sizeof(tablaIdentificadores)/sizeof(t_identificador))
-
+//TODO hacer parser.h y utils.h
 int cantParametros(char *instruccion);
 
 void leerParametro(FILE *archivo, int cantParametros,char** parametros);
@@ -40,6 +41,7 @@ void leerParametro(FILE *archivo, int cantParametros,char** parametros);
 void parsear_instrucciones(char* path, t_list* codigo);
 
 void enviar_programa(t_list* instrucciones, int conexion);
+
 
 
 #endif
