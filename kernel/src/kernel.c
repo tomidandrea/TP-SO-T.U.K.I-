@@ -3,6 +3,8 @@
 
 t_log* logger;
 t_config* config;
+uint32_t RESULT_OK = 0;
+uint32_t RESULT_ERROR = 1;
 
 int main(int argc, char* argv[]) {
     logger = iniciar_logger("kernel.log", "KERNEL", true, LOG_LEVEL_DEBUG);
@@ -14,7 +16,7 @@ int main(int argc, char* argv[]) {
 	t_list* lista;
 		while (1) {
 			t_socket socket_cliente = esperar_cliente(server_fd, logger); //Hace el accept
-			if(socket_cliente != 1){
+			if(socket_cliente != -1){
 				pthread_t thread;
 				thread_args* arg = malloc(sizeof(thread_args));
 						arg->cliente = socket_cliente;
@@ -44,13 +46,13 @@ void atender_cliente(thread_args* argumentos){
 					log_info(logger, "Me llego un paquete\n");
 					mandarCpu();
 					//list_iterate(lista, (void*) iterator);
-					//int cant = list_size(lista);
-							/*for(int i = 0;i<cant;i++) {
+					int cant = list_size(lista);
+							for(int i = 0;i<cant;i++) {
 								log_info(logger, "elemento: %s \n", list_get(lista,i));
-							}*/
+							}
 					break;
 				case -1:
-					send(socket_cliente, (void *)RESULT_ERROR, sizeof(int), NULL);
+					//send(socket_cliente, (void *)RESULT_ERROR, sizeof(int), NULL);
 					log_error(logger, "el cliente se desconecto. Terminando servidor");
 					//return EXIT_FAILURE;
 					break;
@@ -60,7 +62,7 @@ void atender_cliente(thread_args* argumentos){
 					break;
 				}
 
-		send(socket_cliente, (void *)RESULT_OK, sizeof(int), NULL);
+		send(socket_cliente, &RESULT_OK, sizeof(int), NULL);
 		close(socket_cliente);
 }
 

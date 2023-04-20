@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
     // serializa y envia a kernel el programa (lista de instrucciones)
     enviar_programa(instrucciones, conexion);
 
-    int result;
+    uint32_t result = -1;
     recv(conexion, &result, sizeof(int), MSG_WAITALL);
     if(result == 0){
     	log_info(logger, "Resultado: Termino todo bien pa");

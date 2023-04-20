@@ -10,8 +10,7 @@
 #include<utils/serializacion.h>
 
 //#define PUERTO "34315" // Por ahora solo pruebo con KERNEL_PUERTO
-#define RESULT_OK 0
-#define RESULT_ERROR 1
+
 
 typedef int t_socket;
 

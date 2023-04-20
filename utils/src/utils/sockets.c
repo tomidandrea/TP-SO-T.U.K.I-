@@ -154,11 +154,11 @@ t_list* recibir_paquete(int socket_cliente)
 	t_list* valores = list_create();
 	int tamanio;
 
-	printf("hola, recibiendo paquete\n");
+	//printf("hola, recibiendo paquete\n");
 
 	buffer = recibir_buffer(&size, socket_cliente);
 
-	printf("recibiendo buffer\n");
+	//printf("recibiendo buffer\n");
 	while(desplazamiento < size)
 	{
 		memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
