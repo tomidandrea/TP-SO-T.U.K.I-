@@ -3,18 +3,15 @@
   // for the documentation about the tasks.json format
   "version": "2.0.0",
   "tasks": [
-    // #region build
     {
       "label": "build",
       "command": "make all",
       "type": "shell",
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
-      "problemMatcher": ["$gcc"]
+      "group": "build",
+      "problemMatcher": [
+        "$gcc"
+      ]
     },
-    // #endregion build
     {
       "label": "clean",
       "command": "make clean",
@@ -22,6 +19,30 @@
       "group": {
         "kind": "none"
       }
+    },
+    {
+      "type": "cppbuild",
+      "label": "C/C++: gcc-11 build active file",
+      "command": "/usr/bin/gcc-11",
+      "args": [
+        "-fdiagnostics-color=always",
+        "-g",
+        "${file}",
+        "-o",
+        "${fileDirname}/${fileBasenameNoExtension}",
+        "-lcommons"
+      ],
+      "options": {
+        "cwd": "${fileDirname}"
+      },
+      "problemMatcher": [
+        "$gcc"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "detail": "compiler: /usr/bin/gcc-11"
     }
   ]
 }
