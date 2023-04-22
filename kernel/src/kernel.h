@@ -12,7 +12,6 @@ typedef struct{
 	t_socket cliente;
 	t_log* logger;
 	t_list* lista;
-	char* algoritmoPlanificacion;
 	//char* server_name;
 } thread_args;
 

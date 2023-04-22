@@ -3,6 +3,7 @@
 
 #include <utils.h>
 
-void planificarFIFO(t_pcb*, t_list*);
+void pasarAReady(t_pcb*);
+void planificarFIFO(t_list*, int);
 
 #endif

@@ -32,6 +32,7 @@ typedef struct {
 
 t_pcb* crearPCB(t_list* listaInstrucciones);
 
-void planificarFIFO(t_pcb* pcb);
+void mandar_pcb_a_CPU();
+
 
 #endif

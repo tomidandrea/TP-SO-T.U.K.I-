@@ -13,6 +13,9 @@ int main(int argc, char* argv[]) {
     //char* ip = config_get_string_value(config,"IP_KERNEL");;
     char* puerto = config_get_string_value(config,"PUERTO_ESCUCHA");
     char* algoritmo = config_get_string_value(config,"ALGORITMO_PLANIFICACION");
+    char* gradoMultipAux = config_get_string_value(config, "GRADO_MAX_MULTIPROGRAMACION");
+    int gradoMultip = atoi(gradoMultipAux);
+
     procesos = list_create();
 	t_socket server_fd = iniciar_servidor(puerto, logger);
 	t_list* lista;
@@ -24,13 +27,17 @@ int main(int argc, char* argv[]) {
 						arg->cliente = socket_cliente;
 						arg->logger = logger;
 						arg->lista = lista;
-						arg->algoritmoPlanificacion = algoritmo;
 				pthread_create(&thread,
 							  NULL,
 							  (void*) atender_cliente,
 							  (void *)arg);
 				pthread_detach(thread);
 			}
+
+			if(strcmp(algoritmo,"FIFO") == 0){
+				planificarFIFO(procesos, gradoMultip);
+			}
+
 	}
 		return EXIT_SUCCESS;
 }
@@ -38,7 +45,6 @@ int main(int argc, char* argv[]) {
 void atender_cliente(thread_args* argumentos){
 	int socket_cliente = argumentos->cliente;
 	t_list* lista = argumentos->lista;
-	char* algoritmo = argumentos->algoritmoPlanificacion;
 	int cod_op = recibir_operacion(socket_cliente); //hace recv del cod_op
 
 				switch (cod_op) {
@@ -51,10 +57,9 @@ void atender_cliente(thread_args* argumentos){
 
 					t_pcb* pcb = crearPCB(lista);
 
-					if(strcmp(algoritmo,"FIFO") == 0){
-						planificarFIFO(pcb, procesos);
-					}
-					mandarCpu();
+					list_add(procesos, pcb);
+					printf("\nAgregue el proceso:%d\n",pcb->pid);
+
 					//list_iterate(lista, (void*) iterator);
 					int cant = list_size(lista);
 							for(int i = 0;i<cant;i++) {
@@ -76,9 +81,4 @@ void atender_cliente(thread_args* argumentos){
 		close(socket_cliente);
 }
 
-void mandarCpu(){
-	char* ip = config_get_string_value(config,"IP_CPU");
-	char* puerto = config_get_string_value(config,"PUERTO_CPU");
-	t_socket conexion = crear_conexion(ip, puerto, logger);
-}
 
