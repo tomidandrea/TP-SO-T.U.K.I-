@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <string.h>
 
+// TODO: esto si no se usa volarlo
 typedef enum {
     NEW,
     READY,
@@ -16,9 +17,9 @@ typedef enum {
 } Estado;
 
 typedef struct {
-    uint16_t AX,BX,CX,DX;
-    uint16_t EAX, EBX, ECX, EDX;
-    uint16_t RAX, RBX, RCX, RDX;
+    char AX [4], BX [4], CX [4], DX [4];
+	char EAX [8], EBX [8], ECX [8], EDX [8];
+	char RAX [16], RBX [16], RCX [16], RDX [16];
 } t_registros;
 
 typedef struct {
@@ -27,6 +28,7 @@ typedef struct {
     int pc;
     t_registros registros;
     Estado estado;
+    char* motivo;
     // implementar los otros xd
 } t_pcb;
 

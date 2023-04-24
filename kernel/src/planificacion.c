@@ -1,20 +1,38 @@
 #include <planificacion.h>
 
-
-
-void pasarAReady(t_pcb* proceso){
-		proceso -> estado = READY;
+void pasarAReady(t_pcb* proceso, t_list* list){
+	list_add(list, proceso);
 }
 
-void planificarFIFO(t_list* procesos, int gradoMultip){
-	//[pcb1,pcb2,pcb3,pcb4]
-	int cant = list_size(procesos);
+void planificar(t_config* config, t_list* procesosExecute,t_list* procesosReady,t_list* procesosNew){
 
-	for(int i = 0;i<gradoMultip;i++) {
-			t_pcb* pcbActual = list_get(procesos,i);
-			pasarAReady(pcbActual);
-			printf("\n\nEstado:%d\n\n", pcbActual -> estado);
+	char* algoritmo = config_get_string_value(config,"ALGORITMO_PLANIFICACION");
+    char* gradoMultipAux = config_get_string_value(config, "GRADO_MAX_MULTIPROGRAMACION");
+    int gradoMultip = atoi(gradoMultipAux);
+    /*
+    mientras hayan procesos en new
+    los agrego a ready segun grado multip
+    */
+
+    // aca ya los tengo en ready
+	if(strcmp(algoritmo,"FIFO") == 0){
+		planificarFIFO(procesosNew, procesosReady, procesosExecute, gradoMultip);
 	}
 
+	// esperamos la cpu
 
 }
+
+
+
+
+void planificarFIFO(t_list* procesosReady, t_list* procesosExecute, t_list* gradoMultip){
+
+	t_pcb* proceso = list_remove(procesosReady, 0);
+	list_add(procesosExecute, proceso);
+
+	// mandamo la cosa
+
+
+}
+
