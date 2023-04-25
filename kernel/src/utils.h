@@ -6,7 +6,8 @@
 #include <commons/collections/list.h>
 #include <stdint.h>
 #include <string.h>
-
+#include <utils/general.h>
+#include <utils/sockets.h>
 
 // TODO: esto si no se usa volarlo
 typedef enum {

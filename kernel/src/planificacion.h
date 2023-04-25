@@ -5,8 +5,8 @@
 
 #include <utils/general.h>
 
-void planificar(t_config*, t_list*,t_list*,t_list*);
+void planificar();
 void pasarAReady(t_pcb*,t_list*);
-void planificarFIFO(t_list*, t_list*,t_list*,void*);
+void planificarFIFO(int);
 
 #endif

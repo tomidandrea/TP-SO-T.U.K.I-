@@ -17,20 +17,6 @@ typedef struct{
 	//char* server_name;
 } hilo_consolas_args;
 
-typedef struct{
-	t_config* config;
-	t_list* procesosNew;
-	t_list* procesosReady;
-	t_list* procesosExecute;
-}hilo_planificador_args;
-
-
-/*typedef struct t_instruccion {
-	char* instruccion;
-	char parametros[2][20];
-} t_instruccion;*/
-
-
 void atender_cliente(hilo_consolas_args* argumentos);
 
 #endif

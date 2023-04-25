@@ -5,6 +5,9 @@ t_log* logger;
 t_config* config;
 uint32_t RESULT_OK = 0;
 uint32_t RESULT_ERROR = 1;
+t_list* procesosExecute;
+t_list* procesosReady;
+t_list* procesosNew;
 
 //todo: mallocs y free para todos los punteros
 //todo hice malloc de 16 pero no se si estan bien
@@ -44,18 +47,12 @@ int main(int argc, char* argv[]) {
 			}
 
 		// Hilo que planifica por algoritmo - corto plazo
-		while (1) {
+		while (1) { //TODO: Sacar while 1 y reemplazar por semaforo
 				pthread_t hilo_planificador;
-				hilo_planificador_args* arg = malloc(sizeof(hilo_consolas_args));
-						arg->config = config;
-						arg->procesosExecute = procesosExecute;
-						arg->procesosReady = procesosReady;
-						arg->procesosNew = procesosNew;
-
 				pthread_create(&hilo_planificador,
 							  NULL,
 							  (void*) planificar,
-							  (void*) arg);
+							  NULL);
 				pthread_detach(hilo_planificador);
 			}
 
@@ -99,4 +96,9 @@ void atender_cliente(hilo_consolas_args* argumentos){
 		close(socket_cliente);
 }
 
+void mandarCpu(){
+	char* ip = config_get_string_value(config,"IP_CPU");
+	char* puerto = config_get_string_value(config,"PUERTO_CPU");
+	t_socket conexion = crear_conexion(ip, puerto, logger);
+}
 
