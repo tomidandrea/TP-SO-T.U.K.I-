@@ -4,7 +4,9 @@ int main(int argc, char** argv) {
     t_log* logger;
     t_config* config;
     t_socket conexion;
-    char* ip;
+    char* ip
+
+    
     char* puerto;
     char* path;
 

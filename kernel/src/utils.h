@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <string.h>
 
+
 // TODO: esto si no se usa volarlo
 typedef enum {
     NEW,

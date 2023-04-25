@@ -7,6 +7,7 @@ uint32_t RESULT_OK = 0;
 uint32_t RESULT_ERROR = 1;
 
 //todo: mallocs y free para todos los punteros
+//todo hice malloc de 16 pero no se si estan bien
 
 
 int main(int argc, char* argv[]) {
@@ -14,8 +15,13 @@ int main(int argc, char* argv[]) {
     config = iniciar_config(argv[1]);
 
     // todo: settear esto en una funcion aparte setConfig(config)
-    char* ip = config_get_string_value(config,"IP_KERNEL");
-    char* puerto = config_get_string_value(config,"PUERTO_ESCUCHA");
+    char* ip = malloc(16);
+    ip = config_get_string_value(config,"IP_KERNEL");
+    char* puerto = malloc(16);
+    puerto = config_get_string_value(config,"PUERTO_ESCUCHA");
+
+    free(ip);
+    free(puerto);
 
     procesosNew = list_create();
 	t_socket server_fd = iniciar_servidor(puerto, logger);

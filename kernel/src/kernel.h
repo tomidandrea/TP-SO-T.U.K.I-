@@ -2,12 +2,12 @@
 #define KERNEL_H_
 
 #include <readline/readline.h>
-#include <assert.h>
-#include <utils/general.h>
-#include <utils/sockets.h>
 #include <pthread.h>
 #include <listasPCB.h>
 #include <planificacion.h>
+#include <assert.h>
+#include <utils/general.h>
+#include <utils/sockets.h>
 
 
 typedef struct{

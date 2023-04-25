@@ -3,9 +3,10 @@
 
 #include <utils.h>
 
+#include <utils/general.h>
 
-void planificar(t_config, t_list*,t_list*,t_list*);
+void planificar(t_config*, t_list*,t_list*,t_list*);
 void pasarAReady(t_pcb*,t_list*);
-void planificarFIFO(t_list*, int);
+void planificarFIFO(t_list*, t_list*,t_list*,void*);
 
 #endif
