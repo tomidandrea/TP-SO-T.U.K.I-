@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <utils/general.h>
 #include <utils/sockets.h>
+#include <semaphore.h>
 
 
 typedef struct{

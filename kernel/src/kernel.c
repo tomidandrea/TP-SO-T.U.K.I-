@@ -31,35 +31,40 @@ int main(int argc, char* argv[]) {
 	t_list* lista;
 
 	// Hilo que atiende consolas
-		while (1) {
-			t_socket socket_cliente = esperar_cliente(server_fd, logger); //Hace el accept
-			if(socket_cliente != -1){
-				pthread_t hilo_consolas;
-				hilo_consolas_args* arg = malloc(sizeof(hilo_consolas_args));
-						arg->cliente = socket_cliente;
-						arg->logger = logger;
-						arg->lista = lista;
-				pthread_create(&hilo_consolas,
-							  NULL,
-							  (void*) atender_cliente,
-							  (void *)arg);
-				pthread_detach(hilo_consolas);
-			}
+		
+			
+			
+		pthread_t hilo_consolas;
+		/*hilo_consolas_args* arg = malloc(sizeof(hilo_consolas_args));
+				arg->cliente = socket_cliente;
+				arg->lista = lista;*/
+		pthread_create(&hilo_consolas,
+						NULL,
+						(void*) escucharConsolas,
+						//(void *)arg);
+						(t_socket) server_fd);
+		pthread_detach(hilo_consolas);
+		
+		pthread_t hilo_ready;
+		pthread_create(&hilo_ready,
+						NULL,
+						(void*) agregarReady,
+						NULL);
+		pthread_detach(hilo_ready);
 
-		// Hilo que planifica por algoritmo - corto plazo
-		while (1) { //TODO: Sacar while 1 y reemplazar por semaforo
-				pthread_t hilo_planificador;
-				pthread_create(&hilo_planificador,
-							  NULL,
-							  (void*) planificar,
-							  NULL);
-				pthread_detach(hilo_planificador);
-			}
+		pthread_t hilo_planificador;
+		pthread_create(&hilo_planificador,
+						NULL,
+						(void*) planificar,
+						NULL);
+		pthread_detach(hilo_planificador);
 
-	}
+		while(1);
+
+	
 		return EXIT_SUCCESS;
 }
-
+/*
 void atender_cliente(hilo_consolas_args* argumentos){
 	int socket_cliente = argumentos->cliente;
 	t_list* lista = argumentos->lista;
@@ -70,6 +75,7 @@ void atender_cliente(hilo_consolas_args* argumentos){
 					lista = recibir_paquete(socket_cliente); //hace recv de la lista
 					log_info(logger, "Me llego un paquete\n");
 
+					
 					t_pcb* pcb = crearPCB(lista);
 
 					list_add(procesosNew, pcb);
@@ -94,7 +100,7 @@ void atender_cliente(hilo_consolas_args* argumentos){
 
 		send(socket_cliente, &RESULT_OK, sizeof(int), NULL);
 		close(socket_cliente);
-}
+}*/
 
 void mandarCpu(){
 	char* ip = config_get_string_value(config,"IP_CPU");
