@@ -8,7 +8,8 @@
 typedef enum
 {
 	MENSAJE,
-	PAQUETE
+	PROGRAMA,
+	PROCESO,
 }op_code;
 
 typedef struct
@@ -24,7 +25,7 @@ typedef struct
 } t_paquete;
 
 void* serializar_paquete(t_paquete*, int);
-t_paquete* crear_paquete(void);
+t_paquete* crear_paquete(op_code);
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
 void eliminar_paquete(t_paquete* paquete);
 

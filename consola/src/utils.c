@@ -9,7 +9,7 @@ void enviar_programa(t_list * instrucciones, int conexion) {
 	int op_tamanio = 0;                                    // es el tamaño que ocupa la operacion
 	int cant_parametros = 0;
 	t_instruccion* inst = malloc(sizeof(t_instruccion));   // reservo espacio para la instruccion
-	t_paquete *paquete = crear_paquete();                  // creo paquete donde voy a meter todas las instrucciones en su buffer junto con sus tamanios
+	t_paquete *paquete = crear_paquete(PROGRAMA);                  // creo paquete donde voy a meter todas las instrucciones en su buffer junto con sus tamanios
 
 
 	for(int i = 0;i<cant;i++) {
