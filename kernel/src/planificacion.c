@@ -11,21 +11,15 @@ extern t_list* procesosReady;
 extern t_list* procesosNew;
 
 sem_t sem_new_a_ready, sem_ready,
-	//mutex_procesos_new, mutex_procesos_ready, mutex_procesos_execute,
 	sem_grado_multiprogramacion;
 pthread_mutex_t mutex_procesos_new = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_procesos_ready = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_procesos_execute = PTHREAD_MUTEX_INITIALIZER;
-//haceme un init de cada sem_t en una funcion aparten llamada inicializarSemaforos()
-
 
 void inicializarSemoforos(){
 	sem_init(&sem_new_a_ready, 0, 0); //Binario, iniciado en 0 para que solo agregue a ready si hay procesos en new
 	sem_init(&sem_ready, 0, 0); //Binario, solo pase a CPU si hay en ready
-	//sem_init(&mutex_procesos_new, 0, 1);
-	//sem_init(&mutex_procesos_ready, 0, 1);
 	sem_init(&sem_grado_multiprogramacion, 0, config_get_int_value(config,"GRADO_MAX_MULTIPROGRAMACION"));
-	//sem_init(&mutex_procesos_execute, 0, 1);
 	
 }
 
@@ -58,7 +52,6 @@ int escucharConsolas(){
 							list_add(procesosNew, pcb);
 							pthread_mutex_unlock(&mutex_procesos_new);
 
-							//printf("\nAgregue el proceso:%d\n",pcb->pid);
 							log_info(logger, "Se crea el proceso:%d en NEW", pcb->pid);
 							sem_post(&sem_new_a_ready);
 
@@ -66,10 +59,10 @@ int escucharConsolas(){
 							/*int cant = list_size(lista);
 									for(int i = 0;i<cant;i++) {
 										log_info(logger, "elemento: %s \n", list_get(lista,i));
-									}*/
+							}*/
 							break;
 						case -1:
-							//send(socket_cliente, (void *)RESULT_ERROR, sizeof(int), NULL);
+							send(socket_cliente, (void *)RESULT_ERROR, sizeof(int), NULL);
 							log_error(logger, "el cliente se desconecto. Terminando servidor");
 							//return EXIT_FAILURE;
 							break;
@@ -110,7 +103,7 @@ void agregarReady(){
 	
 
 	while (1)
-	{	//TODO: agregar signal en hilo de consola-new
+	{
 		sem_wait(&sem_new_a_ready);
 		sem_wait(&sem_grado_multiprogramacion);
 		log_info(logger, "Permite agregar proceso a ready por grado de multiprogramacion\n");
@@ -147,10 +140,8 @@ void pasarAReady(){
 
 void liberarSemoforos(){
 	sem_destroy(&sem_new_a_ready);
-	//sem_destroy(&mutex_procesos_new);
-	//sem_destroy(&mutex_procesos_ready);
 	sem_destroy(&sem_grado_multiprogramacion);
-	
+	//TODO: Liberar mutex
 }
 
 
