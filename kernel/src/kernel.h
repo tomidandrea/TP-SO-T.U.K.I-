@@ -4,11 +4,11 @@
 #include <readline/readline.h>
 #include <pthread.h>
 #include <listasPCB.h>
-#include <planificacion.h>
 #include <assert.h>
 #include <utils/general.h>
 #include <utils/sockets.h>
 #include <semaphore.h>
+#include <planificacion.h>
 
 
 typedef struct{

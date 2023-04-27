@@ -11,9 +11,9 @@
 #include <pthread.h>
 
 void planificar();
-void pasarAReady(t_pcb* pcb);
+void pasarAReady();
 void planificarFIFO();
 //TODO APARTIR DE ACA SE ELIMIÑIA TO
-void escucharConsolas(t_socket server_fd);
+int escucharConsolas();
 void agregarReady();
 #endif

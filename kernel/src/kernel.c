@@ -3,8 +3,6 @@
 
 t_log* logger;
 t_config* config;
-uint32_t RESULT_OK = 0;
-uint32_t RESULT_ERROR = 1;
 t_list* procesosExecute;
 t_list* procesosReady;
 t_list* procesosNew;
@@ -16,18 +14,20 @@ t_list* procesosNew;
 int main(int argc, char* argv[]) {
     logger = iniciar_logger("kernel.log", "KERNEL", true, LOG_LEVEL_DEBUG);
     config = iniciar_config(argv[1]);
+    inicializarSemoforos();
 
     // todo: settear esto en una funcion aparte setConfig(config)
-    char* ip = malloc(16);
+    /*char* ip = malloc(16);
     ip = config_get_string_value(config,"IP_KERNEL");
     char* puerto = malloc(16);
     puerto = config_get_string_value(config,"PUERTO_ESCUCHA");
-
-    free(ip);
-    free(puerto);
+*/
+    //free(ip);
 
     procesosNew = list_create();
-	t_socket server_fd = iniciar_servidor(puerto, logger);
+    procesosReady = list_create();
+    procesosExecute = list_create();
+
 	t_list* lista;
 
 	// Hilo que atiende consolas
@@ -42,9 +42,10 @@ int main(int argc, char* argv[]) {
 						NULL,
 						(void*) escucharConsolas,
 						//(void *)arg);
-						(t_socket) server_fd);
+						NULL);
 		pthread_detach(hilo_consolas);
 		
+
 		pthread_t hilo_ready;
 		pthread_create(&hilo_ready,
 						NULL,
@@ -58,10 +59,11 @@ int main(int argc, char* argv[]) {
 						(void*) planificar,
 						NULL);
 		pthread_detach(hilo_planificador);
+		//escucharConsolas();
+		//while(escucharConsolas());
 
 		while(1);
 
-	
 		return EXIT_SUCCESS;
 }
 /*
