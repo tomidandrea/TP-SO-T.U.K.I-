@@ -27,6 +27,29 @@ int main(int argc, char* argv[]) {
 	}
 }
 
+t_pcb* recibir_proceso(t_socket socket_cliente) {
+	    int size;
+		int desplazamiento = 0;
+		void * buffer;
+		t_list* valores = list_create();
+		int tamanio;
+
+		//printf("hola, recibiendo paquete\n");
+
+		buffer = recibir_buffer(&size, socket_cliente);
+
+		//printf("recibiendo buffer\n");
+		while(desplazamiento < size)
+		{
+			memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
+			desplazamiento+=sizeof(int);
+			char* valor = malloc(tamanio);
+			memcpy(valor, buffer+desplazamiento, tamanio);
+			desplazamiento+=tamanio;
+			list_add(valores, valor);
+}
+
+
 t_pcb* inicializar_pcb(){
 	t_pcb* pcb = malloc(sizeof(t_pcb));
 	pcb->instrucciones = list_create();
@@ -156,3 +179,5 @@ int entra_en_registro(char*registro,char*valor) {
 	else
 		return 1;
 }
+
+

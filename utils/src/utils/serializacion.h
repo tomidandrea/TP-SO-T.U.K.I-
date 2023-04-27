@@ -9,7 +9,7 @@ typedef enum
 {
 	MENSAJE,
 	PROGRAMA,
-	PROCESO,
+	PROCESO
 }op_code;
 
 typedef struct
