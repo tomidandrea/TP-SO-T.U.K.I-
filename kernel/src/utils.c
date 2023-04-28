@@ -50,9 +50,34 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 
 	enviar_paquete(paquete,conexion);                // serializa el paquete y lo envia
 
-	eliminar_paquete(paquete);                //elimina el paquete y todo lo que contiene
+	eliminar_paquete(paquete);                //elimina el paquete y lo que contiene
 
+}
 
+void crearEscucharConsolas(){
+	pthread_t hilo_consolas;
+	pthread_create(&hilo_consolas,
+					NULL,
+					(void*) escucharConsolas,
+					NULL);
+	pthread_detach(hilo_consolas);
+}
+void crearAgregarReady(){
+	pthread_t hilo_ready;
+	pthread_create(&hilo_ready,
+					NULL,
+					(void*) agregarReady,
+					NULL);
+	pthread_detach(hilo_ready);
+}
+void crearPlanificar(){
+	pthread_t hilo_planificador;
+	pthread_create(&hilo_planificador,
+					NULL,
+					(void*) planificar,
+					NULL);
+	pthread_detach(hilo_planificador);
 
+	while(1);
 }
 

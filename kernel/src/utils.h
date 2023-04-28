@@ -8,6 +8,7 @@
 #include <string.h>
 #include <utils/general.h>
 #include <utils/sockets.h>
+#include <planificacion.h>
 
 // TODO: esto si no se usa volarlo
 typedef enum {
@@ -37,6 +38,8 @@ typedef struct {
 t_pcb* crearPCB(t_list* listaInstrucciones);
 
 void mandar_pcb_a_CPU();
-
+void crearEscucharConsolas();
+void crearAgregarReady();
+void crearPlanificar();
 
 #endif

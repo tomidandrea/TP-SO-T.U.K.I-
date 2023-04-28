@@ -48,3 +48,25 @@ t_config* iniciar_config (char* path){
 	return nuevo_config;
 }
 
+t_list* listaAInstrucciones(t_list* list) {
+	t_list* instrucciones = list_create();
+	int tamanio = list_size(list);
+	int i = 0;
+
+	while (i < tamanio) {
+		t_instruccion* inst = malloc(sizeof(t_instruccion));
+		char* operacion = list_get(list, i);
+		int cant = cantParametros(operacion);
+		inst->instruccion = string_duplicate(operacion);
+		inst->parametros = string_array_new();
+		for(int j = 0; j<cant; j ++) {
+			char* parametro = list_get(list, i + j + 1);
+			inst->parametros[j] = string_duplicate(parametro);
+		}
+		list_add(instrucciones, inst);
+		i+= cant + 1;
+	}
+
+	return instrucciones;
+}
+

@@ -30,7 +30,7 @@ void enviar_programa(t_list * instrucciones, int conexion) {
 
 	enviar_paquete(paquete,conexion);                // serializa el paquete y lo envia
 
-	eliminar_paquete(paquete);                //elimina el paquete y todo lo que contiene
+	eliminar_paquete(paquete);                //elimina el paquete y lo que contiene
 
 }
 

@@ -33,6 +33,7 @@ typedef struct {
 
 void logearInstrucciones(t_list* instrucciones, t_log* logger);
 int cantParametros(char *instruccion);
+t_list* listaAInstrucciones(t_list*);
 
 t_log* iniciar_logger(char* file, char *process_name, bool is_active_console, t_log_level level);
 t_config* iniciar_config (char*);

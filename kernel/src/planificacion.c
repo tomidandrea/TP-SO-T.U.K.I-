@@ -24,7 +24,7 @@ void inicializarSemoforos(){
 }
 
 int escucharConsolas(){
-	t_list* lista = malloc(sizeof(t_list));
+	t_list* lista = list_create();
 	char* puerto = malloc(16);
 	puerto = config_get_string_value(config,"PUERTO_ESCUCHA");
 
@@ -43,9 +43,17 @@ int escucharConsolas(){
 				int cod_op = recibir_operacion(socket_cliente); //hace recv del cod_op
 				switch (cod_op) {
 						case PAQUETE:
+							//TODO VER listaAInstrucciones XQ ROMPE
+							//lista = listaAInstrucciones(recibir_paquete(socket_cliente)); //hace recv de la lista
+
+							//TODO VER listaAInstrucciones XQ ROMPE, FALTA -> INSTRUCCION A LA LISTA
+							//log_info(logger, "Me llego un paquete\n %s", list_get(lista, 2)-> instruccion);
+
+							//send(socket_cliente, &RESULT_OK, sizeof(int), NULL);
+
 							lista = recibir_paquete(socket_cliente); //hace recv de la lista
 							log_info(logger, "Me llego un paquete\n");
-							//send(socket_cliente, &RESULT_OK, sizeof(int), NULL);
+
 
 							t_pcb* pcb = crearPCB(lista);
 							pthread_mutex_lock(&mutex_procesos_new);
@@ -144,6 +152,13 @@ void liberarSemoforos(){
 	//TODO: Liberar mutex
 }
 
+//TODO: creo que esto seria liberar mutex (?
+void liberarMutex(){
+	pthread_mutex_destroy(&mutex_procesos_ready);
+	pthread_mutex_destroy(&mutex_procesos_new);
+	pthread_mutex_destroy(&mutex_procesos_execute);
+
+}
 
 
 void planificarFIFO(){
