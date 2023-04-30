@@ -3,90 +3,15 @@
 extern t_config* config;
 extern t_log* logger;
 
-uint32_t RESULT_OK = 0;
-uint32_t RESULT_ERROR = 1;
-
 extern t_list* procesosExecute;
 extern t_list* procesosReady;
 extern t_list* procesosNew;
 
-sem_t sem_new_a_ready, sem_ready,
-	sem_grado_multiprogramacion;
+sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion;
 pthread_mutex_t mutex_procesos_new = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_procesos_ready = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_procesos_execute = PTHREAD_MUTEX_INITIALIZER;
 
-void inicializarSemoforos(){
-	sem_init(&sem_new_a_ready, 0, 0); //Binario, iniciado en 0 para que solo agregue a ready si hay procesos en new
-	sem_init(&sem_ready, 0, 0); //Binario, solo pase a CPU si hay en ready
-	sem_init(&sem_grado_multiprogramacion, 0, config_get_int_value(config,"GRADO_MAX_MULTIPROGRAMACION"));
-	
-}
-
-int escucharConsolas(){
-	t_list* lista = list_create();
-	char* puerto = malloc(16);
-	puerto = config_get_string_value(config,"PUERTO_ESCUCHA");
-
-	t_socket server_fd = iniciar_servidor(puerto, logger);
-	printf("\nSocket conexion:%d \n",server_fd);
-
-	free(puerto);
-
-//	int socket_cliente = argumentos->cliente;
-	t_socket socket_cliente = malloc(sizeof(int));
-	while(1){
-	socket_cliente = esperar_cliente(server_fd, logger); //Hace el accept
-
-    printf("\nsocket conexion2:%d \n",server_fd);
-		if(socket_cliente != -1){
-				int cod_op = recibir_operacion(socket_cliente); //hace recv del cod_op
-				switch (cod_op) {
-						case PAQUETE:
-							//TODO VER listaAInstrucciones XQ ROMPE
-							//lista = listaAInstrucciones(recibir_paquete(socket_cliente)); //hace recv de la lista
-
-							//TODO VER listaAInstrucciones XQ ROMPE, FALTA -> INSTRUCCION A LA LISTA
-							//log_info(logger, "Me llego un paquete\n %s", list_get(lista, 2)-> instruccion);
-
-							//send(socket_cliente, &RESULT_OK, sizeof(int), NULL);
-
-							lista = recibir_paquete(socket_cliente); //hace recv de la lista
-							log_info(logger, "Me llego un paquete\n");
-
-
-							t_pcb* pcb = crearPCB(lista);
-							pthread_mutex_lock(&mutex_procesos_new);
-							list_add(procesosNew, pcb);
-							pthread_mutex_unlock(&mutex_procesos_new);
-
-							log_info(logger, "Se crea el proceso:%d en NEW", pcb->pid);
-							sem_post(&sem_new_a_ready);
-
-							//list_iterate(lista, (void*) iterator);
-							/*int cant = list_size(lista);
-									for(int i = 0;i<cant;i++) {
-										log_info(logger, "elemento: %s \n", list_get(lista,i));
-							}*/
-							break;
-						case -1:
-							send(socket_cliente, (void *)RESULT_ERROR, sizeof(int), NULL);
-							log_error(logger, "el cliente se desconecto. Terminando servidor");
-							//return EXIT_FAILURE;
-							break;
-
-						default:
-							log_warning(logger,"Operacion desconocida. No quieras meter la pata");
-							break;
-						}
-		}
-	}
-	return 0;
-	//TODO: hacer que salga del while
-	//send(socket_cliente, &RESULT_OK, sizeof(int), NULL);
-	//close(socket_cliente);
-	free(lista);
-}
 
 void planificar(){
 	char* algoritmo = malloc(16);
@@ -108,8 +33,6 @@ void planificar(){
 
 void agregarReady(){
 	
-	
-
 	while (1)
 	{
 		sem_wait(&sem_new_a_ready);
@@ -145,21 +68,6 @@ void pasarAReady(){
 	list_add(procesosReady, proceso);
 	pthread_mutex_unlock(&mutex_procesos_ready);
 }
-
-void liberarSemoforos(){
-	sem_destroy(&sem_new_a_ready);
-	sem_destroy(&sem_grado_multiprogramacion);
-	//TODO: Liberar mutex
-}
-
-//TODO: creo que esto seria liberar mutex (?
-void liberarMutex(){
-	pthread_mutex_destroy(&mutex_procesos_ready);
-	pthread_mutex_destroy(&mutex_procesos_new);
-	pthread_mutex_destroy(&mutex_procesos_execute);
-
-}
-
 
 void planificarFIFO(){
 

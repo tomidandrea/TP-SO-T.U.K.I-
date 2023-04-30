@@ -15,6 +15,7 @@
 #include<commons/log.h>
 #include<commons/config.h>
 #include<commons/collections/list.h>
+#include<commons/string.h>
 #include<utils/serializacion.h>
 
 typedef struct {

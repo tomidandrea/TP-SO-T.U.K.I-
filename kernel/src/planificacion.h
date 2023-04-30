@@ -11,7 +11,5 @@
 void planificar();
 void pasarAReady();
 void planificarFIFO();
-//TODO APARTIR DE ACA SE ELIMIÑIA TO
-int escucharConsolas();
 void agregarReady();
 #endif
