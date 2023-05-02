@@ -9,7 +9,6 @@
 #define SRC_CPU_H_
 
 #include <string.h>
-#include<commons/string.h>
 #include <utils/general.h>
 #include <utils/sockets.h>
 
@@ -28,11 +27,19 @@ typedef struct {
 	char RAX[16], RBX[16], RCX[16], RDX[16];
 } t_registros;
 
+/* alternativa con vector de strings para cada tamaño (4,8 y 16)
+typedef struct {
+	char[4][4] tamanio_4;
+	char[4][8] tamanio_8;
+	char[4][16] tamanio_16;
+} t_registros;
+*/
+
 typedef struct {
     int pid;
     t_list* instrucciones;
     int pc;
-    t_registros registros;
+    t_registros*registros;
 } t_pcb;
 
 typedef struct {
@@ -42,7 +49,9 @@ typedef struct {
 } t_segmento;
 
 t_pcb* inicializar_pcb();
-t_pcb* recibirProceso(t_socket*socket_cliente);
+t_pcb* recibir_proceso(int socket_cliente);
+void recibir_variable(int* variable, t_buffer* buffer,int* desplazamiento);
+void actualizar_registros(t_pcb *pcb, t_list*lista_registros);
 estado_ejec realizar_ciclo_instruccion(t_pcb * pcb);
 t_instruccion* fetch(t_list* instrucciones, uint32_t pc);
 int decode(char* instruccion);

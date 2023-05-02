@@ -2,7 +2,6 @@
 
 t_log* logger;
 t_config* config;
-
 t_registros* registros;
 
 int main(int argc, char* argv[]) {
@@ -18,7 +17,7 @@ int main(int argc, char* argv[]) {
 		t_pcb* pcb = inicializar_pcb();
 		int cod_op = recibir_operacion(socket_cliente);
 		if(cod_op == PROCESO) {
-			// TODO pcb = recibir_proceso();
+			pcb = recibir_proceso(socket_cliente);
 			estado_ejec estado = realizar_ciclo_instruccion(pcb);
 			// TODO enviar_pcb(pcb,estado);
 		} else {
@@ -27,19 +26,41 @@ int main(int argc, char* argv[]) {
 	}
 }
 
-t_pcb* recibir_proceso(t_socket socket_cliente) {
+
+t_pcb* recibir_proceso(int socket_cliente) {
 	    int size;
 		int desplazamiento = 0;
 		void * buffer;
 		t_list* valores = list_create();
 		int tamanio;
+        t_pcb* pcb = inicializar_pcb();
+		int pid;
+		int pc;
+		t_list* instrucciones = list_create();
 
-		//printf("hola, recibiendo paquete\n");
+		//printf("hola, recibiendo proceso\n");
+
+		//printf("recibiendo buffer\n");
 
 		buffer = recibir_buffer(&size, socket_cliente);
 
-		//printf("recibiendo buffer\n");
-		while(desplazamiento < size)
+		recibir_variable(&pid,buffer,&desplazamiento);      // recibo pid
+		pcb->pid = pid;                                     // actualizo pid en el pcb
+
+		recibir_variable(&pc,buffer,&desplazamiento);       //recivo pc
+		pcb->pc = pc;                                      // actualizo pc en el pcb
+
+
+		/* alternativa con vectores por tamaño
+		recibir_registros(buffer,&desplazamiento, 4,registros_>tamanio_4);
+		pcb->registros->tamanio_4 = registros->tamanio_4;
+		recibir_registros(buffer,&desplazamiento, 8,registros_>tamanio_8);
+		pcb->registros->tamanio_8 = registros->tamanio_8;
+		recibir_registros(buffer,&desplazamiento, 16,registros_>tamanio_16);
+		pcb->registros->tamanio_16 = registros->tamanio_16;
+		*/
+
+		while(desplazamiento < size)                                           //recivo todos los registros y las instrucciones y los meto en una lista de strings
 		{
 			memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
 			desplazamiento+=sizeof(int);
@@ -47,6 +68,15 @@ t_pcb* recibir_proceso(t_socket socket_cliente) {
 			memcpy(valor, buffer+desplazamiento, tamanio);
 			desplazamiento+=tamanio;
 			list_add(valores, valor);
+        }
+
+
+		t_list* lista_registros = list_take_and_remove(valores,12);     // saco los primeros 12 elementos de la lista de strings que serian los 12 registros y los agrego en una nueva lista. En la anterior lista solo queadn los strings de las instrucciones.
+		actualizar_registros(pcb,lista_registros);                          // actualizo los registros de la cpu
+		instrucciones = listaAInstrucciones(valores);              // paso de lista de strings a lista de instrucciones
+	    pcb->instrucciones = instrucciones;                             // actualizo lista de instrucciones en el pcb
+
+	    return pcb;
 }
 
 
@@ -56,6 +86,52 @@ t_pcb* inicializar_pcb(){
 //	pcb->registros = inicializar_registros();
 	return pcb;
 }
+
+void recibir_variable(int* variable, t_buffer*buffer,int* desplazamiento) {
+
+	memcpy(&variable, buffer + (*desplazamiento), sizeof(int));
+	(*desplazamiento)+=sizeof(int);
+}
+
+void actualizar_registros(t_pcb *pcb, t_list*lista_registros) {
+	strcpy(registros->AX ,list_get(lista_registros,0));
+	strcpy(pcb->registros->AX,registros->AX);
+	strcpy(registros->BX , list_get(lista_registros,1));
+	strcpy(pcb->registros->BX, registros->BX);
+	strcpy(registros->CX, list_get(lista_registros,2));
+	strcpy(pcb->registros->CX, registros->CX);
+	strcpy(registros->DX, list_get(lista_registros,3));
+	strcpy(pcb->registros->DX, registros->DX);
+	strcpy(registros->EAX, list_get(lista_registros,4));
+	strcpy(pcb->registros->EAX, registros->EAX);
+	strcpy(registros->EBX, list_get(lista_registros,5));
+	strcpy(pcb->registros->EBX, registros->EBX);
+	strcpy(registros->ECX, list_get(lista_registros,6));
+	strcpy(pcb->registros->ECX, registros->ECX);
+	strcpy(registros->EDX, list_get(lista_registros,7));
+	strcpy(pcb->registros->EDX, registros->EDX);
+	strcpy(registros->RAX,list_get(lista_registros,8));
+	strcpy(pcb->registros->RAX, registros->RAX);
+	strcpy(registros->RBX, list_get(lista_registros,9));
+	strcpy(pcb->registros->RBX, registros->RBX);
+	strcpy(registros->RCX, list_get(lista_registros,10));
+	strcpy(pcb->registros->RCX, registros->RCX);
+	strcpy(registros->RDX, list_get(lista_registros,11));
+	strcpy(pcb->registros->RDX, registros->RDX);
+}
+
+/* alternativa con vectores segunel tamaño
+void recibir_registros(t_buffer*buffer, int* desplazamiento, int tamanio_registro, char**registro) {
+
+	for(int i = 0; i<4;i++) {
+		char valor[tamanio_registro];
+		memcpy(valor, buffer + (*desplazamiento), tamanio_registro);
+		(*desplazamiento)+=tamanio_registro;
+		registro[4][i] = string_duplicate(valor);
+	}
+
+}
+*/
 
 
 estado_ejec realizar_ciclo_instruccion(t_pcb * pcb){
