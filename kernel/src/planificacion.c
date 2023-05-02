@@ -79,7 +79,7 @@ void planificarFIFO(){
 
 	// mandamo la cosa
 	//TODO: descomentar para mandar proceso
-	//mandar_pcb_a_CPU(proceso);
+	mandar_pcb_a_CPU(proceso);
 
 }
 

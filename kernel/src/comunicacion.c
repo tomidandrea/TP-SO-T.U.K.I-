@@ -80,8 +80,8 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 	int cant = list_size(proceso->instrucciones);
 	int cant_parametros = 0;
 
-	agregar_a_paquete(paquete,proceso -> pid,sizeof(proceso -> pid));
-	agregar_a_paquete(paquete,proceso -> pc,sizeof(proceso -> pc));
+	agregar_a_paquete(paquete,&(proceso -> pid),sizeof(int));
+	agregar_a_paquete(paquete,&(proceso -> pc),sizeof(int));
 	agregar_a_paquete(paquete, proceso -> registros.AX, 4);
 	agregar_a_paquete(paquete, proceso -> registros.BX, 4);
 	agregar_a_paquete(paquete, proceso -> registros.CX, 4);
