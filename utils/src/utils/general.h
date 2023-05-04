@@ -30,10 +30,37 @@ typedef struct {
 
 } t_instruccion;
 
+typedef struct {
+	char AX[4], BX[4], CX[4], DX[4];
+	char EAX[8], EBX[8], ECX[8], EDX[8];
+	char RAX[16], RBX[16], RCX[16], RDX[16];
+} t_registros;
+
+// TODO: esto si no se usa volarlo, Aclaracion: Estaba en utils del kernel, lo movi a utils
+typedef enum {
+    NEW,
+    READY,
+    EXEC,
+    BLOCKED,
+    EXIT
+} Estado;
+typedef struct {
+    int pid;
+    t_list* instrucciones;
+    int pc;
+    t_registros* registros;
+    Estado estado;
+    char* motivo;
+    // implementar los otros xd
+} t_pcb;
+
 #define CANT_IDENTIFICADORES (sizeof(tablaIdentificadores)/sizeof(t_identificador))
 
 
 void logearInstrucciones(t_list* instrucciones, t_log* logger);
+
+t_registros* inicializarRegistros();
+
 int cantParametros(char *instruccion);
 t_list* listaAInstrucciones(t_list*);
 

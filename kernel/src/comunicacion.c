@@ -80,20 +80,20 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 	int cant = list_size(proceso->instrucciones);
 	int cant_parametros = 0;
 
-	agregar_a_paquete(paquete,&(proceso -> pid),sizeof(int));
-	agregar_a_paquete(paquete,&(proceso -> pc),sizeof(int));
-	agregar_a_paquete(paquete, proceso -> registros.AX, 4);
-	agregar_a_paquete(paquete, proceso -> registros.BX, 4);
-	agregar_a_paquete(paquete, proceso -> registros.CX, 4);
-	agregar_a_paquete(paquete, proceso -> registros.DX, 4);
-	agregar_a_paquete(paquete, proceso -> registros.EAX, 8);
-	agregar_a_paquete(paquete, proceso -> registros.EBX, 8);
-	agregar_a_paquete(paquete, proceso -> registros.ECX, 8);
-	agregar_a_paquete(paquete, proceso -> registros.EDX, 8);
-	agregar_a_paquete(paquete, proceso -> registros.RAX, 16);
-	agregar_a_paquete(paquete, proceso -> registros.RBX, 16);
-	agregar_a_paquete(paquete, proceso -> registros.RCX, 16);
-	agregar_a_paquete(paquete, proceso -> registros.RDX, 16);
+	agregar_valor_estatico(paquete, &(proceso -> pid));
+	agregar_valor_estatico(paquete, &(proceso -> pc));
+	agregar_a_paquete(paquete, proceso -> registros->AX, 4);
+	agregar_a_paquete(paquete, proceso -> registros->BX, 4);
+	agregar_a_paquete(paquete, proceso -> registros->CX, 4);
+	agregar_a_paquete(paquete, proceso -> registros->DX, 4);
+	agregar_a_paquete(paquete, proceso -> registros->EAX, 8);
+	agregar_a_paquete(paquete, proceso -> registros->EBX, 8);
+	agregar_a_paquete(paquete, proceso -> registros->ECX, 8);
+	agregar_a_paquete(paquete, proceso -> registros->EDX, 8);
+	agregar_a_paquete(paquete, proceso -> registros->RAX, 16);
+	agregar_a_paquete(paquete, proceso -> registros->RBX, 16);
+	agregar_a_paquete(paquete, proceso -> registros->RCX, 16);
+	agregar_a_paquete(paquete, proceso -> registros->RDX, 16);
 
 	//TODO: tabla de segmentos
 

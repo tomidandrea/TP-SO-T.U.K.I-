@@ -1,4 +1,4 @@
-#include "cpu.h"
+#include <cpu.h>
 
 t_log* logger;
 t_config* config;
@@ -13,6 +13,7 @@ int main(int argc, char* argv[]) {
 	config = iniciar_config(argv[1]);
 	char* puerto = config_get_string_value(config,"PUERTO_ESCUCHA");
 
+	registros = inicializarRegistros();
 
 	t_socket server_fd = iniciar_servidor(puerto, logger);
 	free(puerto);
@@ -26,7 +27,9 @@ int main(int argc, char* argv[]) {
 			if(cod_op == PROCESO) {
 				pcb = recibir_proceso(socket_cliente);
 				estado_ejec estado = realizar_ciclo_instruccion(pcb);
+				log_info(logger, "Enviando pcb a kernel");
 				// TODO enviar_pcb(pcb,estado);
+
 			} else {
 				send(socket_cliente, (void *)RESULT_ERROR, sizeof(int), NULL);
 				log_error(logger,"No me llego un proceso");
@@ -54,12 +57,15 @@ t_pcb* recibir_proceso(int socket_cliente) {
 
 		buffer = recibir_buffer(&size, socket_cliente);
 
-		recibir_variable(&pid,buffer,&desplazamiento);      // recibo pid
-		pcb->pid = pid;                                     // actualizo pid en el pcb
-
-		recibir_variable(&pc,buffer,&desplazamiento);       //recivo pc
+		//recibir_variable(&pid,buffer,&desplazamiento);      // recibo pid
+		//pcb->pid = pid;                                     // actualizo pid en el pcb
+		memcpy(&(pcb->pid), buffer + desplazamiento, sizeof(int));
+		desplazamiento+=sizeof(int);
+		/*recibir_variable(&pc,buffer,&desplazamiento);       //recivo pc
 		pcb->pc = pc;                                      // actualizo pc en el pcb
-
+*/
+		memcpy(&(pcb->pc), buffer + desplazamiento, sizeof(int));
+		desplazamiento+=sizeof(int);
 
 		/* alternativa con vectores por tamaño
 		recibir_registros(buffer,&desplazamiento, 4,registros_>tamanio_4);
@@ -75,7 +81,7 @@ t_pcb* recibir_proceso(int socket_cliente) {
 			memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
 			desplazamiento+=sizeof(int);
 			char* valor = malloc(tamanio);
-			memcpy(valor, buffer+desplazamiento, tamanio);
+			memcpy(valor, buffer+desplazamiento, tamanio); //rompe aca
 			desplazamiento+=tamanio;
 			list_add(valores, valor);
         }
@@ -93,7 +99,7 @@ t_pcb* recibir_proceso(int socket_cliente) {
 t_pcb* inicializar_pcb(){
 	t_pcb* pcb = malloc(sizeof(t_pcb));
 	pcb->instrucciones = list_create();
-//	pcb->registros = inicializar_registros();
+	pcb->registros = inicializarRegistros();
 	return pcb;
 }
 
@@ -103,10 +109,20 @@ void recibir_variable(int* variable, t_buffer*buffer,int* desplazamiento) {
 	(*desplazamiento)+=sizeof(int);
 }
 
-void actualizar_registros(t_pcb *pcb, t_list*lista_registros) {
-	strcpy(registros->AX ,list_get(lista_registros,0));
+void actualizar_registros(t_pcb *pcb, t_list* lista_registros) {
+	/*int cant = list_size(lista_registros);
+	for(int i = 0;i<cant;i++) {
+		char aux[4];
+		char* auxp;
+		auxp = list_get(lista_registros,i);
+		strncpy(aux, (char *)list_get(lista_registros,i),4);
+		log_info(logger, "elemento: %s \n", auxp);
+		log_info(logger, "tamanio: %d \n", sizeof(*aux));
+		log_info(logger, "tamanio: %d \n", sizeof(aux));
+	}*/
+	strcpy(registros->AX, (char *) list_get(lista_registros,0));
 	strcpy(pcb->registros->AX,registros->AX);
-	strcpy(registros->BX , list_get(lista_registros,1));
+	strcpy(registros->BX , (char *) list_get(lista_registros,1));
 	strcpy(pcb->registros->BX, registros->BX);
 	strcpy(registros->CX, list_get(lista_registros,2));
 	strcpy(pcb->registros->CX, registros->CX);
@@ -150,7 +166,6 @@ estado_ejec realizar_ciclo_instruccion(t_pcb * pcb){
 
 	while (estado == CONTINUAR){ // Solo continua el ciclo con SET, MOV_IN y MOV_OUT
 		t_instruccion* instruccion_ejecutar = fetch(pcb->instrucciones, pcb->pc); // busco la instruccion que apunta el pc
-
 		if(decode(instruccion_ejecutar->instruccion)){ //decode lo usamos para sabEr si la instrccion requiere memoria y para hacer el RETARDO de SET
 			//int direc_logica = direc_logica(instruccion_ejecutar);
 			//direc_fisica = traducir_direcciones(direc_logica);
@@ -162,13 +177,15 @@ estado_ejec realizar_ciclo_instruccion(t_pcb * pcb){
 }
 
 t_instruccion* fetch(t_list* instrucciones, uint32_t pc){
+	log_info(logger, "Entro en fetch");
 	return list_get(instrucciones,pc);
 }
 
 int decode(char* instruccion) {
+	log_info(logger, "Entro en decode");
 	if(strcmp(instruccion, "SET") == 0) {
 		int espera = config_get_int_value(config,"RETARDO_INSTRUCCION");
-		usleep(espera * 1000);
+		usleep(espera * 1000); // Recibe microsegundo, * 1000 -> pasamos a milisegundos
 	}
 	 return requiere_memoria(instruccion);
 }

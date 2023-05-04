@@ -23,6 +23,12 @@ typedef struct
 	op_code codigo_operacion;
 	t_buffer* buffer;
 } t_paquete;
+/*
+typedef struct {
+    char AX [4], BX [4], CX [4], DX [4];
+	char EAX [8], EBX [8], ECX [8], EDX [8];
+	char RAX [16], RBX [16], RCX [16], RDX [16];
+} t_registros;*/
 
 void* serializar_paquete(t_paquete*, int);
 t_paquete* crear_paquete(op_code);

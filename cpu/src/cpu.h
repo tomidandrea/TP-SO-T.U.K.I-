@@ -8,6 +8,7 @@
 #ifndef SRC_CPU_H_
 #define SRC_CPU_H_
 
+#include <stdio.h>
 #include <string.h>
 #include <utils/general.h>
 #include <utils/sockets.h>
@@ -20,12 +21,12 @@ typedef enum {
 	BLOQUEAR
 
 } estado_ejec;
-
+/*
 typedef struct {
 	char AX[4], BX[4], CX[4], DX[4];
 	char EAX[8], EBX[8], ECX[8], EDX[8];
 	char RAX[16], RBX[16], RCX[16], RDX[16];
-} t_registros;
+} t_registros;*/
 
 /* alternativa con vector de strings para cada tamaño (4,8 y 16)
 typedef struct {
@@ -34,13 +35,13 @@ typedef struct {
 	char[4][16] tamanio_16;
 } t_registros;
 */
-
+/*
 typedef struct {
     int pid;
     t_list* instrucciones;
     int pc;
-    t_registros*registros;
-} t_pcb;
+    t_registros* registros;
+} t_pcb;*/
 
 typedef struct {
 	int numero;

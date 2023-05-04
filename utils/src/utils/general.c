@@ -22,6 +22,25 @@ void logearInstrucciones(t_list* instrucciones, t_log* logger){
 	    }
 }
 
+t_registros* inicializarRegistros(){
+	//registros = malloc(4*4+4*8+4*16);
+	t_registros* registros = malloc(sizeof(t_registros));
+	/*registros->AX = malloc(4);
+	registros->BX = malloc(4);
+	registros->CX = malloc(4);
+	registros->DX = malloc(4);
+	registros->EAX = malloc(8);
+	registros->EBX = malloc(8);
+	registros->ECX = malloc(8);
+	registros->EDX = malloc(8);
+	registros->RAX = malloc(16);
+	registros->RBX = malloc(16);
+	registros->RCX = malloc(16);
+	registros->RDX = malloc(16);*/
+
+	return registros;
+}
+
 int cantParametros(char* instruccion){
     for(int i=0;i < CANT_IDENTIFICADORES;i++){
         t_identificador sym;
