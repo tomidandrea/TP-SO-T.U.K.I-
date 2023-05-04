@@ -5,6 +5,8 @@ int main(int argc, char** argv) {
     t_config* config;
     t_socket conexion;
     char* ip;
+
+    
     char* puerto;
     char* path;
 
@@ -29,8 +31,9 @@ int main(int argc, char** argv) {
 
     // serializa y envia a kernel el programa (lista de instrucciones)
     enviar_programa(instrucciones, conexion);
+    printf("\nsocket conexion:%d \n",conexion);
 
-    uint32_t result = -1;
+    uint32_t result = malloc(sizeof(uint32_t));
     recv(conexion, &result, sizeof(int), MSG_WAITALL);
     if(result == 0){
     	log_info(logger, "Resultado: Termino todo bien pa");

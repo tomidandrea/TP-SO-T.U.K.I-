@@ -1,25 +1,24 @@
 #ifndef KERNEL_H_
 #define KERNEL_H_
 
-#include<readline/readline.h>
-#include<assert.h>
+#include <planificacion.h>
+#include <readline/readline.h>
+#include <pthread.h>
+#include <assert.h>
 #include <utils/general.h>
 #include <utils/sockets.h>
-#include<pthread.h>
+#include <semaphore.h>
+
+
 
 typedef struct{
 	t_socket cliente;
 	t_log* logger;
 	t_list* lista;
 	//char* server_name;
-} thread_args;
-
-/*typedef struct t_instruccion {
-	char* instruccion;
-	char parametros[2][20];
-} t_instruccion;*/
+} hilo_consolas_args;
 
 
-void atender_cliente(thread_args* argumentos);
+t_pcb* recibir_proceso(t_socket);
 
 #endif

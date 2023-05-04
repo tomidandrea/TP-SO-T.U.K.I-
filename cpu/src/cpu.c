@@ -3,25 +3,35 @@
 t_log* logger;
 t_config* config;
 t_registros* registros;
+uint32_t RESULT_OK = 0;
+uint32_t RESULT_ERROR = 1;
 
 int main(int argc, char* argv[]) {
 
+	t_list* lista = list_create(); //ver si es necesaria
 	logger = iniciar_logger("cpu.log", "CPU", true, LOG_LEVEL_DEBUG);
 	config = iniciar_config(argv[1]);
 	char* puerto = config_get_string_value(config,"PUERTO_ESCUCHA");
 
 
 	t_socket server_fd = iniciar_servidor(puerto, logger);
+	free(puerto);
+
+	t_socket socket_cliente = malloc(sizeof(int));
 	while(1){
 		t_socket socket_cliente = esperar_cliente(server_fd, logger);
-		t_pcb* pcb = inicializar_pcb();
-		int cod_op = recibir_operacion(socket_cliente);
-		if(cod_op == PROCESO) {
-			pcb = recibir_proceso(socket_cliente);
-			estado_ejec estado = realizar_ciclo_instruccion(pcb);
-			// TODO enviar_pcb(pcb,estado);
-		} else {
-			log_error(logger,"No me llego un proceso");
+		if(socket_cliente != -1){
+			t_pcb* pcb = inicializar_pcb();
+			int cod_op = recibir_operacion(socket_cliente);
+			if(cod_op == PROCESO) {
+				pcb = recibir_proceso(socket_cliente);
+				estado_ejec estado = realizar_ciclo_instruccion(pcb);
+				// TODO enviar_pcb(pcb,estado);
+			} else {
+				send(socket_cliente, (void *)RESULT_ERROR, sizeof(int), NULL);
+				log_error(logger,"No me llego un proceso");
+
+			}
 		}
 	}
 }
