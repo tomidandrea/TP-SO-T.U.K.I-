@@ -29,10 +29,10 @@ void crear_buffer(t_paquete* paquete)
 }
 
 
-t_paquete* crear_paquete(void)
+t_paquete* crear_paquete(op_code cod_op)
 {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
-	paquete->codigo_operacion = PAQUETE;
+	paquete->codigo_operacion = cod_op;
 	crear_buffer(paquete);
 	return paquete;
 }
@@ -45,6 +45,17 @@ void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio)
 	memcpy(paquete->buffer->stream + paquete->buffer->size + sizeof(int), valor, tamanio);
 
 	paquete->buffer->size += tamanio + sizeof(int);
+}
+
+void agregar_valor_estatico(t_paquete* paquete, int* valor)
+{
+	printf("Dentro de la funcion\n");
+	printf("Valor %d\n", *valor);
+	printf("Sizeof %d\n", sizeof(*valor));
+    paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + sizeof(*valor));
+    memcpy(paquete->buffer->stream + paquete->buffer->size, valor, sizeof(*valor));
+
+    paquete->buffer->size += sizeof(*valor);
 }
 
 void eliminar_paquete(t_paquete* paquete)

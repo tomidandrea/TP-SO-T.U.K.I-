@@ -22,6 +22,25 @@ void logearInstrucciones(t_list* instrucciones, t_log* logger){
 	    }
 }
 
+t_registros* inicializarRegistros(){
+	//registros = malloc(4*4+4*8+4*16);
+	t_registros* registros = malloc(sizeof(t_registros));
+	/*registros->AX = malloc(4);
+	registros->BX = malloc(4);
+	registros->CX = malloc(4);
+	registros->DX = malloc(4);
+	registros->EAX = malloc(8);
+	registros->EBX = malloc(8);
+	registros->ECX = malloc(8);
+	registros->EDX = malloc(8);
+	registros->RAX = malloc(16);
+	registros->RBX = malloc(16);
+	registros->RCX = malloc(16);
+	registros->RDX = malloc(16);*/
+
+	return registros;
+}
+
 int cantParametros(char* instruccion){
     for(int i=0;i < CANT_IDENTIFICADORES;i++){
         t_identificador sym;
@@ -30,22 +49,6 @@ int cantParametros(char* instruccion){
     }
     printf("error operacion invalida\n"); //si no es un operacion valido devuelve -1
     exit(EXIT_FAILURE);
-}
-
-t_log* iniciar_logger(char* file, char *process_name, bool is_active_console, t_log_level level)
-{
-	t_log* nuevo_logger = log_create(file, process_name,is_active_console, level);
-
-	return nuevo_logger;
-}
-
-t_config* iniciar_config (char* path){
-	t_config* nuevo_config = config_create(path);
-	if(nuevo_config== NULL){
-		printf("No se pudo crear el config\n");
-	}
-
-	return nuevo_config;
 }
 
 t_list* listaAInstrucciones(t_list* list) {
@@ -70,3 +73,18 @@ t_list* listaAInstrucciones(t_list* list) {
 	return instrucciones;
 }
 
+t_log* iniciar_logger(char* file, char *process_name, bool is_active_console, t_log_level level)
+{
+	t_log* nuevo_logger = log_create(file, process_name,is_active_console, level);
+
+	return nuevo_logger;
+}
+
+t_config* iniciar_config (char* path){
+	t_config* nuevo_config = config_create(path);
+	if(nuevo_config== NULL){
+		printf("No se pudo crear el config\n");
+	}
+
+	return nuevo_config;
+}
