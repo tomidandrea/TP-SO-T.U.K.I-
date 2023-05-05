@@ -45,6 +45,15 @@ void crearEscucharConsolas(){
 					NULL);
 	pthread_detach(hilo_consolas);
 }
+void crearEscucharCPU(){
+	pthread_t hilo_CPU;
+	pthread_create(&hilo_CPU,
+					NULL,
+					(void*) escucharCPU,
+					NULL);
+	pthread_detach(hilo_CPU);
+}
+
 void crearAgregarReady(){
 	pthread_t hilo_ready;
 	pthread_create(&hilo_ready,

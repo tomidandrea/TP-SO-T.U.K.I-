@@ -45,6 +45,7 @@ typedef enum {
     EXIT
 } Estado;
 typedef struct {
+	//TODO: Borrar estado del PCB
     int pid;
     t_list* instrucciones;
     int pc;
@@ -61,10 +62,15 @@ void logearInstrucciones(t_list* instrucciones, t_log* logger);
 
 t_registros* inicializarRegistros();
 
+t_pcb* recibir_proceso(int);
+
 int cantParametros(char *instruccion);
 t_list* listaAInstrucciones(t_list*);
 
 t_log* iniciar_logger(char* file, char *process_name, bool is_active_console, t_log_level level);
 t_config* iniciar_config (char*);
+t_pcb* inicializar_pcb();
+
+void actualizar_registros(t_pcb *pcb, t_list*lista_registros);
 
 #endif /* SRC_UTILS_GENERAL_H_ */

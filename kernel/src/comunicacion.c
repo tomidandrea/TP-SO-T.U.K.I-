@@ -65,6 +65,51 @@ int escucharConsolas(){
 	free(lista);
 }
 
+int escucharCPU(){
+	char* puerto = malloc(16);
+	puerto = config_get_string_value(config,"PUERTO_ESCUCHA");
+	t_pcb* pcb;
+	t_socket server_fd = iniciar_servidor(puerto, logger);
+	free(puerto);
+
+	t_socket socket_cliente = malloc(sizeof(int));
+	while(1){
+	socket_cliente = esperar_cliente(server_fd, logger); //Hace el accept
+
+		if(socket_cliente != -1){
+				int cod_op = recibir_operacion(socket_cliente);
+
+				switch (cod_op) {
+
+						case EXIT: //TODO
+							pcb = recibir_proceso(socket_cliente);
+							log_info(logger, "Me llego un PCB en exit\n");
+							log_info(logger, "Aviso a memoria para liberar\n");
+							//liberarRecurso(PCB);
+							log_info(logger, "Libero memoria\n");
+							//avisoConsolaLiberar();
+							log_info(logger, "Aviso consola\n");
+							//send(socket_cliente, &RESULT_OK, sizeof(int), NULL);
+
+
+							break;
+						case -1:
+							send(socket_cliente, (void *)RESULT_ERROR, sizeof(int), NULL);
+							log_error(logger, "el cliente se desconecto. Terminando servidor");
+							//return EXIT_FAILURE;
+							break;
+						default:
+							log_warning(logger,"Operacion desconocida. No quieras meter la pata");
+							break;
+						}
+		}
+	}
+	return 0;
+	//TODO: hacer que salga del while
+	//send(socket_cliente, &RESULT_OK, sizeof(int), NULL);
+	//close(socket_cliente);
+	free(pcb);
+}
 
 void mandar_pcb_a_CPU(t_pcb* proceso){
 	char* ip = config_get_string_value(config,"IP_CPU");
