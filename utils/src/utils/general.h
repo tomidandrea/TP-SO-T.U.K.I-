@@ -22,6 +22,7 @@
 typedef struct {
 	char *operacion;
 	int cantParametros;
+	int id;
 } t_identificador;
 
 typedef struct {
@@ -44,12 +45,39 @@ typedef enum {
     BLOCKED,
     EXIT
 } Estado;
+
+typedef enum {
+    CONTINUAR,
+    FIN,
+	DESALOJAR,
+	BLOQUEAR
+
+} estado_ejec;
+
+typedef enum {
+    SET,
+    MOV_OUT,
+    WAIT,
+    IO,
+	SIGNAL,
+	MOV_IN,
+	F_OPEN,
+	YIELD,
+	F_TRUNCATE,
+	F_SEEK,
+	CREATE_SEGMENT,
+	F_WRITE,
+	F_READ,
+	DELETE_SEGMENT,
+	F_CLOSE,
+	EXT
+} operacion;
 typedef struct {
     int pid;
     t_list* instrucciones;
     int pc;
     t_registros* registros;
-    Estado estado;
+    estado_ejec estado_ejec;
     char* motivo;
     // implementar los otros xd
 } t_pcb;
@@ -61,6 +89,7 @@ void logearInstrucciones(t_list* instrucciones, t_log* logger);
 
 t_registros* inicializarRegistros();
 
+int id(char * instruccion);
 int cantParametros(char *instruccion);
 t_list* listaAInstrucciones(t_list*);
 
