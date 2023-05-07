@@ -81,16 +81,23 @@ int escucharCPU(){
 
 				switch (cod_op) {
 
-						case EXIT: //TODO
+						case PROGRAMA: //TODO
 							pcb = recibir_proceso(socket_cliente);
-							log_info(logger, "Me llego un PCB en exit\n");
-							log_info(logger, "Aviso a memoria para liberar\n");
-							//liberarRecurso(PCB);
-							log_info(logger, "Libero memoria\n");
-							//avisoConsolaLiberar();
-							log_info(logger, "Aviso consola\n");
-							//send(socket_cliente, &RESULT_OK, sizeof(int), NULL);
 
+							switch (pcb -> estado_ejec) {
+								case FIN:
+									log_info(logger, "Me llego un PCB en exit\n");
+									log_info(logger, "Aviso a memoria para liberar\n");
+									//liberarRecurso(PCB);
+									log_info(logger, "Libero memoria\n");
+									//avisoConsolaLiberar();
+									log_info(logger, "Aviso consola\n");
+									//send(socket_cliente, &RESULT_OK, sizeof(int), NULL);
+									break;
+								case DESALOJAR:
+									log_info(logger, "Me llego un PCB que se desalojo\n");
+									break;
+							}
 
 							break;
 						case -1:

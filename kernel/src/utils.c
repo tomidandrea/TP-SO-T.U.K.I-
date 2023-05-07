@@ -30,7 +30,6 @@ t_pcb* crearPCB(t_list* listaInstrucciones){
 	strcpy(pcb->registros->RBX, "0");
 	strcpy(pcb->registros->RCX, "0");
 	strcpy(pcb->registros->RDX, "0");
-    pcb->estado = NEW;
 
     return pcb;
 }

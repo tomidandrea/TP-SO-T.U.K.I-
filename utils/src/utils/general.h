@@ -37,20 +37,22 @@ typedef struct {
 } t_registros;
 
 // TODO: esto si no se usa volarlo, Aclaracion: Estaba en utils del kernel, lo movi a utils
+
 typedef enum {
-    NEW,
-    READY,
-    EXEC,
-    BLOCKED,
-    EXIT
-} Estado;
+    CONTINUAR,
+    FIN,
+	DESALOJAR,
+	BLOQUEAR
+
+} estado_ejec;
+
 typedef struct {
 	//TODO: Borrar estado del PCB
     int pid;
     t_list* instrucciones;
     int pc;
     t_registros* registros;
-    Estado estado;
+    estado_ejec estado_ejec;
     char* motivo;
     // implementar los otros xd
 } t_pcb;

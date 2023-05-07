@@ -183,3 +183,50 @@ int entra_en_registro(char*registro,char*valor) {
 }
 
 
+void enviar_pcb(t_pcb* proceso, int conexion){
+
+	char* operacion;
+	t_paquete *paquete = crear_paquete(PROCESO);
+	int op_tamanio = 0;
+	t_instruccion* inst = malloc(sizeof(t_instruccion));
+	int cant = list_size(proceso->instrucciones);
+	int cant_parametros = 0;
+
+	agregar_valor_estatico(paquete, &(proceso -> pid));
+	agregar_valor_estatico(paquete, &(proceso -> pc));
+	agregar_valor_estatico(paquete, &(proceso->estado_ejec));
+	agregar_a_paquete(paquete, proceso -> registros->AX, 4);
+	agregar_a_paquete(paquete, proceso -> registros->BX, 4);
+	agregar_a_paquete(paquete, proceso -> registros->CX, 4);
+	agregar_a_paquete(paquete, proceso -> registros->DX, 4);
+	agregar_a_paquete(paquete, proceso -> registros->EAX, 8);
+	agregar_a_paquete(paquete, proceso -> registros->EBX, 8);
+	agregar_a_paquete(paquete, proceso -> registros->ECX, 8);
+	agregar_a_paquete(paquete, proceso -> registros->EDX, 8);
+	agregar_a_paquete(paquete, proceso -> registros->RAX, 16);
+	agregar_a_paquete(paquete, proceso -> registros->RBX, 16);
+	agregar_a_paquete(paquete, proceso -> registros->RCX, 16);
+	agregar_a_paquete(paquete, proceso -> registros->RDX, 16);
+
+	//TODO: tabla de segmentos
+
+	for(int i = 0;i<cant;i++) {
+
+	    inst = list_get(proceso -> instrucciones,i);
+	    operacion = string_duplicate(inst -> instruccion);
+	    op_tamanio = strlen(operacion)+1;
+
+	    agregar_a_paquete(paquete,operacion,op_tamanio);
+
+	    cant_parametros = cantParametros(operacion);
+	    for(int i=0; i<cant_parametros; i++) {
+	    	agregar_a_paquete(paquete,inst->parametros[i],strlen(inst->parametros[i])+1);
+	    }
+
+	}
+	enviar_paquete(paquete,conexion);                // serializa el paquete y lo envia
+
+	eliminar_paquete(paquete);                //elimina el paquete y lo que contiene
+
+}
+

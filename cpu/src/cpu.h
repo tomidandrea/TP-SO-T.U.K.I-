@@ -14,13 +14,6 @@
 #include <utils/sockets.h>
 
 
-typedef enum {
-    CONTINUAR,
-    FIN,
-	DESALOJAR,
-	BLOQUEAR
-
-} estado_ejec;
 /*
 typedef struct {
 	char AX[4], BX[4], CX[4], DX[4];
@@ -58,5 +51,6 @@ int requiere_memoria(char* instruccion);
 estado_ejec execute(t_instruccion* instruccion_ejecutar, int pid);
 void ejecutar_set(char* registro, char* valor);
 int entra_en_registro(char*registro,char*valor);
+void enviar_pcb(t_pcb*, int);
 
 #endif /* SRC_CPU_H_ */
