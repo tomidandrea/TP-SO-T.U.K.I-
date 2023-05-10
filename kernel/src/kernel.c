@@ -23,7 +23,6 @@ int main(int argc, char* argv[]) {
 
 	// Hilo que atiende consolas
 
-		crearEscucharCPU();
 		crearEscucharConsolas();
 		crearAgregarReady();
 		crearPlanificar();

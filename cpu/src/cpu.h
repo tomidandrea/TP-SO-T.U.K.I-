@@ -42,6 +42,8 @@ typedef struct {
 
 } t_segmento;
 
+t_pcb* inicializar_pcb();
+t_pcb* recibir_proceso(int socket_cliente);
 void recibir_variable(int* variable, t_buffer* buffer,int* desplazamiento);
 void actualizar_registros(t_pcb *pcb, t_list*lista_registros);
 estado_ejec realizar_ciclo_instruccion(t_pcb * pcb);

@@ -21,7 +21,6 @@ typedef struct {
 t_pcb* crearPCB(t_list* listaInstrucciones);
 
 void inicializarSemoforos();
-void crearEscucharCPU();
 void crearEscucharConsolas();
 void crearAgregarReady();
 void crearPlanificar();
