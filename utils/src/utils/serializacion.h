@@ -33,6 +33,7 @@ typedef struct {
 void* serializar_paquete(t_paquete*, int);
 t_paquete* crear_paquete(op_code);
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
+void agregar_valor_estatico(t_paquete* paquete, int* valor);
 void eliminar_paquete(t_paquete* paquete);
 
 #endif /* SRC_UTILS_SERIALIZACION_H_ */

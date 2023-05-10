@@ -13,7 +13,6 @@
 #include <utils/general.h>
 #include <utils/sockets.h>
 
-
 /*
 typedef struct {
 	char AX[4], BX[4], CX[4], DX[4];
@@ -45,7 +44,8 @@ typedef struct {
 t_pcb* inicializar_pcb();
 t_pcb* recibir_proceso(int socket_cliente);
 void recibir_variable(int* variable, t_buffer* buffer,int* desplazamiento);
-void actualizar_registros(t_pcb *pcb, t_list*lista_registros);
+void actualizar_registros_cpu(t_pcb *pcb, t_list*lista_registros);
+void actualizar_registros_pcb(t_pcb *pcb);
 estado_ejec realizar_ciclo_instruccion(t_pcb * pcb);
 t_instruccion* fetch(t_list* instrucciones, uint32_t pc);
 int decode(char* instruccion);
@@ -53,6 +53,6 @@ int requiere_memoria(char* instruccion);
 estado_ejec execute(t_instruccion* instruccion_ejecutar, int pid);
 void ejecutar_set(char* registro, char* valor);
 int entra_en_registro(char*registro,char*valor);
-void enviar_pcb(t_pcb*, int);
+void enviar_pcb(t_pcb* proceso, int conexion);
 
 #endif /* SRC_CPU_H_ */

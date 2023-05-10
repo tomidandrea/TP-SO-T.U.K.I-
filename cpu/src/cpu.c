@@ -18,7 +18,6 @@ int main(int argc, char* argv[]) {
 	t_socket server_fd = iniciar_servidor(puerto, logger);
 	free(puerto);
 
-	t_socket socket_cliente = malloc(sizeof(int));
 	while(1){
 		t_socket socket_cliente = esperar_cliente(server_fd, logger);
 		if(socket_cliente != -1){
@@ -28,7 +27,9 @@ int main(int argc, char* argv[]) {
 				pcb = recibir_proceso(socket_cliente);
 				estado_ejec estado = realizar_ciclo_instruccion(pcb);
 				log_info(logger, "Enviando pcb a kernel");
-				// TODO enviar_pcb(pcb,estado);
+				actualizar_registros_pcb(pcb);
+				pcb->estado_ejec = estado;
+				enviar_pcb(pcb,socket_cliente);
 
 			} else {
 				send(socket_cliente, (void *)RESULT_ERROR, sizeof(int), NULL);
@@ -47,8 +48,6 @@ t_pcb* recibir_proceso(int socket_cliente) {
 		t_list* valores = list_create();
 		int tamanio;
         t_pcb* pcb = inicializar_pcb();
-		int pid;
-		int pc;
 		t_list* instrucciones = list_create();
 
 		//printf("hola, recibiendo proceso\n");
@@ -88,7 +87,7 @@ t_pcb* recibir_proceso(int socket_cliente) {
 
 
 		t_list* lista_registros = list_take_and_remove(valores,12);     // saco los primeros 12 elementos de la lista de strings que serian los 12 registros y los agrego en una nueva lista. En la anterior lista solo queadn los strings de las instrucciones.
-		actualizar_registros(pcb,lista_registros);                          // actualizo los registros de la cpu
+		actualizar_registros_cpu(pcb,lista_registros);                          // actualizo los registros de la cpu
 		instrucciones = listaAInstrucciones(valores);              // paso de lista de strings a lista de instrucciones
 	    pcb->instrucciones = instrucciones;                             // actualizo lista de instrucciones en el pcb
 
@@ -109,7 +108,7 @@ void recibir_variable(int* variable, t_buffer*buffer,int* desplazamiento) {
 	(*desplazamiento)+=sizeof(int);
 }
 
-void actualizar_registros(t_pcb *pcb, t_list* lista_registros) {
+void actualizar_registros_cpu(t_pcb *pcb, t_list* lista_registros) {
 	/*int cant = list_size(lista_registros);
 	for(int i = 0;i<cant;i++) {
 		char aux[4];
@@ -121,28 +120,33 @@ void actualizar_registros(t_pcb *pcb, t_list* lista_registros) {
 		log_info(logger, "tamanio: %d \n", sizeof(aux));
 	}*/
 	strcpy(registros->AX, (char *) list_get(lista_registros,0));
-	strcpy(pcb->registros->AX,registros->AX);
 	strcpy(registros->BX , (char *) list_get(lista_registros,1));
-	strcpy(pcb->registros->BX, registros->BX);
 	strcpy(registros->CX, list_get(lista_registros,2));
-	strcpy(pcb->registros->CX, registros->CX);
 	strcpy(registros->DX, list_get(lista_registros,3));
-	strcpy(pcb->registros->DX, registros->DX);
 	strcpy(registros->EAX, list_get(lista_registros,4));
-	strcpy(pcb->registros->EAX, registros->EAX);
 	strcpy(registros->EBX, list_get(lista_registros,5));
-	strcpy(pcb->registros->EBX, registros->EBX);
 	strcpy(registros->ECX, list_get(lista_registros,6));
-	strcpy(pcb->registros->ECX, registros->ECX);
 	strcpy(registros->EDX, list_get(lista_registros,7));
-	strcpy(pcb->registros->EDX, registros->EDX);
 	strcpy(registros->RAX,list_get(lista_registros,8));
-	strcpy(pcb->registros->RAX, registros->RAX);
 	strcpy(registros->RBX, list_get(lista_registros,9));
-	strcpy(pcb->registros->RBX, registros->RBX);
 	strcpy(registros->RCX, list_get(lista_registros,10));
-	strcpy(pcb->registros->RCX, registros->RCX);
 	strcpy(registros->RDX, list_get(lista_registros,11));
+}
+
+
+void actualizar_registros_pcb(t_pcb *pcb) {
+
+	strcpy(pcb->registros->AX,registros->AX);
+	strcpy(pcb->registros->BX, registros->BX);
+	strcpy(pcb->registros->CX, registros->CX);
+	strcpy(pcb->registros->DX, registros->DX);
+	strcpy(pcb->registros->EAX, registros->EAX);
+	strcpy(pcb->registros->EBX, registros->EBX);
+	strcpy(pcb->registros->ECX, registros->ECX);
+	strcpy(pcb->registros->EDX, registros->EDX);
+	strcpy(pcb->registros->RAX, registros->RAX);
+	strcpy(pcb->registros->RBX, registros->RBX);
+	strcpy(pcb->registros->RCX, registros->RCX);
 	strcpy(pcb->registros->RDX, registros->RDX);
 }
 
@@ -202,16 +206,16 @@ int requiere_memoria(char* instruccion) {
 
 estado_ejec execute(t_instruccion* instruccion_ejecutar, int pid){
 
-	switch (instruccion_ejecutar->instruccion[0]) {
-		case 'S':
+	switch (id(instruccion_ejecutar->instruccion)) {
+		case SET:
 			 log_info(logger, "PID: %d - Ejecutando: %s - %s %s", pid, instruccion_ejecutar->instruccion, instruccion_ejecutar->parametros[0], instruccion_ejecutar->parametros[1]);
 			 ejecutar_set(instruccion_ejecutar->parametros[0], instruccion_ejecutar->parametros[1]);
 			 return CONTINUAR;
-		case 'Y':
+		case YIELD:
 			log_info(logger,"PID: %d - Ejecutando: %s - ", pid, instruccion_ejecutar-> instruccion);
 			return DESALOJAR;
 
-		case 'E':
+		case EXT:
 			log_info(logger,"PID: %d - Ejecutando: %s - ", pid, instruccion_ejecutar-> instruccion);
 			return FIN;
 		default:
@@ -330,4 +334,3 @@ void enviar_pcb(t_pcb* proceso, int conexion){
 	eliminar_paquete(paquete);                //elimina el paquete y lo que contiene
 
 }
-

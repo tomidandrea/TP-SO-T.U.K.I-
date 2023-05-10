@@ -1,9 +1,9 @@
 #include <utils/general.h>
 
 static t_identificador tablaIdentificadores[] = {
-        {"SET",2},{"MOV_OUT",2}, {"WAIT",1}, {"I/O",1}, {"SIGNAL",1}, {"MOV_IN",2},
-		{"F_OPEN",1},{"YIELD",0},{"F_TRUNCATE",2},{"F_SEEK",2},{"CREATE_SEGMENT",2},
-		{"F_WRITE",3},{"F_READ",3},{"DELETE_SEGMENT",1},{"F_CLOSE",1},{"EXIT",0}
+        {"SET",2,SET},{"MOV_OUT",2,MOV_OUT}, {"WAIT",1,WAIT}, {"I/O",1,3}, {"SIGNAL",1,SIGNAL}, {"MOV_IN",2,MOV_IN},
+		{"F_OPEN",1,F_OPEN},{"YIELD",0,YIELD},{"F_TRUNCATE",2,F_TRUNCATE},{"F_SEEK",2,F_SEEK},{"CREATE_SEGMENT",2,CREATE_SEGMENT},
+		{"F_WRITE",3,F_WRITE},{"F_READ",3,F_READ},{"DELETE_SEGMENT",1,DELETE_SEGMENT},{"F_CLOSE",1,F_CLOSE},{"EXIT",0,EXT}
 };
 
 void logearInstrucciones(t_list* instrucciones, t_log* logger){
@@ -39,6 +39,16 @@ t_registros* inicializarRegistros(){
 	registros->RDX = malloc(16);*/
 
 	return registros;
+}
+
+int id(char * instruccion) {
+	for(int i=0;i < CANT_IDENTIFICADORES;i++){
+	        t_identificador sym;
+	        sym = tablaIdentificadores[i];
+	        if(strcmp(sym.operacion,instruccion)==0) return sym.id;
+	    }
+	    printf("error operacion invalida\n");
+	    exit(EXIT_FAILURE);
 }
 
 int cantParametros(char* instruccion){
