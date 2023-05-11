@@ -23,21 +23,7 @@ void logearInstrucciones(t_list* instrucciones, t_log* logger){
 }
 
 t_registros* inicializarRegistros(){
-	//registros = malloc(4*4+4*8+4*16);
 	t_registros* registros = malloc(sizeof(t_registros));
-	/*registros->AX = malloc(4);
-	registros->BX = malloc(4);
-	registros->CX = malloc(4);
-	registros->DX = malloc(4);
-	registros->EAX = malloc(8);
-	registros->EBX = malloc(8);
-	registros->ECX = malloc(8);
-	registros->EDX = malloc(8);
-	registros->RAX = malloc(16);
-	registros->RBX = malloc(16);
-	registros->RCX = malloc(16);
-	registros->RDX = malloc(16);*/
-
 	return registros;
 }
 
@@ -99,15 +85,25 @@ t_config* iniciar_config (char* path){
 	return nuevo_config;
 }
 
-void liberar_instruccion(t_instruccion* inst) {
+void liberar_instrucciones(t_list* instrucciones) {
 	int i;
+	int cantInstrucciones = list_size(instrucciones);
+	for (i = 0; i < cantInstrucciones; ++i) {
+		liberar_instruccion(list_get(instrucciones, i));
+	}
+}
+
+void liberar_instruccion(t_instruccion* inst){
 	int cant = cantParametros(inst->instruccion);
-	for(i=0; i<cant; ++i)
-		free(inst->parametros[i]);
-	free(inst->parametros);
+	liberar_parametros(inst->parametros, cant);
 	free(inst->instruccion);
-	//string_array_destroy(instruccion->parametros);
 	free(inst);
+}
+
+void liberar_parametros(char** parametros, int cantidadParametros){
+	for(int j=0; j<cantidadParametros; ++j)
+			free(parametros[j]);
+	free(parametros);
 }
 
 char* copiar(char* palabra){

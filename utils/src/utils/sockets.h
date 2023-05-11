@@ -9,18 +9,13 @@
 #include<commons/collections/list.h>
 #include<utils/serializacion.h>
 
-
 typedef int t_socket;
-#define TAMANIO_PUERTO 6
-#define TAMANIO_IP 16
-#define TAMANIO_PATH 20
 
 // Utils cliente
 t_socket crear_conexion(char*, char*, t_log*);
 void enviar_mensaje(char*, int);
 void enviar_paquete(t_paquete*, int);
 void liberar_conexion(int);
-
 
 //Utils server
 t_socket iniciar_servidor(char* , t_log*);

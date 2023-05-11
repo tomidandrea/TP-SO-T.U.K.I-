@@ -98,7 +98,10 @@ t_list* listaAInstrucciones(t_list*);
 
 t_log* iniciar_logger(char* file, char *process_name, bool is_active_console, t_log_level level);
 t_config* iniciar_config (char*);
+
+void liberar_instrucciones(t_list* instrucciones);
 void liberar_instruccion(t_instruccion* instruccion);
-char* copiar(char* palabra);
+void liberar_parametros(char** parametros, int cantidadParametros);
+char* copiar(char* palabra); //hacemos malloc aca dentro
 
 #endif /* SRC_UTILS_GENERAL_H_ */
