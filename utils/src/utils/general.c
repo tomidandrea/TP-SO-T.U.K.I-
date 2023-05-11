@@ -8,7 +8,7 @@ static t_identificador tablaIdentificadores[] = {
 
 void logearInstrucciones(t_list* instrucciones, t_log* logger){
 	int cant = list_size(instrucciones);
-	        for(int i = 0;i<cant;i++) {
+		for(int i = 0;i<cant;i++) {
 	    	t_instruccion* inst = list_get(instrucciones,i);
 
 	        log_info(logger, "Instruccion: %s", inst->instruccion);
@@ -97,4 +97,22 @@ t_config* iniciar_config (char* path){
 	}
 
 	return nuevo_config;
+}
+
+void liberar_instruccion(t_instruccion* inst) {
+	int i;
+	int cant = cantParametros(inst->instruccion);
+	for(i=0; i<cant; ++i)
+		free(inst->parametros[i]);
+	free(inst->parametros);
+	free(inst->instruccion);
+	//string_array_destroy(instruccion->parametros);
+	free(inst);
+}
+
+char* copiar(char* palabra){
+	char* tmp = malloc(sizeof(char) * strlen(palabra) + 1);
+	memcpy(tmp, palabra, strlen(palabra));
+	tmp[strlen(palabra)] = '\0';
+	return tmp;
 }

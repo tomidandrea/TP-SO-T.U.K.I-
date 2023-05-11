@@ -1,11 +1,9 @@
 #include <consola.h>
 
-
-
 void enviar_programa(t_list * instrucciones, int conexion) {
 
 	int cant = list_size(instrucciones);                   // saco la cantidad de elementos de la lista para despues poder iterar rn el for hasta esa cantidad
-	char* operacion;                                       // es el nombre de la instruccion (llamado operacion)
+	char* operacion = malloc(TAMANIO_OPERACION);                                       // es el nombre de la instruccion (llamado operacion)
 	int op_tamanio = 0;                                    // es el tamaño que ocupa la operacion
 	int cant_parametros = 0;
 	t_instruccion* inst = malloc(sizeof(t_instruccion));   // reservo espacio para la instruccion
@@ -29,6 +27,7 @@ void enviar_programa(t_list * instrucciones, int conexion) {
 
 	enviar_paquete(paquete,conexion);                // serializa el paquete y lo envia
 
+	free(operacion);
 	eliminar_paquete(paquete);                //elimina el paquete y lo que contiene
 
 }

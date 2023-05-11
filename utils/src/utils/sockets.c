@@ -74,7 +74,7 @@ t_socket iniciar_servidor(char* puerto, t_log* logger) //agrego que mande logger
 
 	int socket_servidor;
 
-	struct addrinfo hints, *servinfo, *p;
+	struct addrinfo hints, *servinfo;//, *p;
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;

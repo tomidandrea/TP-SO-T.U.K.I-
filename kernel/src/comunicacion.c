@@ -21,7 +21,8 @@ int escucharConsolas(){
 
 	free(puerto);
 
-	t_socket socket_cliente = malloc(sizeof(int));
+	//t_socket socket_cliente = malloc(sizeof(t_socket));
+	t_socket socket_cliente;
 	while(1){
 	socket_cliente = esperar_cliente(server_fd, logger); //Hace el accept
 
@@ -47,7 +48,7 @@ int escucharConsolas(){
 
 							break;
 						case -1:
-							send(socket_cliente, (void *)RESULT_ERROR, sizeof(int), NULL);
+							send(socket_cliente, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);
 							log_error(logger, "el cliente se desconecto. Terminando servidor");
 							//return EXIT_FAILURE;
 							break;

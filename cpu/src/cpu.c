@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
 				enviar_pcb(pcb,socket_cliente);
 
 			} else {
-				send(socket_cliente, (void *)RESULT_ERROR, sizeof(int), NULL);
+				send(socket_cliente, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);
 				log_error(logger,"No me llego un proceso");
 
 			}

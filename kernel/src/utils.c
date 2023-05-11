@@ -16,6 +16,7 @@ t_pcb* crearPCB(t_list* listaInstrucciones){
 	t_pcb *pcb = malloc(sizeof(t_pcb));
     pcb->pid = ++processID;
     pcb->pc = 0;
+    pcb->estado_ejec = (estado_ejec) NUEVO;
     pcb->instrucciones = list_duplicate(listaInstrucciones);
     pcb->registros = inicializarRegistros();
     strcpy(pcb->registros->AX, "0");
@@ -72,15 +73,14 @@ void inicializarSemoforos(){
 
 void liberarSemoforos(){
 	sem_destroy(&sem_new_a_ready);
+	sem_destroy(&sem_ready);
 	sem_destroy(&sem_grado_multiprogramacion);
-	//TODO: Liberar mutex
+	liberarMutex();
 }
 
-//TODO: creo que esto seria liberar mutex (?
-void liberarMutex(){
+void liberarMutex(){ //Semaforos mutex para acceder a las listas de procesos
 	pthread_mutex_destroy(&mutex_procesos_ready);
 	pthread_mutex_destroy(&mutex_procesos_new);
 	pthread_mutex_destroy(&mutex_procesos_execute);
-
 }
 

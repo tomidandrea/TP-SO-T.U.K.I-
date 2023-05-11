@@ -11,4 +11,6 @@
 void leerParametro(FILE *archivo, int cantParametros,char** parametros);
 void parsear_instrucciones(char* path, t_list* codigo);
 
+void inicializar_instruccion(t_instruccion* inst, int cantidadParametros);
+
 #endif /* SRC_PARSER_H_ */

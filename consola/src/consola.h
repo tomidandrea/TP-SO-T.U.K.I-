@@ -7,7 +7,7 @@
 #include <utils/general.h>
 #include <parser.h>
 
-void logearInstrucciones(t_list* instrucciones, t_log* logger);
 void enviar_programa(t_list* instrucciones, int conexion);
+void liberarEstructuras(void);
 
 #endif

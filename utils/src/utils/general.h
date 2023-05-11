@@ -19,6 +19,8 @@
 #include<commons/string.h>
 #include<utils/serializacion.h>
 
+#define TAMANIO_OPERACION 15 //Tamaño maximo de operacion, así usamos malloc de este tamaño (14 + 1 por el \0)
+
 typedef struct {
 	char *operacion;
 	int cantParametros;
@@ -47,6 +49,7 @@ typedef enum {
 } Estado;
 
 typedef enum {
+	NUEVO,
     CONTINUAR,
     FIN,
 	DESALOJAR,
@@ -95,5 +98,7 @@ t_list* listaAInstrucciones(t_list*);
 
 t_log* iniciar_logger(char* file, char *process_name, bool is_active_console, t_log_level level);
 t_config* iniciar_config (char*);
+void liberar_instruccion(t_instruccion* instruccion);
+char* copiar(char* palabra);
 
 #endif /* SRC_UTILS_GENERAL_H_ */

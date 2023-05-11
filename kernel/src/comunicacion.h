@@ -6,6 +6,6 @@
 #include <semaphore.h>
 
 int escucharConsolas();
-void mandar_pcb_a_CPU();
+void mandar_pcb_a_CPU(t_pcb* proceso);
 
 #endif

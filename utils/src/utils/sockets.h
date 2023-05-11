@@ -9,10 +9,11 @@
 #include<commons/collections/list.h>
 #include<utils/serializacion.h>
 
-//#define PUERTO "34315" // Por ahora solo pruebo con KERNEL_PUERTO
-
 
 typedef int t_socket;
+#define TAMANIO_PUERTO 6
+#define TAMANIO_IP 16
+#define TAMANIO_PATH 20
 
 // Utils cliente
 t_socket crear_conexion(char*, char*, t_log*);
