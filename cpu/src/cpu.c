@@ -226,25 +226,27 @@ estado_ejec execute(t_instruccion* instruccion_ejecutar, int pid){
 	return CONTINUAR;
 }
 
-void ejecutar_set(char* registro, char* valor) {
+void ejecutar_set(char* registro, char* valor) {          // habria que ver que pasa cuando hay un error al ejecutar set (avisar al kernel para que finalice el proceso??)
 
 	int tamanio = strlen(valor);
 
-	if(entra_en_registro(registro,valor)) {
-	if(tamanio <= 4) {
+	if(tamanio == 4) {
 
 		switch (registro[0]) {
 		      case 'A':  strcpy(registros->AX, valor);
 		                 break;
-		      case 'B' : strcpy(registros->BX, valor);
+		      case 'B':  strcpy(registros->BX, valor);
 		                 break;
 		      case 'C':  strcpy(registros->CX, valor);
 		                 break;
-		      case 'D' : strcpy(registros->DX, valor);
+		      case 'D':  strcpy(registros->DX, valor);
+		                 break;
+		      default :  log_error(logger,"Error al ejecutar SET: el tamanio del valor a asignar es de 4 bytes pero el registro no es de dicho tamanio");
 		                 break;
 		}
 	}
-	else if (tamanio <= 8) {
+	else if (tamanio == 8) {
+
 		switch (registro[1]) {
 			 case 'A':  strcpy(registros->EAX, valor);
 			            break;
@@ -254,9 +256,12 @@ void ejecutar_set(char* registro, char* valor) {
 			            break;
 			 case 'D':  strcpy(registros->EDX, valor);
 			            break;
+			 default :  log_error(logger,"Error al ejecutar SET: el tamanio del valor a asignar es de 8 bytes pero el registro no es de dicho tamanio");
+			 		    break;
 		}
 	}
-	else {
+	else if (tamanio == 16) {
+
 		switch (registro[1]) {
 			 case 'A':  strcpy(registros->RAX, valor);
 			            break;
@@ -266,26 +271,15 @@ void ejecutar_set(char* registro, char* valor) {
 		                break;
 		     case 'D':  strcpy(registros->RDX, valor);
 		                break;
+		     default :  log_error(logger,"Error al ejecutar SET: el tamanio del valor a asignar es de 16 bytes pero el registro no es de dicho tamanio");
+		                break;
 		}
 	}
-  }
    else {
-		log_error(logger,"No es posible almacenar %s en el registro %s ya que supera el limite de capacidad", valor,registro);
+		log_error(logger,"Error al ejecutar SET: el valor a asignar no es de 4/8/16 bytes");
   }
 }
 
-
-
-int entra_en_registro(char*registro,char*valor) {
-
-	int tamanio_valor = strlen(valor);
-	int caracteres= strlen(registro);
-
-	if ((tamanio_valor >4 && caracteres == 2) || (tamanio_valor >8 && registro[0] != 'R') || tamanio_valor > 16 )
-		return 0;
-	else
-		return 1;
-}
 
 
 void enviar_pcb(t_pcb* proceso, int conexion){

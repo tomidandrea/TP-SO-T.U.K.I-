@@ -52,7 +52,6 @@ int decode(char* instruccion);
 int requiere_memoria(char* instruccion);
 estado_ejec execute(t_instruccion* instruccion_ejecutar, int pid);
 void ejecutar_set(char* registro, char* valor);
-int entra_en_registro(char*registro,char*valor);
 void enviar_pcb(t_pcb* proceso, int conexion);
 
 #endif /* SRC_CPU_H_ */
