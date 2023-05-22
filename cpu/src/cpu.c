@@ -8,7 +8,6 @@ uint32_t RESULT_ERROR = 1;
 
 int main(int argc, char* argv[]) {
 
-	t_list* lista = list_create(); //ver si es necesaria
 	logger = iniciar_logger("cpu.log", "CPU", true, LOG_LEVEL_DEBUG);
 	config = iniciar_config(argv[1]);
 	char* puerto = config_get_string_value(config,"PUERTO_ESCUCHA");
@@ -25,10 +24,9 @@ int main(int argc, char* argv[]) {
 			int cod_op = recibir_operacion(socket_cliente);
 			if(cod_op == PROCESO) {
 				pcb = recibir_proceso(socket_cliente);
-				estado_ejec estado = realizar_ciclo_instruccion(pcb);
+				realizar_ciclo_instruccion(pcb);
 				log_info(logger, "Enviando pcb a kernel");
 				actualizar_registros_pcb(pcb);
-				pcb->estado_ejec = estado;
 				enviar_pcb(pcb,socket_cliente);
 
 			} else {
@@ -164,20 +162,19 @@ void recibir_registros(t_buffer*buffer, int* desplazamiento, int tamanio_registr
 */
 
 
-estado_ejec realizar_ciclo_instruccion(t_pcb * pcb){
+void realizar_ciclo_instruccion(t_pcb * pcb){
 	estado_ejec estado = CONTINUAR;
 	//t_segmento* direc_fisica;
 
-	while (estado == CONTINUAR){ // Solo continua el ciclo con SET, MOV_IN y MOV_OUT
+	while (estado == CONTINUAR){ // Solo continua el ciclo con SET, MOV_IN y MOV_OUT (si no hay un error)
 		t_instruccion* instruccion_ejecutar = fetch(pcb->instrucciones, pcb->pc); // busco la instruccion que apunta el pc
 		if(decode(instruccion_ejecutar->instruccion)){ //decode lo usamos para sabEr si la instrccion requiere memoria y para hacer el RETARDO de SET
 			//int direc_logica = direc_logica(instruccion_ejecutar);
 			//direc_fisica = traducir_direcciones(direc_logica);
 		}
-		estado = execute(instruccion_ejecutar,pcb->pid); //execute devuelve el estado de ejecucion de la instruccion
+		estado = execute(instruccion_ejecutar,pcb); //execute devuelve el estado de ejecucion de la instruccion
 		pcb->pc++;
 	}
-	return estado;
 }
 
 t_instruccion* fetch(t_list* instrucciones, uint32_t pc){
@@ -204,29 +201,52 @@ int requiere_memoria(char* instruccion) {
      return 0;
 }
 
-estado_ejec execute(t_instruccion* instruccion_ejecutar, int pid){
+estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb* pcb){
 
 	switch (id(instruccion_ejecutar->instruccion)) {
 		case SET:
-			 log_info(logger, "PID: %d - Ejecutando: %s - %s %s", pid, instruccion_ejecutar->instruccion, instruccion_ejecutar->parametros[0], instruccion_ejecutar->parametros[1]);
-			 ejecutar_set(instruccion_ejecutar->parametros[0], instruccion_ejecutar->parametros[1]);
-			 return CONTINUAR;
+			 log_info(logger, "PID: %d - Ejecutando: %s - %s %s", pcb->pid, instruccion_ejecutar->instruccion, instruccion_ejecutar->parametros[0], instruccion_ejecutar->parametros[1]);
+			 estado_ejec estado_set = ejecutar_set(instruccion_ejecutar->parametros[0], instruccion_ejecutar->parametros[1]);
+			 if(estado_set == ERROR)
+				 pcb->motivo = EXT;
+			 return estado_set;
+
 		case YIELD:
-			log_info(logger,"PID: %d - Ejecutando: %s - ", pid, instruccion_ejecutar-> instruccion);
-			return DESALOJAR;
+			log_info(logger,"PID: %d - Ejecutando: %s - ", pcb->pid, instruccion_ejecutar-> instruccion);
+			pcb->motivo = YIELD;
+			return FIN;
 
 		case EXT:
-			log_info(logger,"PID: %d - Ejecutando: %s - ", pid, instruccion_ejecutar-> instruccion);
+			log_info(logger,"PID: %d - Ejecutando: %s - ", pcb->pid, instruccion_ejecutar-> instruccion);
+			pcb->motivo = EXT;
 			return FIN;
+
+		case IO:
+			log_info(logger,"PID: %d - Ejecutando: %s - ", pcb->pid, instruccion_ejecutar-> instruccion);
+			pcb->motivo = IO;
+			//TODO ver si tengo que tener el parametro de la instruccion en el pcb que envio a kernel (que indica el tiempo de bloqueo) o lo podemos buscar directo desde el kernel haciendo un listget pc-1  de la lista de instrucciones (obtengo la instruccion anterior y de ahi saco los parametros)
+			return FIN;
+
+		//TODO ver lo mismo del parametro que pasa en IO para WAIT Y SIGNAL (en este caso el parametro es un recurso)
+		case WAIT:
+			log_info(logger,"PID: %d - Ejecutando: %s - ", pcb->pid, instruccion_ejecutar-> instruccion);
+			pcb->motivo = WAIT;
+			return FIN;
+
+		case SIGNAL:
+			log_info(logger,"PID: %d - Ejecutando: %s - ", pcb->pid, instruccion_ejecutar-> instruccion);
+		    pcb->motivo = SIGNAL;
+			return FIN;
+
 		default:
 			log_error(logger,"Hubo un error en el ciclo de instruccion");
-			break;
+			return FIN;
 	}
 
 	return CONTINUAR;
 }
 
-void ejecutar_set(char* registro, char* valor) {          // habria que ver que pasa cuando hay un error al ejecutar set (avisar al kernel para que finalice el proceso??)
+estado_ejec ejecutar_set(char* registro, char* valor) {
 
 	int tamanio = strlen(valor);
 
@@ -241,8 +261,8 @@ void ejecutar_set(char* registro, char* valor) {          // habria que ver que 
 		                 break;
 		      case 'D':  strcpy(registros->DX, valor);
 		                 break;
-		      default :  log_error(logger,"Error al ejecutar SET: el tamanio del valor a asignar es de 4 bytes pero el registro no es de dicho tamanio");
-		                 break;
+		      default :  log_error(logger,"Error al ejecutar SET: el tamanio del valor a asignar es de 4 bytes pero el registro no es de dicho tamanio");		                 return FIN;
+                         return ERROR;
 		}
 	}
 	else if (tamanio == 8) {
@@ -257,7 +277,7 @@ void ejecutar_set(char* registro, char* valor) {          // habria que ver que 
 			 case 'D':  strcpy(registros->EDX, valor);
 			            break;
 			 default :  log_error(logger,"Error al ejecutar SET: el tamanio del valor a asignar es de 8 bytes pero el registro no es de dicho tamanio");
-			 		    break;
+			            return ERROR;
 		}
 	}
 	else if (tamanio == 16) {
@@ -272,12 +292,15 @@ void ejecutar_set(char* registro, char* valor) {          // habria que ver que 
 		     case 'D':  strcpy(registros->RDX, valor);
 		                break;
 		     default :  log_error(logger,"Error al ejecutar SET: el tamanio del valor a asignar es de 16 bytes pero el registro no es de dicho tamanio");
-		                break;
+		                return ERROR;
 		}
 	}
    else {
 		log_error(logger,"Error al ejecutar SET: el valor a asignar no es de 4/8/16 bytes");
+		return ERROR;
   }
+
+	return CONTINUAR;
 }
 
 
@@ -293,7 +316,7 @@ void enviar_pcb(t_pcb* proceso, int conexion){
 
 	agregar_valor_estatico(paquete, &(proceso -> pid));
 	agregar_valor_estatico(paquete, &(proceso -> pc));
-	agregar_valor_estatico(paquete, &(proceso->estado_ejec));
+	agregar_valor_estatico(paquete, &(proceso -> motivo));
 	agregar_a_paquete(paquete, proceso -> registros->AX, 4);
 	agregar_a_paquete(paquete, proceso -> registros->BX, 4);
 	agregar_a_paquete(paquete, proceso -> registros->CX, 4);

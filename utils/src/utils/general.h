@@ -48,10 +48,8 @@ typedef enum {
 
 typedef enum {
     CONTINUAR,
+	ERROR,
     FIN,
-	DESALOJAR,
-	BLOQUEAR
-
 } estado_ejec;
 
 typedef enum {
@@ -77,8 +75,7 @@ typedef struct {
     t_list* instrucciones;
     int pc;
     t_registros* registros;
-    estado_ejec estado_ejec;
-    char* motivo;
+    operacion motivo;
     // implementar los otros xd
 } t_pcb;
 

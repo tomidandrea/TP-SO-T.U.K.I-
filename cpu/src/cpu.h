@@ -46,12 +46,12 @@ t_pcb* recibir_proceso(int socket_cliente);
 void recibir_variable(int* variable, t_buffer* buffer,int* desplazamiento);
 void actualizar_registros_cpu(t_pcb *pcb, t_list*lista_registros);
 void actualizar_registros_pcb(t_pcb *pcb);
-estado_ejec realizar_ciclo_instruccion(t_pcb * pcb);
+void realizar_ciclo_instruccion(t_pcb * pcb);
 t_instruccion* fetch(t_list* instrucciones, uint32_t pc);
 int decode(char* instruccion);
 int requiere_memoria(char* instruccion);
-estado_ejec execute(t_instruccion* instruccion_ejecutar, int pid);
-void ejecutar_set(char* registro, char* valor);
+estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb *pcb);
+estado_ejec ejecutar_set(char* registro, char* valor);
 void enviar_pcb(t_pcb* proceso, int conexion);
 
 #endif /* SRC_CPU_H_ */
