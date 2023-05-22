@@ -101,6 +101,22 @@ void actualizar_pcb(t_pcb* proceso) {
 					// actualizo proceso con lo q viene del pcb (PC y registros)
 					log_info(logger, "Recibo contexto pa - PID:%d\n", pcb->pid);
 
+					proceso->pid = pcb->pid;
+					proceso->pc = pcb->pc;
+					proceso->motivo = pcb->motivo;
+					strcpy(proceso->registros->AX, pcb->registros->AX);
+					strcpy(proceso->registros->BX, pcb->registros->BX);
+					strcpy(proceso->registros->CX, pcb->registros->CX);
+					strcpy(proceso->registros->DX, pcb->registros->DX);
+					strcpy(proceso->registros->EAX, pcb->registros->EAX);
+					strcpy(proceso->registros->EBX, pcb->registros->EBX);
+					strcpy(proceso->registros->ECX, pcb->registros->ECX);
+					strcpy(proceso->registros->EDX, pcb->registros->EDX);
+					strcpy(proceso->registros->RAX, pcb->registros->RAX);
+					strcpy(proceso->registros->RBX, pcb->registros->RBX);
+					strcpy(proceso->registros->RCX, pcb->registros->RCX);
+					strcpy(proceso->registros->RDX, pcb->registros->RDX);
+
 				} else {
 					log_error(logger,"No me llego un proceso");
 				}

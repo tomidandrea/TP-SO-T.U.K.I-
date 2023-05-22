@@ -27,11 +27,38 @@ void planificar(){
 			proceso = planificarFIFO();
 			log_info(logger, "Termine de planificar\n");
 		}
-		log_info(logger, "PID:%d \n", proceso->pid);
+
 		mandar_pcb_a_CPU(proceso);
-		log_info(logger, "Mande a cpu\n");
+		log_info(logger, "Proceso enviado a cpu\n");
+
+		// RCV de cpu
 		actualizar_pcb(proceso);
 
+		// TODO: Quitar proceso de procesosExecute (proceso en running)
+
+		switch(proceso->motivo){
+			case EXT:
+				log_info(logger, "Salimos como unos campeones\n");
+				// Pasar a estado EXIT
+				// liberar_recursos();
+				// avisar_fin_a_memoria();
+				// avisar_fin_a_consola();
+				break;
+			case YIELD:
+				log_info(logger, "Hubo un YIELD\n");
+
+				// Lo agrego al final de la lista de ready
+
+				pthread_mutex_lock(&mutex_procesos_ready);
+				list_add(procesosReady, proceso);
+				pthread_mutex_unlock(&mutex_procesos_ready);
+
+				// Si algoritmo == HRRN -> calcular_estimado();
+				break;
+			default:
+				log_info(logger, "No se implemento xd\n");
+				break;
+		}
 	}
 	free(algoritmo);
 }

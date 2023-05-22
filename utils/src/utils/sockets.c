@@ -184,7 +184,7 @@ t_pcb* recibir_contexto(int socket_cliente) {
 
 		buffer = recibir_buffer(&size, socket_cliente);
 
-		//slo para confirmar q el proceso sea el correcto
+		// Pasamos el PID solo para confirmación del proceso.
 		memcpy(&(pcb->pid), buffer + desplazamiento, sizeof(int));
 		desplazamiento+=sizeof(int);
 
@@ -194,12 +194,12 @@ t_pcb* recibir_contexto(int socket_cliente) {
 		memcpy(&(pcb->motivo), buffer + desplazamiento, sizeof(int));
 		desplazamiento+=sizeof(int);
 
-		while(desplazamiento < size)                                           //recibo todos los registros y las instrucciones y los meto en una lista de strings
+		while(desplazamiento < size)
 		{
 			memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
 			desplazamiento+=sizeof(int);
 			char* valor = malloc(tamanio);
-			memcpy(valor, buffer+desplazamiento, tamanio); //rompe aca
+			memcpy(valor, buffer+desplazamiento, tamanio);
 			desplazamiento+=tamanio;
 			list_add(valores, valor);
         }
