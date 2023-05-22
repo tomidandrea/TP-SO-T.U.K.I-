@@ -8,6 +8,7 @@
 #include<commons/log.h>
 #include<commons/collections/list.h>
 #include<utils/serializacion.h>
+#include<utils/general.h>
 
 typedef int t_socket;
 
@@ -24,5 +25,7 @@ int recibir_operacion(int);
 void* recibir_buffer(int*, int);
 void recibir_mensaje(int, t_log*);
 t_list* recibir_paquete(int);
+t_pcb* inicializar_pcb();
+t_pcb* recibir_contexto(int);
 
 #endif

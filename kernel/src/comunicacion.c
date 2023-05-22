@@ -3,10 +3,12 @@
 
 extern t_config* config;
 extern t_log* logger;
+extern t_socket conexionCPU;
 
 extern pthread_mutex_t mutex_procesos_new;
 extern t_list* procesosNew;
 extern sem_t sem_new_a_ready;
+
 
 uint32_t RESULT_OK = 0;
 uint32_t RESULT_ERROR = 1;
@@ -68,12 +70,6 @@ int escucharConsolas(){
 
 
 void mandar_pcb_a_CPU(t_pcb* proceso){
-	char* ip = config_get_string_value(config,"IP_CPU");
-	char* puerto = config_get_string_value(config,"PUERTO_CPU");
-	t_socket conexion = crear_conexion(ip, puerto, logger);
-
-	// esto implementarlo para lo nuestro (copiado de consola)
-
 	char* operacion;
 	t_paquete *paquete = crear_paquete(PROCESO);
 	int op_tamanio = 0;
@@ -113,7 +109,7 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 
 	}
 
-	enviar_paquete(paquete,conexion);                // serializa el paquete y lo envia
+	enviar_paquete(paquete,conexionCPU);                // serializa el paquete y lo envia
 
 	eliminar_paquete(paquete);                //elimina el paquete y lo que contiene
 

@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
 				realizar_ciclo_instruccion(pcb);
 				log_info(logger, "Enviando pcb a kernel");
 				actualizar_registros_pcb(pcb);
-				enviar_pcb(pcb,socket_cliente);
+				enviar_contexto(pcb,socket_cliente);
 
 			} else {
 				send(socket_cliente, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);
@@ -92,14 +92,6 @@ t_pcb* recibir_proceso(int socket_cliente) {
 	    return pcb;
 }
 
-
-t_pcb* inicializar_pcb(){
-	t_pcb* pcb = malloc(sizeof(t_pcb));
-	pcb->instrucciones = list_create();
-	pcb->registros = inicializarRegistros();
-	return pcb;
-}
-
 void recibir_variable(int* variable, t_buffer*buffer,int* desplazamiento) {
 
 	memcpy(&variable, buffer + (*desplazamiento), sizeof(int));
@@ -125,7 +117,7 @@ void actualizar_registros_cpu(t_pcb *pcb, t_list* lista_registros) {
 	strcpy(registros->EBX, list_get(lista_registros,5));
 	strcpy(registros->ECX, list_get(lista_registros,6));
 	strcpy(registros->EDX, list_get(lista_registros,7));
-	strcpy(registros->RAX,list_get(lista_registros,8));
+	strcpy(registros->RAX, list_get(lista_registros,8));
 	strcpy(registros->RBX, list_get(lista_registros,9));
 	strcpy(registros->RCX, list_get(lista_registros,10));
 	strcpy(registros->RDX, list_get(lista_registros,11));
@@ -305,7 +297,7 @@ estado_ejec ejecutar_set(char* registro, char* valor) {
 
 
 
-void enviar_pcb(t_pcb* proceso, int conexion){
+void enviar_contexto(t_pcb* proceso, int conexion){
 
 	char* operacion;
 	t_paquete *paquete = crear_paquete(PROCESO);
@@ -332,20 +324,6 @@ void enviar_pcb(t_pcb* proceso, int conexion){
 
 	//TODO: tabla de segmentos
 
-	for(int i = 0;i<cant;i++) {
-
-	    inst = list_get(proceso -> instrucciones,i);
-	    operacion = string_duplicate(inst -> instruccion);
-	    op_tamanio = strlen(operacion)+1;
-
-	    agregar_a_paquete(paquete,operacion,op_tamanio);
-
-	    cant_parametros = cantParametros(operacion);
-	    for(int i=0; i<cant_parametros; i++) {
-	    	agregar_a_paquete(paquete,inst->parametros[i],strlen(inst->parametros[i])+1);
-	    }
-
-	}
 	enviar_paquete(paquete,conexion);                // serializa el paquete y lo envia
 
 	eliminar_paquete(paquete);                //elimina el paquete y lo que contiene

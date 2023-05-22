@@ -112,3 +112,10 @@ char* copiar(char* palabra){
 	tmp[strlen(palabra)] = '\0';
 	return tmp;
 }
+
+t_pcb* inicializar_pcb(){
+	t_pcb* pcb = malloc(sizeof(t_pcb));
+	pcb->instrucciones = list_create();
+	pcb->registros = inicializarRegistros();
+	return pcb;
+}

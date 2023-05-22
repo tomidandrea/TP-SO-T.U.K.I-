@@ -6,6 +6,7 @@ t_config* config;
 t_list* procesosExecute;
 t_list* procesosReady;
 t_list* procesosNew;
+t_socket conexionCPU;
 
 //todo: mallocs y free para todos los punteros
 
@@ -21,6 +22,7 @@ int main(int argc, char* argv[]) {
     procesosReady = list_create();
     procesosExecute = list_create();
 
+    conexionCPU = crearConexionCPU();
 	// Hilo que atiende consolas
 
 		crearEscucharConsolas();

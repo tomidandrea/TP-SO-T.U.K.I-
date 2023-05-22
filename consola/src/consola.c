@@ -35,8 +35,6 @@ int main(int argc, char** argv) {
     list_destroy(instrucciones);
 
 
-
-    uint32_t result = malloc(sizeof(uint32_t));
     uint32_t result;
     recv(conexion, &result, sizeof(uint32_t), MSG_WAITALL);
     if(result == 0){

@@ -41,7 +41,6 @@ typedef struct {
 
 } t_segmento;
 
-t_pcb* inicializar_pcb();
 t_pcb* recibir_proceso(int socket_cliente);
 void recibir_variable(int* variable, t_buffer* buffer,int* desplazamiento);
 void actualizar_registros_cpu(t_pcb *pcb, t_list*lista_registros);
@@ -52,6 +51,6 @@ int decode(char* instruccion);
 int requiere_memoria(char* instruccion);
 estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb *pcb);
 estado_ejec ejecutar_set(char* registro, char* valor);
-void enviar_pcb(t_pcb* proceso, int conexion);
+void enviar_contexto(t_pcb* proceso, int conexion);
 
 #endif /* SRC_CPU_H_ */

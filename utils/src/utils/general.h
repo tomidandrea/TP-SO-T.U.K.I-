@@ -85,6 +85,8 @@ typedef struct {
 #define CANT_IDENTIFICADORES (sizeof(tablaIdentificadores)/sizeof(t_identificador))
 
 
+
+t_pcb* inicializar_pcb();
 void logearInstrucciones(t_list* instrucciones, t_log* logger);
 
 t_registros* inicializarRegistros();

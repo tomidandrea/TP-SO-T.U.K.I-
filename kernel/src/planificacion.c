@@ -15,6 +15,7 @@ pthread_mutex_t mutex_procesos_execute = PTHREAD_MUTEX_INITIALIZER;
 
 void planificar(){
 	char* algoritmo = malloc(16);
+	t_pcb* proceso;
 	algoritmo = config_get_string_value(config,"ALGORITMO_PLANIFICACION");
 	while (1)
 	{
@@ -23,9 +24,12 @@ void planificar(){
 		log_info(logger, "Empezando a planificar\n");
 		//sem_wait(&sem_ready); // Agrego otro semaforo para que no empiece a planificar por ahora
 		if(strcmp(algoritmo,"FIFO") == 0){
-			planificarFIFO();
+			planificarFIFO(proceso);
 			log_info(logger, "Termine de planificar\n");
 		}
+		mandar_pcb_a_CPU(proceso);
+		log_info(logger, "Mande a cpu\n");
+		actualizar_pcb(proceso);
 
 	}
 	free(algoritmo);
@@ -69,9 +73,7 @@ void pasarAReady(){
 	pthread_mutex_unlock(&mutex_procesos_ready);
 }
 
-void planificarFIFO(){
-
-	t_pcb* proceso = malloc(sizeof(list_get(procesosReady, 0)));
+void planificarFIFO(t_pcb* proceso){
 	proceso = list_remove(procesosReady, 0);
 	pthread_mutex_lock(&mutex_procesos_execute);
 	list_add(procesosExecute, proceso);
@@ -79,7 +81,6 @@ void planificarFIFO(){
 
 	// mandamo la cosa
 	//TODO: descomentar para mandar proceso
-	mandar_pcb_a_CPU(proceso);
 
 }
 

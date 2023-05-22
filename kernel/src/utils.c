@@ -4,6 +4,7 @@
 int processID=0;
 extern t_config* config;
 extern t_log* logger;
+extern t_socket conexionCPU;
 
 
 extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion;
@@ -16,7 +17,6 @@ t_pcb* crearPCB(t_list* listaInstrucciones){
 	t_pcb *pcb = malloc(sizeof(t_pcb));
     pcb->pid = ++processID;
     pcb->pc = 0;
-    pcb->estado_ejec = (estado_ejec) NUEVO;
     pcb->instrucciones = list_duplicate(listaInstrucciones);
     pcb->registros = inicializarRegistros();
     strcpy(pcb->registros->AX, "0");
@@ -34,6 +34,14 @@ t_pcb* crearPCB(t_list* listaInstrucciones){
 
     return pcb;
 }
+
+t_socket crearConexionCPU(){
+	char* ip = config_get_string_value(config,"IP_CPU");
+	char* puerto = config_get_string_value(config,"PUERTO_CPU");
+	t_socket conexion = crear_conexion(ip, puerto, logger);
+	return conexion;
+}
+
 
 // creamos los hilos
 
@@ -83,4 +91,21 @@ void liberarMutex(){ //Semaforos mutex para acceder a las listas de procesos
 	pthread_mutex_destroy(&mutex_procesos_new);
 	pthread_mutex_destroy(&mutex_procesos_execute);
 }
+
+void actualizar_pcb(t_pcb* proceso) {
+	if(conexionCPU != -1){
+				t_pcb* pcb = inicializar_pcb();
+				int cod_op = recibir_operacion(conexionCPU);
+				if(cod_op == PROCESO) {
+					pcb = recibir_contexto(conexionCPU);
+					// actualizo proceso con lo q viene del pcb (PC y registros)
+					log_info(logger, "Recibo contexto pa - PID:%d\n", pcb->pid);
+
+				} else {
+					log_error(logger,"No me llego un proceso");
+				}
+			}
+
+}
+
 
