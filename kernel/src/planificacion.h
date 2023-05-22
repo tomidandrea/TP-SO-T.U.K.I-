@@ -10,6 +10,8 @@
 
 void planificar();
 void pasarAReady();
-void planificarFIFO();
+t_pcb* planificarFIFO();
 void agregarReady();
+void mandar_pcb_a_CPU(t_pcb*);
+void actualizar_pcb(t_pcb*);
 #endif

@@ -20,6 +20,7 @@ typedef struct {
 
 t_pcb* crearPCB(t_list* listaInstrucciones);
 
+t_socket crearConexionCPU();
 void inicializarSemoforos();
 void crearEscucharConsolas();
 void crearAgregarReady();
