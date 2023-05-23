@@ -55,6 +55,10 @@ void planificar(){
 
 				// Si algoritmo == HRRN -> calcular_estimado();
 				break;
+			case WAIT:
+				validarRecursos(proceso -> recursos, proceso -> instanciasDeRecursos);
+				//IGUAL ACA FALTAN MAS COSAS XD
+
 			default:
 				log_info(logger, "No se implemento xd\n");
 				break;

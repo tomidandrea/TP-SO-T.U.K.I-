@@ -80,6 +80,11 @@ typedef struct {
     t_registros* registros;
     operacion motivo;
     // implementar los otros xd
+    //TODO JARWI VER ESTE TLIST
+    // verificar si conviene mantener este t_pcb para los recursos o hacer otro
+    //
+    t_list* recursos;
+    t_list* instanciasDeRecursos;
 } t_pcb;
 
 #define CANT_IDENTIFICADORES (sizeof(tablaIdentificadores)/sizeof(t_identificador))

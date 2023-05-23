@@ -20,5 +20,5 @@ typedef struct{
 
 
 t_pcb* recibir_proceso(t_socket);
-
+int verificarRecursos(t_list*, t_config*);
 #endif
