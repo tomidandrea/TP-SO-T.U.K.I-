@@ -105,7 +105,9 @@ t_config* iniciar_config (char*);
 
 void liberar_instrucciones(t_list* instrucciones);
 void liberar_instruccion(t_instruccion* instruccion);
+char** inicializar_parametros(int cantidadParametros);
 void liberar_parametros(char** parametros, int cantidadParametros);
 char* copiar(char* palabra); //hacemos malloc aca dentro
+int contar(char* cadena, char caracter);
 
 #endif /* SRC_UTILS_GENERAL_H_ */

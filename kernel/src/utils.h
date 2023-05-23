@@ -10,6 +10,9 @@
 #include <utils/sockets.h>
 #include <planificacion.h>
 
+#define RECURSO_EXISTENTE 1
+#define RECURSO_INEXISTENTE 0
+
 
 /*
 typedef struct {
@@ -19,14 +22,17 @@ typedef struct {
 } t_registros;*/
 
 t_pcb* crearPCB(t_list* listaInstrucciones);
-
 t_socket crearConexionCPU();
-void inicializarSemoforos();
 void crearEscucharConsolas();
 void crearAgregarReady();
 void crearPlanificar();
+
+void inicializarRecursos();
+void inicializarSemoforos();
 void liberarSemoforos();
 void liberarMutex();
+
+int verificarRecursos(char* recurso);
 
 
 #endif

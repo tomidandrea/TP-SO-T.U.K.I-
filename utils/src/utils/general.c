@@ -100,6 +100,14 @@ void liberar_instruccion(t_instruccion* inst){
 	free(inst);
 }
 
+char** inicializar_parametros(int cantidadParametros){
+	char** parametros = calloc(cantidadParametros, sizeof(char*));
+	/*for (int i = 0; i < cantidadParametros; ++i) {
+		parametros[i] = malloc(sizeof(char*));
+	}*/
+	return parametros;
+}
+
 void liberar_parametros(char** parametros, int cantidadParametros){
 	for(int j=0; j<cantidadParametros; ++j)
 			free(parametros[j]);
@@ -111,6 +119,15 @@ char* copiar(char* palabra){
 	memcpy(tmp, palabra, strlen(palabra));
 	tmp[strlen(palabra)] = '\0';
 	return tmp;
+}
+
+int contar(char* cadena, char caracter){
+	int comas = 0;
+	for (int i = 0; i < strlen(cadena); ++i){
+		//printf("caracter %d: %c\n",i,cadena[i]);
+	    comas += (cadena[i] == caracter);
+	}
+	return comas;
 }
 
 t_pcb* inicializar_pcb(){

@@ -6,6 +6,9 @@ extern t_config* config;
 extern t_log* logger;
 extern t_socket conexionCPU;
 
+extern char** recursos;
+extern char** instanciasRecursos;
+extern int cantidad_recursos;
 
 extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion;
 extern pthread_mutex_t mutex_procesos_new;
@@ -72,6 +75,19 @@ void crearPlanificar(){
 	while(1);
 }
 
+void inicializarRecursos(){
+	char* recursos_config =  config_get_string_value(config, "RECURSOS");
+	cantidad_recursos = contar(recursos_config, ',') + 1; //cuento las comas y le sumo uno para saber cantidad de recursos
+	//log_info(logger, "Existen %d recursos: %s\n", cantidad_recursos, recursos_config);
+	recursos = inicializar_parametros(cantidad_recursos);
+	recursos = config_get_array_value(config, "RECURSOS");
+	instanciasRecursos = inicializar_parametros(cantidad_recursos);
+	instanciasRecursos = config_get_array_value(config, "INSTANCIAS_RECURSOS");
+	for (int i = 0; i < cantidad_recursos; ++i) {
+		log_info(logger, "Recurso %d: %s tiene %s instancia/s", i, recursos[i], instanciasRecursos[i]);
+	}
+}
+
 void inicializarSemoforos(){
 	sem_init(&sem_new_a_ready, 0, 0); //Binario, iniciado en 0 para que solo agregue a ready si hay procesos en new
 	sem_init(&sem_ready, 0, 0); //Binario, solo pase a CPU si hay en ready
@@ -121,6 +137,24 @@ void actualizar_pcb(t_pcb* proceso) {
 					log_error(logger,"No me llego un proceso");
 				}
 			}
+
+}
+
+
+int verificarRecursos(char* recurso){
+	int existeRecurso = RECURSO_INEXISTENTE;
+	//Verificamos que el recurso exista
+	for(int i = 0; i<cantidad_recursos;i++){
+		if(strcmp(recurso, recursos[i]) == 0){
+			existeRecurso = RECURSO_EXISTENTE;
+		}
+	}
+	if(existeRecurso){
+		//validar recursos disponible
+		//wait
+	}else{
+		log_error(logger, "No existe el recurso: %s", recurso);
+	}
 
 }
 

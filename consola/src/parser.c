@@ -45,10 +45,4 @@ t_instruccion* inicializar_instruccion(int cantidadParametros){
 	return inst;
 }
 
-char** inicializar_parametros(int cantidadParametros){
-	char** parametros = calloc(cantidadParametros, sizeof(char*));
-	/*for (int i = 0; i < cantidadParametros; ++i) {
-		parametros[i] = malloc(sizeof(char*));
-	}*/
-	return parametros;
-}
+
