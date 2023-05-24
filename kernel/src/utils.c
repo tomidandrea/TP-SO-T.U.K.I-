@@ -77,15 +77,18 @@ void crearPlanificar(){
 
 void inicializarRecursos(){
 	char* recursos_config =  config_get_string_value(config, "RECURSOS");
+	// TODO: alejiti fijate q la cantidad es un vector
 	cantidad_recursos = contar(recursos_config, ',') + 1; //cuento las comas y le sumo uno para saber cantidad de recursos
+	// Falta un if para ver si no hay recursos!!
+
 	//log_info(logger, "Existen %d recursos: %s\n", cantidad_recursos, recursos_config);
 	recursos = inicializar_parametros(cantidad_recursos);
 	recursos = config_get_array_value(config, "RECURSOS");
 	instanciasRecursos = inicializar_parametros(cantidad_recursos);
 	instanciasRecursos = config_get_array_value(config, "INSTANCIAS_RECURSOS");
-	for (int i = 0; i < cantidad_recursos; ++i) {
-		log_info(logger, "Recurso %d: %s tiene %s instancia/s", i, recursos[i], instanciasRecursos[i]);
-	}
+//	for (int i = 0; i < cantidad_recursos; ++i) {
+//		log_info(logger, "Recurso %d: %s tiene %s instancia/s", i, recursos[i], instanciasRecursos[i]);
+//	}
 }
 
 void inicializarSemoforos(){
@@ -110,7 +113,7 @@ void liberarMutex(){ //Semaforos mutex para acceder a las listas de procesos
 
 void actualizar_pcb(t_pcb* proceso) {
 	if(conexionCPU != -1){
-				t_pcb* contexto;
+				t_contexto* contexto;
 				int cod_op = recibir_operacion(conexionCPU);
 				if(cod_op == PROCESO) {
 					contexto = recibir_contexto(conexionCPU);
@@ -152,13 +155,7 @@ int verificarRecursos(char* recurso){
 			break;
 		}
 	}
-	if(existeRecurso){
-		//validar recursos disponible
-		//wait(sem recurso contador)
-	}else{
-		log_error(logger, "No existe el recurso: %s", recurso);
-	}
-
+	return existeRecurso;
 }
 
 
