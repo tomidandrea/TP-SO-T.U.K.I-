@@ -180,7 +180,7 @@ t_pcb* recibir_contexto(int socket_cliente) {
 		t_list* valores = list_create();
 		int tamanio;
         t_pcb* pcb = inicializar_pcb();
-		t_list* instrucciones = list_create();
+		//t_list* instrucciones = list_create();
 
 		buffer = recibir_buffer(&size, socket_cliente);
 
@@ -216,6 +216,8 @@ t_pcb* recibir_contexto(int socket_cliente) {
 		strcpy(pcb->registros->RBX, list_get(valores,9));
 		strcpy(pcb->registros->RCX, list_get(valores,10));
 		strcpy(pcb->registros->RDX, list_get(valores,11));
+
+		list_destroy_and_destroy_elements(valores, free);
 
 	    return pcb;
 }

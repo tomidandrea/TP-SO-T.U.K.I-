@@ -53,14 +53,15 @@ t_list* listaAInstrucciones(t_list* list) {
 	int i = 0;
 
 	while (i < tamanio) {
-		t_instruccion* inst = malloc(sizeof(t_instruccion));
 		char* operacion = list_get(list, i);
 		int cant = cantParametros(operacion);
-		inst->instruccion = string_duplicate(operacion);
-		inst->parametros = string_array_new();
+		t_instruccion* inst = inicializar_instruccion(cant);
+		inst->instruccion = copiar(operacion);
+		//free(operacion);
 		for(int j = 0; j<cant; j ++) {
 			char* parametro = list_get(list, i + j + 1);
-			inst->parametros[j] = string_duplicate(parametro);
+			inst->parametros[j] = copiar(parametro);
+			//free(parametro);
 		}
 		list_add(instrucciones, inst);
 		i+= cant + 1;
@@ -83,6 +84,12 @@ t_config* iniciar_config (char* path){
 	}
 
 	return nuevo_config;
+}
+
+t_instruccion* inicializar_instruccion(int cantidadParametros){
+	t_instruccion* inst = malloc(sizeof(t_instruccion));
+	inst->parametros = inicializar_parametros(cantidadParametros);
+	return inst;
 }
 
 void liberar_instrucciones(t_list* instrucciones) {

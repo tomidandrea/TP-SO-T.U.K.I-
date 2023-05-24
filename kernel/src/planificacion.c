@@ -15,7 +15,7 @@ pthread_mutex_t mutex_procesos_execute = PTHREAD_MUTEX_INITIALIZER;
 
 void planificar(){
 	char* algoritmo = malloc(16);
-	t_pcb* proceso = malloc(sizeof(t_pcb*));
+	t_pcb* proceso;
 	algoritmo = config_get_string_value(config,"ALGORITMO_PLANIFICACION");
 	while (1)
 	{
@@ -90,7 +90,7 @@ void agregarReady(){
 }
 
 void pasarAReady(){
-	t_pcb* proceso = malloc(sizeof(t_pcb*));
+	t_pcb* proceso;
 	/*int cant = list_size(procesosNew);
 	for(int i = 0;i<cant;i++) {
 		proceso = list_get(procesosNew,i);
@@ -106,8 +106,8 @@ void pasarAReady(){
 }
 
 t_pcb* planificarFIFO(){
-	t_pcb* proceso = malloc(sizeof(list_get(procesosReady, 0)));
-	proceso = list_remove(procesosReady, 0);
+	//t_pcb* proceso = malloc(sizeof(list_get(procesosReady, 0)));
+	t_pcb* proceso = list_remove(procesosReady, 0);
 	pthread_mutex_lock(&mutex_procesos_execute);
 	list_add(procesosExecute, proceso);
 	pthread_mutex_unlock(&mutex_procesos_execute);

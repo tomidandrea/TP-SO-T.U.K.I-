@@ -110,7 +110,7 @@ void liberarMutex(){ //Semaforos mutex para acceder a las listas de procesos
 
 void actualizar_pcb(t_pcb* proceso) {
 	if(conexionCPU != -1){
-				t_pcb* pcb = inicializar_pcb();
+				t_pcb* pcb;
 				int cod_op = recibir_operacion(conexionCPU);
 				if(cod_op == PROCESO) {
 					pcb = recibir_contexto(conexionCPU);
@@ -147,11 +147,12 @@ int verificarRecursos(char* recurso){
 	for(int i = 0; i<cantidad_recursos;i++){
 		if(strcmp(recurso, recursos[i]) == 0){
 			existeRecurso = RECURSO_EXISTENTE;
+			break;
 		}
 	}
 	if(existeRecurso){
 		//validar recursos disponible
-		//wait
+		//wait(sem recurso contador)
 	}else{
 		log_error(logger, "No existe el recurso: %s", recurso);
 	}

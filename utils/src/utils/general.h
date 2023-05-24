@@ -103,6 +103,7 @@ t_list* listaAInstrucciones(t_list*);
 t_log* iniciar_logger(char* file, char *process_name, bool is_active_console, t_log_level level);
 t_config* iniciar_config (char*);
 
+t_instruccion* inicializar_instruccion(int cantidadParametros);
 void liberar_instrucciones(t_list* instrucciones);
 void liberar_instruccion(t_instruccion* instruccion);
 char** inicializar_parametros(int cantidadParametros);

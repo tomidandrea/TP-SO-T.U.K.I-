@@ -14,9 +14,8 @@ uint32_t RESULT_OK = 0;
 uint32_t RESULT_ERROR = 1;
 
 int escucharConsolas(){
-	t_list* lista = list_create();
-	char* puerto = malloc(16);
-	puerto = config_get_string_value(config,"PUERTO_ESCUCHA");
+	t_list* lista;// = list_create(); ya hacemos el create en listaAInstruccion
+	char* puerto = config_get_string_value(config,"PUERTO_ESCUCHA");
 
 	t_socket server_fd = iniciar_servidor(puerto, logger);
 	printf("\nSocket conexion:%d \n",server_fd);
@@ -27,20 +26,22 @@ int escucharConsolas(){
 	t_socket socket_cliente;
 	while(1){
 	socket_cliente = esperar_cliente(server_fd, logger); //Hace el accept
-
-    printf("\nsocket conexion2:%d \n",server_fd);
+    printf("\nsocket cliente:%d \n",socket_cliente);
+    //TODO: deberiamos agregar el socket cliente para saber que Consola finalizar
 		if(socket_cliente != -1){
 				int cod_op = recibir_operacion(socket_cliente);
 				switch (cod_op) {
 						case PROGRAMA: //TODO
-
-							lista = listaAInstrucciones(recibir_paquete(socket_cliente));
-
+							t_list* buffer = recibir_paquete(socket_cliente);
+							lista = listaAInstrucciones(buffer);
+							list_destroy_and_destroy_elements(buffer, free);
 							//send(socket_cliente, &RESULT_OK, sizeof(int), NULL);
 
 							log_info(logger, "Me llego un paquete\n");
 
-							t_pcb* pcb = crearPCB(lista);
+							t_pcb* pcb = crearPCB(lista); //agregar para pasar el socket de consola
+							liberar_instrucciones(lista); // dentro de crearPCB estamos duplicando la lista, entonces libero la que ya no usamos
+							list_destroy(lista);
 							pthread_mutex_lock(&mutex_procesos_new);
 							list_add(procesosNew, pcb);
 							pthread_mutex_unlock(&mutex_procesos_new);
@@ -73,7 +74,7 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 	char* operacion;
 	t_paquete *paquete = crear_paquete(PROCESO);
 	int op_tamanio = 0;
-	t_instruccion* inst = malloc(sizeof(t_instruccion));
+
 	int cant = list_size(proceso->instrucciones);
 	int cant_parametros = 0;
 
@@ -94,19 +95,21 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 
 	//TODO: tabla de segmentos
 
+	t_instruccion* inst;
 	for(int i = 0;i<cant;i++) {
-
 	    inst = list_get(proceso -> instrucciones,i);
-	    operacion = string_duplicate(inst -> instruccion);
+	    operacion = copiar(inst->instruccion);
+		//operacion = ((t_instruccion)list_get(proceso -> instrucciones,i))->instruccion;
 	    op_tamanio = strlen(operacion)+1;
 
 	    agregar_a_paquete(paquete,operacion,op_tamanio);
 
 	    cant_parametros = cantParametros(operacion);
+	    //inst = inicializar_instruccion(cant_parametros);
+	    free(operacion);
 	    for(int i=0; i<cant_parametros; i++) {
 	    	agregar_a_paquete(paquete,inst->parametros[i],strlen(inst->parametros[i])+1);
 	    }
-
 	}
 
 	enviar_paquete(paquete,conexionCPU);                // serializa el paquete y lo envia

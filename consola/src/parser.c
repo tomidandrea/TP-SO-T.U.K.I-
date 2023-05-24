@@ -39,10 +39,4 @@ void parsear_instrucciones(char* path, t_list* instrucciones) {
     fclose(archivo);
 }
 
-t_instruccion* inicializar_instruccion(int cantidadParametros){
-	t_instruccion* inst = malloc(sizeof(t_instruccion));
-	inst->parametros = inicializar_parametros(cantidadParametros);
-	return inst;
-}
-
 
