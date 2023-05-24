@@ -10,6 +10,8 @@
 #include<utils/serializacion.h>
 #include<utils/general.h>
 
+#include<utils/visualizarEstructuras.h>
+
 typedef int t_socket;
 
 // Utils cliente

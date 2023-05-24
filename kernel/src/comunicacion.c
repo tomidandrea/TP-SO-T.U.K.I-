@@ -40,7 +40,8 @@ int escucharConsolas(){
 							log_info(logger, "Me llego un paquete\n");
 
 							t_pcb* pcb = crearPCB(lista); //agregar para pasar el socket de consola
-							liberar_instrucciones(lista); // dentro de crearPCB estamos duplicando la lista, entonces libero la que ya no usamos
+							t_instruccion* instruc = list_get(pcb->instrucciones, 0);
+							printf("instruccion: %s\n", instruc->instruccion);
 							list_destroy(lista);
 							pthread_mutex_lock(&mutex_procesos_new);
 							list_add(procesosNew, pcb);
@@ -106,11 +107,11 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 	    agregar_a_paquete(paquete,operacion,op_tamanio);
 
 	    cant_parametros = cantParametros(operacion);
-	    //inst = inicializar_instruccion(cant_parametros);
 	    free(operacion);
 	    for(int i=0; i<cant_parametros; i++) {
 	    	agregar_a_paquete(paquete,inst->parametros[i],strlen(inst->parametros[i])+1);
 	    }
+	    //free(inst);
 	}
 
 	enviar_paquete(paquete,conexionCPU);                // serializa el paquete y lo envia

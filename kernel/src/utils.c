@@ -26,7 +26,7 @@ t_pcb* crearPCB(t_list* listaInstrucciones){
     strcpy(pcb->registros->BX, "0");
     strcpy(pcb->registros->CX, "0");
     strcpy(pcb->registros->DX, "0");
-    strcpy(pcb->registros->EAX, "TEXTO111");
+    strcpy(pcb->registros->EAX, "0");
     strcpy(pcb->registros->EBX, "0");
     strcpy(pcb->registros->ECX, "0");
 	strcpy(pcb->registros->EDX, "0");
