@@ -54,6 +54,9 @@ void planificar(){
 				list_add(procesosReady, proceso);
 				pthread_mutex_unlock(&mutex_procesos_ready);
 
+				sem_post(&sem_ready);
+
+
 				// Si algoritmo == HRRN -> calcular_estimado();
 				break;
 			case WAIT:
