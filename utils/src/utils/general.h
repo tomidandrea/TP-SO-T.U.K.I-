@@ -88,7 +88,8 @@ typedef struct {
     int pc;
     t_registros* registros;
     operacion motivo;
-    char* recurso;
+    char** parametros;
+    int cantidadParametros;
 } t_contexto;
 
 #define CANT_IDENTIFICADORES (sizeof(tablaIdentificadores)/sizeof(t_identificador))

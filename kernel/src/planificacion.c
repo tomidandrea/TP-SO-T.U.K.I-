@@ -28,7 +28,7 @@ void planificar(){
 			log_info(logger, "Termine de planificar\n");
 		}
 
-		printf("Instruccion: %s\n", ((t_instruccion*)list_get(proceso -> instrucciones,0))->instruccion);
+		//printf("Instruccion: %s\n", ((t_instruccion*)list_get(proceso -> instrucciones,0))->instruccion);
 		mandar_pcb_a_CPU(proceso);
 		log_info(logger, "Proceso enviado a cpu\n");
 

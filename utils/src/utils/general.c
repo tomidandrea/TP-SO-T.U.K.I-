@@ -149,12 +149,13 @@ t_pcb* inicializar_pcb(){
 t_contexto* inicializar_contexto(){
 	t_contexto* contexto = malloc(sizeof(t_contexto));
 	contexto->registros = inicializarRegistros();
-	contexto->recurso = malloc(sizeof(char*));
+	//contexto->parametros = malloc(sizeof(char*));
 	return contexto;
 }
 
 
 void liberar_contexto(t_contexto* contexto){ //por ahora contexto seria lo que nos devuelve cpu
 	free(contexto->registros);
+	liberar_parametros(contexto->parametros, contexto->cantidadParametros);
 	free(contexto);
 }

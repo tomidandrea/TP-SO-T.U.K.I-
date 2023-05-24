@@ -193,6 +193,22 @@ t_contexto* recibir_contexto(int socket_cliente) {
 		memcpy(&(contexto->motivo), buffer + desplazamiento, sizeof(int));
 		desplazamiento+=sizeof(int);
 
+		//TODO: alejiti asignar cantidadParametros y luego inicializar_parametros
+		/*
+		memcpy(&(contexto->cantidadParametros), buffer + desplazamiento, sizeof(int));
+		desplazamiento+=sizeof(int);
+		contexto->parametros = inicializar_parametros(cantidadParametros);
+		for(int i = 0;i<cantidadParametros; i++;){
+			memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
+			desplazamiento+=sizeof(int);
+			char* valor = malloc(tamanio);
+			memcpy(valor, buffer+desplazamiento, tamanio);
+			desplazamiento+=tamanio;
+			contexto->parametros[i] = copiar(valor);
+		 }
+
+		 */
+
 		while(desplazamiento < size)
 		{
 			memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
@@ -203,18 +219,18 @@ t_contexto* recibir_contexto(int socket_cliente) {
 			list_add(valores, valor);
         }
 
-		strcpy(contexto->registros->AX, (char *) list_get(valores,0));
-		strcpy(contexto->registros->BX , (char *) list_get(valores,1));
-		strcpy(contexto->registros->CX, list_get(valores,2));
-		strcpy(contexto->registros->DX, list_get(valores,3));
-		strcpy(contexto->registros->EAX, list_get(valores,4));
-		strcpy(contexto->registros->EBX, list_get(valores,5));
-		strcpy(contexto->registros->ECX, list_get(valores,6));
-		strcpy(contexto->registros->EDX, list_get(valores,7));
-		strcpy(contexto->registros->RAX,list_get(valores,8));
-		strcpy(contexto->registros->RBX, list_get(valores,9));
-		strcpy(contexto->registros->RCX, list_get(valores,10));
-		strcpy(contexto->registros->RDX, list_get(valores,11));
+		strncpy(contexto->registros->AX, list_get(valores,0), 4);
+		strncpy(contexto->registros->BX, list_get(valores,1), 4);
+		strncpy(contexto->registros->CX, list_get(valores,2), 4);
+		strncpy(contexto->registros->DX, list_get(valores,3), 4);
+		strncpy(contexto->registros->EAX, list_get(valores,4), 8);
+		strncpy(contexto->registros->EBX, list_get(valores,5), 8);
+		strncpy(contexto->registros->ECX, list_get(valores,6), 8);
+		strncpy(contexto->registros->EDX, list_get(valores,7), 8);
+		strncpy(contexto->registros->RAX,list_get(valores,8), 16);
+		strncpy(contexto->registros->RBX, list_get(valores,9), 16);
+		strncpy(contexto->registros->RCX, list_get(valores,10), 16);
+		strncpy(contexto->registros->RDX, list_get(valores,11), 16);
 
 		free(buffer);
 		list_destroy_and_destroy_elements(valores, free);

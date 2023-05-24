@@ -98,9 +98,9 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 
 	t_instruccion* inst;
 	for(int i = 0;i<cant;i++) {
-		printf("Instruccion: %s\n", ((t_instruccion*)list_get(proceso -> instrucciones,i))->instruccion);
+		//printf("Instruccion: %s\n", ((t_instruccion*)list_get(proceso -> instrucciones,i))->instruccion);
 	    inst = list_get(proceso -> instrucciones,i);
-	    printf("Instruccion: %s\n",inst->instruccion);
+	    //printf("Instruccion: %s\n",inst->instruccion);
 	    operacion = copiar(inst->instruccion);
 		//operacion = ((t_instruccion)list_get(proceso -> instrucciones,i))->instruccion;
 	    op_tamanio = strlen(operacion)+1;
