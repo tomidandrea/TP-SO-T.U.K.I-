@@ -217,6 +217,7 @@ t_pcb* recibir_contexto(int socket_cliente) {
 		strcpy(pcb->registros->RCX, list_get(valores,10));
 		strcpy(pcb->registros->RDX, list_get(valores,11));
 
+		free(buffer);
 		list_destroy_and_destroy_elements(valores, free);
 
 	    return pcb;

@@ -110,28 +110,30 @@ void liberarMutex(){ //Semaforos mutex para acceder a las listas de procesos
 
 void actualizar_pcb(t_pcb* proceso) {
 	if(conexionCPU != -1){
-				t_pcb* pcb;
+				t_pcb* contexto;
 				int cod_op = recibir_operacion(conexionCPU);
 				if(cod_op == PROCESO) {
-					pcb = recibir_contexto(conexionCPU);
+					contexto = recibir_contexto(conexionCPU);
 					// actualizo proceso con lo q viene del pcb (PC y registros)
-					log_info(logger, "Recibo contexto pa - PID:%d\n", pcb->pid);
+					log_info(logger, "Recibo contexto pa - PID:%d\n", contexto->pid);
 
-					proceso->pid = pcb->pid;
-					proceso->pc = pcb->pc;
-					proceso->motivo = pcb->motivo;
-					strcpy(proceso->registros->AX, pcb->registros->AX);
-					strcpy(proceso->registros->BX, pcb->registros->BX);
-					strcpy(proceso->registros->CX, pcb->registros->CX);
-					strcpy(proceso->registros->DX, pcb->registros->DX);
-					strcpy(proceso->registros->EAX, pcb->registros->EAX);
-					strcpy(proceso->registros->EBX, pcb->registros->EBX);
-					strcpy(proceso->registros->ECX, pcb->registros->ECX);
-					strcpy(proceso->registros->EDX, pcb->registros->EDX);
-					strcpy(proceso->registros->RAX, pcb->registros->RAX);
-					strcpy(proceso->registros->RBX, pcb->registros->RBX);
-					strcpy(proceso->registros->RCX, pcb->registros->RCX);
-					strcpy(proceso->registros->RDX, pcb->registros->RDX);
+					proceso->pid = contexto->pid;
+					proceso->pc = contexto->pc;
+					proceso->motivo = contexto->motivo;
+					strcpy(proceso->registros->AX, contexto->registros->AX);
+					strcpy(proceso->registros->BX, contexto->registros->BX);
+					strcpy(proceso->registros->CX, contexto->registros->CX);
+					strcpy(proceso->registros->DX, contexto->registros->DX);
+					strcpy(proceso->registros->EAX, contexto->registros->EAX);
+					strcpy(proceso->registros->EBX, contexto->registros->EBX);
+					strcpy(proceso->registros->ECX, contexto->registros->ECX);
+					strcpy(proceso->registros->EDX, contexto->registros->EDX);
+					strcpy(proceso->registros->RAX, contexto->registros->RAX);
+					strcpy(proceso->registros->RBX, contexto->registros->RBX);
+					strcpy(proceso->registros->RCX, contexto->registros->RCX);
+					strcpy(proceso->registros->RDX, contexto->registros->RDX);
+
+					liberar_contexto(contexto);
 
 				} else {
 					log_error(logger,"No me llego un proceso");

@@ -143,3 +143,8 @@ t_pcb* inicializar_pcb(){
 	pcb->registros = inicializarRegistros();
 	return pcb;
 }
+
+void liberar_contexto(t_pcb* contexto){ //por ahora contexto seria lo que nos devuelve cpu
+	free(contexto->registros);
+	free(contexto);
+}

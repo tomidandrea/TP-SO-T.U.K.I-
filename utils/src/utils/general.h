@@ -80,7 +80,7 @@ typedef struct {
     t_registros* registros;
     operacion motivo;
     // implementar los otros xd
-    //TODO JARWI VER ESTE TLIST
+    //TODO JARWI cambiar TLIST a char**
     // verificar si conviene mantener este t_pcb para los recursos o hacer otro
     //
     t_list* recursos;
@@ -110,5 +110,7 @@ char** inicializar_parametros(int cantidadParametros);
 void liberar_parametros(char** parametros, int cantidadParametros);
 char* copiar(char* palabra); //hacemos malloc aca dentro
 int contar(char* cadena, char caracter);
+
+void liberar_contexto(t_pcb* contexto);
 
 #endif /* SRC_UTILS_GENERAL_H_ */
