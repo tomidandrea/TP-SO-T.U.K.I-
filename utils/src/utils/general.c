@@ -1,5 +1,7 @@
 #include <utils/general.h>
 
+extern int cantidad_recursos;
+
 static t_identificador tablaIdentificadores[] = {
         {"SET",2,SET},{"MOV_OUT",2,MOV_OUT}, {"WAIT",1,WAIT}, {"I/O",1,3}, {"SIGNAL",1,SIGNAL}, {"MOV_IN",2,MOV_IN},
 		{"F_OPEN",1,F_OPEN},{"YIELD",0,YIELD},{"F_TRUNCATE",2,F_TRUNCATE},{"F_SEEK",2,F_SEEK},{"CREATE_SEGMENT",2,CREATE_SEGMENT},
@@ -144,7 +146,15 @@ t_pcb* inicializar_pcb(){
 	return pcb;
 }
 
-void liberar_contexto(t_pcb* contexto){ //por ahora contexto seria lo que nos devuelve cpu
+t_contexto* inicializar_contexto(){
+	t_contexto* contexto = malloc(sizeof(t_contexto));
+	contexto->registros = inicializarRegistros();
+	contexto->recurso = malloc(sizeof(char*));
+	return contexto;
+}
+
+
+void liberar_contexto(t_contexto* contexto){ //por ahora contexto seria lo que nos devuelve cpu
 	free(contexto->registros);
 	free(contexto);
 }

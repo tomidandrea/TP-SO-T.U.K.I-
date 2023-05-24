@@ -78,7 +78,7 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 
 	int cant = list_size(proceso->instrucciones);
 	int cant_parametros = 0;
-
+	log_info(logger, "PID:%d\n",proceso->pid);
 	agregar_valor_estatico(paquete, &(proceso -> pid));
 	agregar_valor_estatico(paquete, &(proceso -> pc));
 	agregar_a_paquete(paquete, proceso -> registros->AX, 4);
@@ -98,6 +98,7 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 
 	t_instruccion* inst;
 	for(int i = 0;i<cant;i++) {
+		printf("Instruccion: %s\n", ((t_instruccion*)list_get(proceso -> instrucciones,i))->instruccion);
 	    inst = list_get(proceso -> instrucciones,i);
 	    printf("Instruccion: %s\n",inst->instruccion);
 	    operacion = copiar(inst->instruccion);

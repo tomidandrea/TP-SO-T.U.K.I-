@@ -28,6 +28,6 @@ void* recibir_buffer(int*, int);
 void recibir_mensaje(int, t_log*);
 t_list* recibir_paquete(int);
 t_pcb* inicializar_pcb();
-t_pcb* recibir_contexto(int);
+t_contexto* recibir_contexto(int);
 
 #endif

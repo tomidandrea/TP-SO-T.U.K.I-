@@ -28,6 +28,7 @@ void planificar(){
 			log_info(logger, "Termine de planificar\n");
 		}
 
+		printf("Instruccion: %s\n", ((t_instruccion*)list_get(proceso -> instrucciones,0))->instruccion);
 		mandar_pcb_a_CPU(proceso);
 		log_info(logger, "Proceso enviado a cpu\n");
 
@@ -56,9 +57,13 @@ void planificar(){
 				// Si algoritmo == HRRN -> calcular_estimado();
 				break;
 			case WAIT:
-				//validarRecursos(proceso -> recursos, proceso -> instanciasDeRecursos);
-				//IGUAL ACA FALTAN MAS COSAS XD
+				log_info(logger, "Llego un WAIT pibe\n");
+				/*if(verificarRecursos(proceso->recurso)){
 
+				}else{
+					log_error(logger, "No existe el recurso: %s", proceso->recurso);
+				}*/
+				break;
 			default:
 				log_info(logger, "No se implemento xd\n");
 				break;
@@ -108,6 +113,8 @@ void pasarAReady(){
 t_pcb* planificarFIFO(){
 	//t_pcb* proceso = malloc(sizeof(list_get(procesosReady, 0)));
 	t_pcb* proceso = list_remove(procesosReady, 0);
+	//t_instruccion* inst = list_get(proceso -> instrucciones,0);
+	//printf("Instruccion del fifo: %s\n", inst->instruccion);
 	pthread_mutex_lock(&mutex_procesos_execute);
 	list_add(procesosExecute, proceso);
 	pthread_mutex_unlock(&mutex_procesos_execute);

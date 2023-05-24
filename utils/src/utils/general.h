@@ -79,19 +79,24 @@ typedef struct {
     int pc;
     t_registros* registros;
     operacion motivo;
+    //char* recurso;
     // implementar los otros xd
-    //TODO JARWI cambiar TLIST a char**
-    // verificar si conviene mantener este t_pcb para los recursos o hacer otro
-    //
-    t_list* recursos;
-    t_list* instanciasDeRecursos;
 } t_pcb;
+
+typedef struct {
+    int pid;
+    int pc;
+    t_registros* registros;
+    operacion motivo;
+    char* recurso;
+} t_contexto;
 
 #define CANT_IDENTIFICADORES (sizeof(tablaIdentificadores)/sizeof(t_identificador))
 
 
 
 t_pcb* inicializar_pcb();
+t_contexto* inicializar_contexto();
 void logearInstrucciones(t_list* instrucciones, t_log* logger);
 
 t_registros* inicializarRegistros();
@@ -111,6 +116,6 @@ void liberar_parametros(char** parametros, int cantidadParametros);
 char* copiar(char* palabra); //hacemos malloc aca dentro
 int contar(char* cadena, char caracter);
 
-void liberar_contexto(t_pcb* contexto);
+void liberar_contexto(t_contexto* contexto);
 
 #endif /* SRC_UTILS_GENERAL_H_ */

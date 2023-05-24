@@ -173,25 +173,24 @@ t_list* recibir_paquete(int socket_cliente)
 }
 
 
-t_pcb* recibir_contexto(int socket_cliente) {
+t_contexto* recibir_contexto(int socket_cliente) {
 	    int size;
 		int desplazamiento = 0;
 		void * buffer;
 		t_list* valores = list_create();
 		int tamanio;
-        t_pcb* pcb = inicializar_pcb();
-		//t_list* instrucciones = list_create();
+        t_contexto* contexto = inicializar_contexto();
 
 		buffer = recibir_buffer(&size, socket_cliente);
 
 		// Pasamos el PID solo para confirmación del proceso.
-		memcpy(&(pcb->pid), buffer + desplazamiento, sizeof(int));
+		memcpy(&(contexto->pid), buffer + desplazamiento, sizeof(int));
 		desplazamiento+=sizeof(int);
 
-		memcpy(&(pcb->pc), buffer + desplazamiento, sizeof(int));
+		memcpy(&(contexto->pc), buffer + desplazamiento, sizeof(int));
 		desplazamiento+=sizeof(int);
 
-		memcpy(&(pcb->motivo), buffer + desplazamiento, sizeof(int));
+		memcpy(&(contexto->motivo), buffer + desplazamiento, sizeof(int));
 		desplazamiento+=sizeof(int);
 
 		while(desplazamiento < size)
@@ -204,25 +203,23 @@ t_pcb* recibir_contexto(int socket_cliente) {
 			list_add(valores, valor);
         }
 
-		strncpy(pcb->registros->AX, list_get(valores,0), 4);
-		strncpy(pcb->registros->BX, list_get(valores,1), 4);
-		strncpy(pcb->registros->CX, list_get(valores,2), 4);
-		strncpy(pcb->registros->DX, list_get(valores,3), 4);
-		strncpy(pcb->registros->EAX, list_get(valores,4), 8);
-		strncpy(pcb->registros->EBX, list_get(valores,5), 8);
-		strncpy(pcb->registros->ECX, list_get(valores,6), 8);
-		strncpy(pcb->registros->EDX, list_get(valores,7), 8);
-		strncpy(pcb->registros->RAX,list_get(valores,8), 16);
-		strncpy(pcb->registros->RBX, list_get(valores,9), 16);
-		strncpy(pcb->registros->RCX, list_get(valores,10), 16);
-		strncpy(pcb->registros->RDX, list_get(valores,11), 16);
-
-		mostrarRegistros(pcb->registros);
+		strcpy(contexto->registros->AX, (char *) list_get(valores,0));
+		strcpy(contexto->registros->BX , (char *) list_get(valores,1));
+		strcpy(contexto->registros->CX, list_get(valores,2));
+		strcpy(contexto->registros->DX, list_get(valores,3));
+		strcpy(contexto->registros->EAX, list_get(valores,4));
+		strcpy(contexto->registros->EBX, list_get(valores,5));
+		strcpy(contexto->registros->ECX, list_get(valores,6));
+		strcpy(contexto->registros->EDX, list_get(valores,7));
+		strcpy(contexto->registros->RAX,list_get(valores,8));
+		strcpy(contexto->registros->RBX, list_get(valores,9));
+		strcpy(contexto->registros->RCX, list_get(valores,10));
+		strcpy(contexto->registros->RDX, list_get(valores,11));
 
 		free(buffer);
 		list_destroy_and_destroy_elements(valores, free);
 
-	    return pcb;
+	    return contexto;
 }
 
 
