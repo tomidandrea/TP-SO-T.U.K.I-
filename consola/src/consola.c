@@ -3,9 +3,7 @@ t_log* logger;
 t_config* config;
 
 int main(int argc, char** argv) {
-    t_socket conexion;
-    char* ip;
-    char* puerto;
+    t_socket conexionKernel;
     char* path_config;
     char* path_inst;
 
@@ -23,26 +21,24 @@ int main(int argc, char** argv) {
 
     logearInstrucciones(instrucciones, logger); //logeamos la lista de instrucciones
 
-    ip = config_get_string_value(config,"IP_KERNEL");
-    puerto = config_get_string_value(config,"PUERTO_KERNEL");
-    conexion = crear_conexion(ip, puerto, logger);
+    conexionKernel = iniciarConexion(config, logger, "IP_KERNEL","PUERTO_KERNEL");
 
 
     // serializa y envia a kernel el programa (lista de instrucciones)
-    enviar_programa(instrucciones, conexion);
-    printf("\nsocket conexion:%d \n",conexion);
+    enviar_programa(instrucciones, conexionKernel);
+    printf("\nsocket conexion:%d \n",conexionKernel);
     liberar_instrucciones(instrucciones);
     list_destroy(instrucciones);
 
 
     uint32_t result;
-    recv(conexion, &result, sizeof(uint32_t), MSG_WAITALL);
+    recv(conexionKernel, &result, sizeof(uint32_t), MSG_WAITALL);
     if(result == 0){
     	log_info(logger, "Resultado: Termino todo bien pa");
     }else
     	log_info(logger, "Resultado: Rompiste algo");
 
-    liberar_conexion(conexion); // Libera ip y puerto
+    liberar_conexion(conexionKernel); // Libera ip y puerto
     liberarEstructuras();
     return 0;
 }

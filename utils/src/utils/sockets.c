@@ -1,5 +1,21 @@
 #include "sockets.h"
 
+t_socket iniciarConexion(t_config* config, t_log*logger, char*ip_config, char*puerto_config){
+	char* ip = config_get_string_value(config,ip_config);
+	char* puerto = config_get_string_value(config,puerto_config);
+	t_socket conexion = crear_conexion(ip, puerto, logger);
+	return conexion;
+}
+
+t_socket iniciarServidor(t_config*config, t_log* logger, char* puerto_config) {
+    char* puerto;
+    puerto = config_get_string_value(config,puerto_config);
+
+    t_socket servidor = iniciar_servidor(puerto, logger);
+    free(puerto);
+    return servidor;
+}
+
 t_socket crear_conexion(char* ip, char* puerto, t_log* logger)
 {
 	struct addrinfo hints;

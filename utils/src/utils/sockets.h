@@ -15,12 +15,14 @@
 typedef int t_socket;
 
 // Utils cliente
+t_socket iniciarConexion(t_config*, t_log*, char*, char*);
 t_socket crear_conexion(char*, char*, t_log*);
 void enviar_mensaje(char*, int);
 void enviar_paquete(t_paquete*, int);
 void liberar_conexion(int);
 
 //Utils server
+t_socket iniciarServidor(t_config*, t_log*, char*);
 t_socket iniciar_servidor(char* , t_log*);
 t_socket esperar_cliente(int, t_log*);
 int recibir_operacion(int);

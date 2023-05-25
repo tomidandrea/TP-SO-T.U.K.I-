@@ -1,4 +1,5 @@
-#include <utils.h>
+#include "utilsKernel.h"
+
 #include <comunicacion.h>
 
 int processID=0;
