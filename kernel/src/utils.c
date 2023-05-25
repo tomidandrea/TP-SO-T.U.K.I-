@@ -22,6 +22,8 @@ t_pcb* crearPCB(t_list* listaInstrucciones){
     pcb->pc = 0;
     pcb->instrucciones = list_duplicate(listaInstrucciones);
     pcb->registros = inicializarRegistros();
+    pcb->estimadoAnterior = config_get_double_value(config,"ESTIMACION_INICIAL");
+
     strcpy(pcb->registros->AX, "0");
     strcpy(pcb->registros->BX, "0");
     strcpy(pcb->registros->CX, "0");
@@ -116,7 +118,12 @@ t_contexto* actualizar_pcb(t_pcb* proceso) {
 				t_contexto* contexto;
 				int cod_op = recibir_operacion(conexionCPU);
 				if(cod_op == CONTEXTO) {
+
 					contexto = recibir_contexto(conexionCPU);
+
+					temporal_stop(proceso->tiempoCPU);
+					int64_t tiempo = temporal_gettime(proceso->tiempoCPU);
+					//todo: reiniciar tiempo
 					// actualizo proceso con lo q viene del pcb (PC y registros)
 					log_info(logger, "Recibo contexto pa - PID:%d\n", contexto->pid);
 
@@ -145,6 +152,18 @@ t_contexto* actualizar_pcb(t_pcb* proceso) {
 
 }
 
+void iniciarTiempoEnReady(t_pcb* proceso){
+	t_temporal* tiempo;
+	tiempo = temporal_create();
+	proceso->tiempoEnReady = tiempo;
+}
+
+void iniciarTiempoCPU(t_pcb* proceso){
+	t_temporal* tiempo;
+		tiempo = temporal_create();
+		proceso->tiempoCPU = tiempo;
+}
+
 
 int verificarRecursos(char* recurso){
 	int existeRecurso = RECURSO_INEXISTENTE;
@@ -157,5 +176,6 @@ int verificarRecursos(char* recurso){
 	}
 	return existeRecurso;
 }
+
 
 

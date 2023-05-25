@@ -11,6 +11,7 @@
 void planificar();
 void pasarAReady();
 t_pcb* planificarFIFO();
+t_pcb* planificarHRRN();
 void agregarReady();
 void mandar_pcb_a_CPU(t_pcb*);
 t_contexto* actualizar_pcb(t_pcb*);

@@ -7,6 +7,8 @@ extern t_list* procesosExecute;
 extern t_list* procesosReady;
 extern t_list* procesosNew;
 
+uint32_t INICIO = 1;
+
 sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion;
 pthread_mutex_t mutex_procesos_new = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_procesos_ready = PTHREAD_MUTEX_INITIALIZER;
@@ -17,22 +19,30 @@ void planificar(){
 	char* algoritmo = malloc(16);
 	t_pcb* proceso;
 	algoritmo = config_get_string_value(config,"ALGORITMO_PLANIFICACION");
+	double alfa;
+	alfa = config_get_double_value(config,"HRRN_ALFA");
+
 	while (1)
 	{
 		sem_wait(&sem_ready);
-		 // aca ya los tengo en ready
 		log_info(logger, "Empezando a planificar\n");
 		//sem_wait(&sem_ready); // Agrego otro semaforo para que no empiece a planificar por ahora
+
 		if(strcmp(algoritmo,"FIFO") == 0){
 			proceso = planificarFIFO();
-			log_info(logger, "Termine de planificar\n");
+			int64_t tiempo = temporal_gettime(proceso->tiempoEnReady);
+			log_info(logger, "Tiempo en ready: %ld\n", tiempo);
+			log_info(logger, "Termine de planificar FIFO\n");
 		}
 
-		//printf("Instruccion: %s\n", ((t_instruccion*)list_get(proceso -> instrucciones,0))->instruccion);
+		if(strcmp(algoritmo,"HRRN") == 0){
+					//proceso = planificarHRRN(alfa);
+
+					log_info(logger, "Termine de planificar HRRN\n");
+				}
+
 		mandar_pcb_a_CPU(proceso);
 		log_info(logger, "Proceso enviado a cpu\n");
-
-		// RCV de cpu
 		t_contexto* contexto = actualizar_pcb(proceso);
 
 		// TODO: Quitar proceso de procesosExecute (proceso en running)
@@ -49,7 +59,7 @@ void planificar(){
 				log_info(logger, "Hubo un YIELD\n");
 
 				// Lo agrego al final de la lista de ready
-
+				iniciarTiempoEnReady(proceso);
 				pthread_mutex_lock(&mutex_procesos_ready);
 				list_add(procesosReady, proceso);
 				pthread_mutex_unlock(&mutex_procesos_ready);
@@ -87,14 +97,6 @@ void agregarReady(){
 		sem_post(&sem_ready);
 	}
 
-   
-	//aca va HRRN
-	//if(strcmp(algoritmo,"HRRN") == 0){
-	//	planificarHRRN(procesosNew, procesosReady, procesosExecute, gradoMultip);
-	//}
-
-	// esperamos la cpu
-	//free(proceso);
 }
 
 void pasarAReady(){
@@ -111,16 +113,72 @@ void pasarAReady(){
 	pthread_mutex_lock(&mutex_procesos_ready);
 	list_add(procesosReady, proceso);
 	pthread_mutex_unlock(&mutex_procesos_ready);
+	iniciarTiempoEnReady(proceso);
 }
 
 t_pcb* planificarFIFO(){
-	//t_pcb* proceso = malloc(sizeof(list_get(procesosReady, 0)));
 	t_pcb* proceso = list_remove(procesosReady, 0);
-	//t_instruccion* inst = list_get(proceso -> instrucciones,0);
-	//printf("Instruccion del fifo: %s\n", inst->instruccion);
+
 	pthread_mutex_lock(&mutex_procesos_execute);
 	list_add(procesosExecute, proceso);
 	pthread_mutex_unlock(&mutex_procesos_execute);
+
+	// TODO: DESTRUIR TIEMPO READY
 	return proceso;
 }
+
+int procesoConMayorRatio(int cant){
+	double ratio = 0;
+	t_pcb* proceso;
+	int max;
+	for(int i=0;i<cant;i++){
+		proceso = list_get(procesosReady,i);
+		if(ratio < proceso->ratio){
+			ratio = proceso->ratio;
+			max = i;
+		}
+	}
+	return max;
+}
+
+t_pcb* planificarHRRN(double alfa){
+
+	t_pcb* proceso;
+
+	if(INICIO){
+		proceso = list_remove(procesosReady, 0);
+		INICIO = 0;
+	}
+	else {
+		int64_t realEjec;
+		int64_t tiempoEnReady;
+		double est;
+		double estActual;
+		int cant = list_size(procesosNew);
+
+		for(int i = 0;i<cant;i++) {
+			proceso = list_get(procesosReady,i);
+			realEjec = temporal_gettime(proceso->tiempoCPU);
+			tiempoEnReady = temporal_gettime(proceso->tiempoEnReady);
+			est = proceso->estimadoAnterior;
+
+			// calculo la rafaga actual
+			estActual = alfa*realEjec + (1-alfa)*est;
+
+			proceso->estimadoAnterior = estActual;
+
+			// calculo el ratio
+			proceso->ratio = (tiempoEnReady + estActual)/estActual;
+		}
+		// aca se puede usar la funcion de las commons list_get_maximum
+		proceso = list_remove(procesosReady, procesoConMayorRatio(cant));
+	}
+	pthread_mutex_lock(&mutex_procesos_execute);
+	list_add(procesosExecute, proceso);
+	pthread_mutex_unlock(&mutex_procesos_execute);
+
+	//TODO: DESTRUIR TIEMPO DE READY DE PROCESO ELEGIDO
+	return proceso;
+}
+
 

@@ -17,6 +17,7 @@
 #include<commons/string.h>
 #include<commons/collections/list.h>
 #include<commons/string.h>
+#include<commons/temporal.h>
 #include<utils/serializacion.h>
 
 #define TAMANIO_OPERACION 15 //Tamaño maximo de operacion, así usamos malloc de este tamaño (14 + 1 por el \0)
@@ -80,7 +81,10 @@ typedef struct {
     t_registros* registros;
     operacion motivo;
     //char* recurso;
-    // implementar los otros xd
+    t_temporal* tiempoEnReady;
+	t_temporal* tiempoCPU;
+	double estimadoAnterior;
+	double ratio;
 } t_pcb;
 
 typedef struct {
