@@ -193,12 +193,11 @@ t_contexto* recibir_contexto(int socket_cliente) {
 		memcpy(&(contexto->motivo), buffer + desplazamiento, sizeof(int));
 		desplazamiento+=sizeof(int);
 
-		//TODO: alejiti asignar cantidadParametros y luego inicializar_parametros
-		/*
 		memcpy(&(contexto->cantidadParametros), buffer + desplazamiento, sizeof(int));
 		desplazamiento+=sizeof(int);
-		contexto->parametros = inicializar_parametros(cantidadParametros);
-		for(int i = 0;i<cantidadParametros; i++;){
+		int cantParametros = contexto->cantidadParametros;
+		contexto->parametros = inicializar_parametros(cantParametros);
+		for(int i = 0;i<cantParametros; i++){
 			memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
 			desplazamiento+=sizeof(int);
 			char* valor = malloc(tamanio);
@@ -207,7 +206,6 @@ t_contexto* recibir_contexto(int socket_cliente) {
 			contexto->parametros[i] = copiar(valor);
 		 }
 
-		 */
 
 		while(desplazamiento < size)
 		{

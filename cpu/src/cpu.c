@@ -24,15 +24,15 @@ int main(int argc, char* argv[]) {
 			int cod_op = recibir_operacion(socket_cliente);
 			if(cod_op == PROCESO) {
 				pcb = recibir_proceso(socket_cliente);
-				realizar_ciclo_instruccion(pcb);
+				t_instruccion* inst_privilegiada = realizar_ciclo_instruccion(pcb);
 				log_info(logger, "Enviando pcb a kernel");
 				actualizar_registros_pcb(pcb);
-				enviar_contexto(pcb,socket_cliente);
+				enviar_contexto(pcb,inst_privilegiada,socket_cliente);
 
 			} else {
 				send(socket_cliente, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);
 				log_error(logger,"No me llego un proceso");
-				exit(1);
+				//exit(1);
 			}
 		}
 	}
@@ -154,12 +154,13 @@ void recibir_registros(t_buffer*buffer, int* desplazamiento, int tamanio_registr
 */
 
 
-void realizar_ciclo_instruccion(t_pcb * pcb){
+t_instruccion* realizar_ciclo_instruccion(t_pcb * pcb){
 	estado_ejec estado = CONTINUAR;
+	t_instruccion* instruccion_ejecutar;
 	//t_segmento* direc_fisica;
 
 	while (estado == CONTINUAR){ // Solo continua el ciclo con SET, MOV_IN y MOV_OUT (si no hay un error)
-		t_instruccion* instruccion_ejecutar = fetch(pcb->instrucciones, pcb->pc); // busco la instruccion que apunta el pc
+		instruccion_ejecutar = fetch(pcb->instrucciones, pcb->pc); // busco la instruccion que apunta el pc
 		if(decode(instruccion_ejecutar->instruccion)){ //decode lo usamos para sabEr si la instrccion requiere memoria y para hacer el RETARDO de SET
 			//int direc_logica = direc_logica(instruccion_ejecutar);
 			//direc_fisica = traducir_direcciones(direc_logica);
@@ -167,6 +168,7 @@ void realizar_ciclo_instruccion(t_pcb * pcb){
 		estado = execute(instruccion_ejecutar,pcb); //execute devuelve el estado de ejecucion de la instruccion
 		pcb->pc++;
 	}
+	return instruccion_ejecutar;
 }
 
 t_instruccion* fetch(t_list* instrucciones, uint32_t pc){
@@ -297,18 +299,18 @@ estado_ejec ejecutar_set(char* registro, char* valor) {
 
 
 
-void enviar_contexto(t_pcb* proceso, int conexion){
+void enviar_contexto(t_pcb* proceso, t_instruccion* inst, int conexion){
 
-	char* operacion;
-	t_paquete *paquete = crear_paquete(PROCESO);
-	int op_tamanio = 0;
-	t_instruccion* inst = malloc(sizeof(t_instruccion));
-	int cant = list_size(proceso->instrucciones);
-	int cant_parametros = 0;
+	t_paquete *paquete = crear_paquete(CONTEXTO);
+	int cant_parametros = cantParametros(inst->instruccion);
 
 	agregar_valor_estatico(paquete, &(proceso -> pid));
 	agregar_valor_estatico(paquete, &(proceso -> pc));
 	agregar_valor_estatico(paquete, &(proceso -> motivo));
+	agregar_valor_estatico(paquete, &(cant_parametros));
+	for(int i=0; i<cant_parametros; i++) {
+		agregar_a_paquete(paquete,inst->parametros[i],strlen(inst->parametros[i])+1);
+	}
 	agregar_a_paquete(paquete, proceso -> registros->AX, 4);
 	agregar_a_paquete(paquete, proceso -> registros->BX, 4);
 	agregar_a_paquete(paquete, proceso -> registros->CX, 4);

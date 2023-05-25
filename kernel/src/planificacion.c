@@ -33,11 +33,11 @@ void planificar(){
 		log_info(logger, "Proceso enviado a cpu\n");
 
 		// RCV de cpu
-		actualizar_pcb(proceso);
+		t_contexto* contexto = actualizar_pcb(proceso);
 
 		// TODO: Quitar proceso de procesosExecute (proceso en running)
 
-		switch(proceso->motivo){
+		switch(contexto->motivo){
 			case EXT:
 				log_info(logger, "Salimos como unos campeones\n");
 				// Pasar a estado EXIT

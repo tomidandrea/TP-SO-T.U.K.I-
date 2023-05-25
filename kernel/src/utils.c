@@ -111,18 +111,17 @@ void liberarMutex(){ //Semaforos mutex para acceder a las listas de procesos
 	pthread_mutex_destroy(&mutex_procesos_execute);
 }
 
-void actualizar_pcb(t_pcb* proceso) {
+t_contexto* actualizar_pcb(t_pcb* proceso) {
 	if(conexionCPU != -1){
 				t_contexto* contexto;
 				int cod_op = recibir_operacion(conexionCPU);
-				if(cod_op == PROCESO) {
+				if(cod_op == CONTEXTO) {
 					contexto = recibir_contexto(conexionCPU);
 					// actualizo proceso con lo q viene del pcb (PC y registros)
 					log_info(logger, "Recibo contexto pa - PID:%d\n", contexto->pid);
 
 					proceso->pid = contexto->pid;
 					proceso->pc = contexto->pc;
-					proceso->motivo = contexto->motivo;
 					strcpy(proceso->registros->AX, contexto->registros->AX);
 					strcpy(proceso->registros->BX, contexto->registros->BX);
 					strcpy(proceso->registros->CX, contexto->registros->CX);
@@ -141,7 +140,8 @@ void actualizar_pcb(t_pcb* proceso) {
 				} else {
 					log_error(logger,"No me llego un proceso");
 				}
-			}
+			return contexto;
+		}
 
 }
 
