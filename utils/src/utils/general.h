@@ -16,6 +16,7 @@
 #include<commons/config.h>
 #include<commons/string.h>
 #include<commons/collections/list.h>
+#include<commons/collections/queue.h>
 #include<commons/string.h>
 #include<utils/serializacion.h>
 
@@ -78,7 +79,6 @@ typedef struct {
     t_list* instrucciones;
     int pc;
     t_registros* registros;
-    operacion motivo;
     //char* recurso;
     // implementar los otros xd
 } t_pcb;

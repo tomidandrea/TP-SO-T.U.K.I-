@@ -7,9 +7,13 @@ extern t_config* config;
 extern t_log* logger;
 extern t_socket conexionCPU;
 
+extern t_list* colasDeBloqueados;
 extern char** recursos;
 extern char** instanciasRecursos;
 extern int cantidad_recursos;
+extern int* instancias;
+extern t_list* procesosExecute;
+extern t_list* procesosReady;
 
 extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion;
 extern pthread_mutex_t mutex_procesos_new;
@@ -87,9 +91,10 @@ void inicializarRecursos(){
 	recursos = config_get_array_value(config, "RECURSOS");
 	instanciasRecursos = inicializar_parametros(cantidad_recursos);
 	instanciasRecursos = config_get_array_value(config, "INSTANCIAS_RECURSOS");
-//	for (int i = 0; i < cantidad_recursos; ++i) {
-//		log_info(logger, "Recurso %d: %s tiene %s instancia/s", i, recursos[i], instanciasRecursos[i]);
-//	}
+	pasarAInstanciasEnteras();
+	for (int i = 0; i < cantidad_recursos; ++i) {
+		log_info(logger, "Recurso %d: %s tiene %d instancia/s", i, recursos[i], instancias[i]);
+	}
 }
 
 void inicializarSemoforos(){
@@ -157,6 +162,92 @@ int verificarRecursos(char* recurso){
 		}
 	}
 	return existeRecurso;
+}
+
+void wait(char* recurso, t_pcb* proceso) {
+
+    disminuirInstancias(recurso);
+
+    if(cantInstancias(recurso) < 0) {
+        bloquear(proceso, recurso);
+    }
+}
+
+
+void ejecutarSignal(char* recurso) {
+    aumentarInstancias(recurso);
+
+    if(cantInstancias(recurso) <= 0) {
+         desbloquearPrimerProceso(recurso);
+    }
+}
+
+int indice(char* recurso) {
+
+    for(int i=0; i <= cantidad_recursos; i++) {
+        if(strcmp(recursos[i], recurso) == 0) {
+          return i;
+        }
+    }
+}
+
+int cantInstancias(char* recurso) {
+	int i =  indice(recurso);
+
+	return instancias[i];
+}
+
+void crearColasDeBloqueados() {
+    for(int i=0; i <= cantidad_recursos; i++) {
+        t_queue* cola = queue_create();
+        list_add(colasDeBloqueados, cola);
+    }
+}
+
+void aumentarInstancias(char* recurso) {
+    int i =  indice(recurso);
+    instancias[i] += 1;
+    log_info(logger, "La nueva cantidad de instancias del recurso %s es: %d", recurso,instancias[i]);
+}
+
+void disminuirInstancias(char* recurso) {
+    int i =  indice(recurso);
+    instancias[i] -= 1;
+    log_info(logger, "La nueva cantidad de instancias del recurso %s es: %d", recurso,instancias[i]);
+}
+
+void desbloquearPrimerProceso(char* recurso) {
+    int i = indice(recurso);
+    t_queue* cola = list_get(colasDeBloqueados, i);
+    t_pcb* proceso = queue_peek(cola);
+    pthread_mutex_lock(&mutex_procesos_ready);
+	list_add(procesosReady, proceso);
+	pthread_mutex_unlock(&mutex_procesos_ready);
+    log_info(logger, "Se desbloqueo el proceso %d de la cola del recurso %s",proceso->pid, recurso);
+    queue_pop(cola);
+
+}
+
+void bloquear(t_pcb* proceso, char* recurso) {
+    int i = indice(recurso);
+    t_queue* cola = list_get(colasDeBloqueados, i);
+    sacarDeCPU();
+    queue_push(cola, proceso);
+    log_info(logger, "El proceso %d queda bloqueado por falta de instancias del recurso %s", proceso->pid, recurso);
+
+}
+
+void sacarDeCPU() {
+    pthread_mutex_lock(&mutex_procesos_execute);
+	t_pcb* proceso = list_remove(procesosExecute, 0);
+	pthread_mutex_unlock(&mutex_procesos_execute);
+    //sem_post(sem_execute) no se si habria que crear un semaforo para execute
+}
+
+void pasarAInstanciasEnteras() {
+	for(int i=0; i <= cantidad_recursos; i++) {
+        instancias[i] = atoi(instanciasRecursos[i]);
+    }
 }
 
 

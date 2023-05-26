@@ -61,11 +61,22 @@ void planificar(){
 				break;
 			case WAIT:
 				log_info(logger, "Llego un WAIT pibe\n");
-				/*if(verificarRecursos(proceso->recurso)){
-
-				}else{
-					log_error(logger, "No existe el recurso: %s", proceso->recurso);
-				}*/
+				char* recurso = contexto->parametros[0];
+				if(verificarRecursos(recurso)){
+					wait(recurso, proceso);
+				} else{
+					log_error(logger, "No existe el recurso: %s", recurso);
+					// TODO:FINALIZAR PROCESO
+				}
+				break;
+			case SIGNAL:
+				log_info(logger, "Llego un WAIT pibe\n");
+				if(verificarRecursos(recurso)){
+					ejecutarSignal(recurso);
+				} else{
+					log_error(logger, "No existe el recurso: %s", recurso);
+					//FINALIZAR PROCESO
+				}
 				break;
 			default:
 				log_info(logger, "No se implemento xd\n");

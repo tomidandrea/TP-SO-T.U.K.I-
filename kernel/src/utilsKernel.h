@@ -33,6 +33,15 @@ void liberarSemoforos();
 void liberarMutex();
 
 int verificarRecursos(char* recurso);
-
-
+void wait(char* recurso, t_pcb* proceso);
+void ejecutarSignal(char* recurso);
+int indice(char* recurso);
+int cantInstancias(char* recurso);
+void crearColasDeBloqueados();
+void aumentarInstancias(char* recurso);
+void disminuirInstancias(char* recurso);
+void desbloquearPrimerProceso(char* recurso);
+void bloquear(t_pcb* proceso, char* recurso);
+void sacarDeCPU();
+void pasarAInstanciasEnteras();
 #endif
