@@ -79,7 +79,7 @@ typedef struct {
     t_list* instrucciones;
     int pc;
     t_registros* registros;
-    //char* recurso;
+    operacion motivo;
     // implementar los otros xd
 } t_pcb;
 

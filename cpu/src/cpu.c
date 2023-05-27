@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
 			} else {
 				send(socket_cliente, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);
 				log_error(logger,"No me llego un proceso");
-				//exit(1);
+				exit(1);
 			}
 		}
 	}
@@ -103,19 +103,19 @@ estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb* pcb){
 			return FIN;
 
 		case IO:
-			log_info(logger,"PID: %d - Ejecutando: %s - ", pcb->pid, instruccion_ejecutar-> instruccion);
+			log_info(logger,"PID: %d - Ejecutando: %s - %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar->parametros[0]);
 			pcb->motivo = IO;
 			//TODO ver si tengo que tener el parametro de la instruccion en el pcb que envio a kernel (que indica el tiempo de bloqueo) o lo podemos buscar directo desde el kernel haciendo un listget pc-1  de la lista de instrucciones (obtengo la instruccion anterior y de ahi saco los parametros)
 			return FIN;
 
 		//TODO ver lo mismo del parametro que pasa en IO para WAIT Y SIGNAL (en este caso el parametro es un recurso)
 		case WAIT:
-			log_info(logger,"PID: %d - Ejecutando: %s - ", pcb->pid, instruccion_ejecutar-> instruccion);
+			log_info(logger,"PID: %d - Ejecutando: %s - %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar-> parametros[0]);
 			pcb->motivo = WAIT;
 			return FIN;
 
 		case SIGNAL:
-			log_info(logger,"PID: %d - Ejecutando: %s - ", pcb->pid, instruccion_ejecutar-> instruccion);
+			log_info(logger,"PID: %d - Ejecutando: %s - %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar-> parametros[0]);
 		    pcb->motivo = SIGNAL;
 			return FIN;
 

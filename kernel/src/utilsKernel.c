@@ -91,6 +91,7 @@ void inicializarRecursos(){
 	recursos = config_get_array_value(config, "RECURSOS");
 	instanciasRecursos = inicializar_parametros(cantidad_recursos);
 	instanciasRecursos = config_get_array_value(config, "INSTANCIAS_RECURSOS");
+	instancias = malloc(sizeof(int) * cantidad_recursos);
 	pasarAInstanciasEnteras();
 	for (int i = 0; i < cantidad_recursos; ++i) {
 		log_info(logger, "Recurso %d: %s tiene %d instancia/s", i, recursos[i], instancias[i]);
@@ -128,6 +129,7 @@ t_contexto* actualizar_pcb(t_pcb* proceso) {
 
 					proceso->pid = contexto->pid;
 					proceso->pc = contexto->pc;
+					proceso->motivo = contexto->motivo;
 					strcpy(proceso->registros->AX, contexto->registros->AX);
 					strcpy(proceso->registros->BX, contexto->registros->BX);
 					strcpy(proceso->registros->CX, contexto->registros->CX);
@@ -141,7 +143,6 @@ t_contexto* actualizar_pcb(t_pcb* proceso) {
 					strcpy(proceso->registros->RCX, contexto->registros->RCX);
 					strcpy(proceso->registros->RDX, contexto->registros->RDX);
 
-					liberar_contexto(contexto);
 
 				} else {
 					log_error(logger,"No me llego un proceso");
@@ -171,6 +172,8 @@ void wait(char* recurso, t_pcb* proceso) {
     if(cantInstancias(recurso) < 0) {
         bloquear(proceso, recurso);
     }
+    mandar_pcb_a_CPU(proceso);
+    log_info(logger, "Proceso %d vuelve a cpu por disponibilidad del recurso %s\n", proceso->pid, recurso);
 }
 
 
@@ -180,11 +183,12 @@ void ejecutarSignal(char* recurso) {
     if(cantInstancias(recurso) <= 0) {
          desbloquearPrimerProceso(recurso);
     }
+    log_info(logger, "Se realizo signal del recurso %s. El proceso puede seguir ejecutandose en cpu\n", recurso);
 }
 
 int indice(char* recurso) {
 
-    for(int i=0; i <= cantidad_recursos; i++) {
+    for(int i=0; i < cantidad_recursos; i++) {
         if(strcmp(recursos[i], recurso) == 0) {
           return i;
         }
@@ -198,7 +202,7 @@ int cantInstancias(char* recurso) {
 }
 
 void crearColasDeBloqueados() {
-    for(int i=0; i <= cantidad_recursos; i++) {
+    for(int i=0; i < cantidad_recursos; i++) {
         t_queue* cola = queue_create();
         list_add(colasDeBloqueados, cola);
     }
@@ -245,7 +249,7 @@ void sacarDeCPU() {
 }
 
 void pasarAInstanciasEnteras() {
-	for(int i=0; i <= cantidad_recursos; i++) {
+	for(int i=0; i < cantidad_recursos; i++) {
         instancias[i] = atoi(instanciasRecursos[i]);
     }
 }

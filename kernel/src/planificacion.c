@@ -82,6 +82,7 @@ void planificar(){
 				log_info(logger, "No se implemento xd\n");
 				break;
 		}
+		liberar_contexto(contexto);
 	}
 	free(algoritmo);
 }
