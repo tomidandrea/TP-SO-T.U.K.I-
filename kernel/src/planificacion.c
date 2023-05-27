@@ -40,16 +40,24 @@ void planificar(){
 		switch(contexto->motivo){
 			case EXT:
 				log_info(logger, "Salimos como unos campeones\n");
+				sacarDeCPU();
 				// Pasar a estado EXIT
 				// liberar_recursos();
 				// avisar_fin_a_memoria();
 				// avisar_fin_a_consola();
+				printf("Lista procesosReady:%d\n", list_size(procesosReady));
+				if(!list_is_empty(procesosReady)){
+					printf("Entre al if\n");
+					sem_post(&sem_ready);
+				}
+				printf("POST grado multi\n");
+				sem_post(&sem_grado_multiprogramacion);
 				break;
 			case YIELD:
 				log_info(logger, "Hubo un YIELD\n");
 
 				// Lo agrego al final de la lista de ready
-
+				sacarDeCPU();
 				pthread_mutex_lock(&mutex_procesos_ready);
 				list_add(procesosReady, proceso);
 				pthread_mutex_unlock(&mutex_procesos_ready);

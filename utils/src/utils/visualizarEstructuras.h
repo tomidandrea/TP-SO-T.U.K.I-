@@ -11,6 +11,7 @@
 #include<utils/general.h>
 
 void mostrarRegistros(t_registros* registros);
+void mostrarLista(t_list* lista);
 
 
 #endif /* SRC_UTILS_VISUALIZARESTRUCTURAS_H_ */

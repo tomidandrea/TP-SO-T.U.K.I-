@@ -186,8 +186,9 @@ void ejecutarSignal(char* recurso) {
          desbloquearPrimerProceso(recurso);
     }
     t_pcb* proceso = sacarDeCPU();
-    agregarAlInicioDeReady(proceso);
-    log_info(logger, "Se realizo signal del recurso %s. El proceso %d puede seguir ejecutandose en cpu\n", recurso, proceso->pid);
+	agregarAlInicioDeReady(proceso);
+	log_info(logger, "Se realizo signal del recurso %s. El proceso %d puede seguir ejecutandose en cpu\n", recurso, proceso->pid);
+
 }
 
 int indice(char* recurso) {
@@ -249,6 +250,7 @@ t_pcb* sacarDeCPU() {
     pthread_mutex_lock(&mutex_procesos_execute);
 	t_pcb* proceso = list_remove(procesosExecute, 0);
 	pthread_mutex_unlock(&mutex_procesos_execute);
+	printf("Proceso que sacamos de execute:%d\n", proceso->pid);
 	return proceso;
 }
 

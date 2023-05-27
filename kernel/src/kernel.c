@@ -23,8 +23,8 @@ int main(int argc, char* argv[]) {
     colasDeBloqueados = list_create();
     crearColasDeBloqueados();
     //no hay que verificar acá, solo de prueba
-    char* recursoEjemplo = "DISCO";
-    verificarRecursos(recursoEjemplo);
+    /*char* recursoEjemplo = "DISCO";
+    verificarRecursos(recursoEjemplo);*/
     inicializarSemoforos();
 
     procesosNew = list_create();
