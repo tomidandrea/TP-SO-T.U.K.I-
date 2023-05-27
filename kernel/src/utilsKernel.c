@@ -165,15 +165,17 @@ int verificarRecursos(char* recurso){
 	return existeRecurso;
 }
 
-void wait(char* recurso, t_pcb* proceso) {
+void wait(char* recurso) {
 
     disminuirInstancias(recurso);
 
     if(cantInstancias(recurso) < 0) {
-        bloquear(proceso, recurso);
-    }
-    mandar_pcb_a_CPU(proceso);
+        bloquear(recurso);
+    } else {
+    t_pcb* proceso = sacarDeCPU();
+    agregarAlInicioDeReady(proceso);
     log_info(logger, "Proceso %d vuelve a cpu por disponibilidad del recurso %s\n", proceso->pid, recurso);
+    }
 }
 
 
@@ -183,7 +185,9 @@ void ejecutarSignal(char* recurso) {
     if(cantInstancias(recurso) <= 0) {
          desbloquearPrimerProceso(recurso);
     }
-    log_info(logger, "Se realizo signal del recurso %s. El proceso puede seguir ejecutandose en cpu\n", recurso);
+    t_pcb* proceso = sacarDeCPU();
+    agregarAlInicioDeReady(proceso);
+    log_info(logger, "Se realizo signal del recurso %s. El proceso %d puede seguir ejecutandose en cpu\n", recurso, proceso->pid);
 }
 
 int indice(char* recurso) {
@@ -232,20 +236,27 @@ void desbloquearPrimerProceso(char* recurso) {
 
 }
 
-void bloquear(t_pcb* proceso, char* recurso) {
+void bloquear(char* recurso) {
     int i = indice(recurso);
     t_queue* cola = list_get(colasDeBloqueados, i);
-    sacarDeCPU();
+    t_pcb* proceso = sacarDeCPU();
     queue_push(cola, proceso);
     log_info(logger, "El proceso %d queda bloqueado por falta de instancias del recurso %s", proceso->pid, recurso);
 
 }
 
-void sacarDeCPU() {
+t_pcb* sacarDeCPU() {
     pthread_mutex_lock(&mutex_procesos_execute);
 	t_pcb* proceso = list_remove(procesosExecute, 0);
 	pthread_mutex_unlock(&mutex_procesos_execute);
-    //sem_post(sem_execute) no se si habria que crear un semaforo para execute
+	return proceso;
+}
+
+void agregarAlInicioDeReady(t_pcb* proceso) {
+	pthread_mutex_lock(&mutex_procesos_ready);
+	list_add_in_index(procesosReady,0,proceso);
+	pthread_mutex_unlock(&mutex_procesos_ready);
+	sem_post(&sem_ready);
 }
 
 void pasarAInstanciasEnteras() {

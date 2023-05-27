@@ -61,20 +61,21 @@ void planificar(){
 				break;
 			case WAIT:
 				log_info(logger, "Llego un WAIT pibe\n");
-				char* recurso = contexto->parametros[0];
-				if(verificarRecursos(recurso)){
-					wait(recurso, proceso);
+				char* recursoW = contexto->parametros[0];
+				if(verificarRecursos(recursoW)){
+					wait(recursoW);
 				} else{
-					log_error(logger, "No existe el recurso: %s", recurso);
+					log_error(logger, "No existe el recurso: %s", recursoW);
 					// TODO:FINALIZAR PROCESO
 				}
 				break;
 			case SIGNAL:
-				log_info(logger, "Llego un WAIT pibe\n");
-				if(verificarRecursos(recurso)){
-					ejecutarSignal(recurso);
+				log_info(logger, "Llego un SIGNAL pibe\n");
+				char* recursoS = contexto->parametros[0];
+				if(verificarRecursos(recursoS)){
+					ejecutarSignal(recursoS);
 				} else{
-					log_error(logger, "No existe el recurso: %s", recurso);
+					log_error(logger, "No existe el recurso: %s", recursoS);
 					//FINALIZAR PROCESO
 				}
 				break;
