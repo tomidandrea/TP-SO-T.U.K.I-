@@ -122,8 +122,6 @@ t_contexto* actualizar_pcb(t_pcb* proceso) {
 					contexto = recibir_contexto(conexionCPU);
 
 					temporal_stop(proceso->tiempoCPU);
-					int64_t tiempo = temporal_gettime(proceso->tiempoCPU);
-					//todo: reiniciar tiempo
 					// actualizo proceso con lo q viene del pcb (PC y registros)
 					log_info(logger, "Recibo contexto pa - PID:%d\n", contexto->pid);
 
@@ -152,16 +150,19 @@ t_contexto* actualizar_pcb(t_pcb* proceso) {
 
 }
 
-void iniciarTiempoEnReady(t_pcb* proceso){
+t_temporal* iniciarTiempoEnReady(){
 	t_temporal* tiempo;
 	tiempo = temporal_create();
-	proceso->tiempoEnReady = tiempo;
+	//proceso->tiempoEnReady = tiempo;
+	return tiempo;
 }
 
-void iniciarTiempoCPU(t_pcb* proceso){
+
+t_temporal* iniciarTiempoCPU(){
 	t_temporal* tiempo;
-		tiempo = temporal_create();
-		proceso->tiempoCPU = tiempo;
+	tiempo = temporal_create();
+	//proceso->tiempoCPU = tiempo;
+	return tiempo;
 }
 
 

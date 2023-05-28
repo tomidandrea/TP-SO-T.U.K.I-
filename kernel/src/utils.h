@@ -27,8 +27,8 @@ void crearEscucharConsolas();
 void crearAgregarReady();
 void crearPlanificar();
 
-void iniciarTiempoCPU(t_pcb*);
-void iniciarTiempoEnReady(t_pcb*);
+t_temporal* iniciarTiempoCPU();
+t_temporal* iniciarTiempoEnReady();
 
 void inicializarRecursos();
 void inicializarSemoforos();

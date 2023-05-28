@@ -56,17 +56,14 @@ void planificar(){
 				// avisar_fin_a_consola();
 				break;
 			case YIELD:
-				log_info(logger, "Hubo un YIELD\n");
+				log_info(logger, "Hubo un YIELD del proceso %d\n", proceso->pid);
 
-				// Lo agrego al final de la lista de ready
-				/*
-				iniciarTiempoEnReady(proceso);
+				proceso->tiempoEnReady = iniciarTiempoEnReady();
 				pthread_mutex_lock(&mutex_procesos_ready);
 				list_add(procesosReady, proceso);
 				pthread_mutex_unlock(&mutex_procesos_ready);
 
 				sem_post(&sem_ready);
-				*/
 
 				// Si algoritmo == HRRN -> calcular_estimado();
 				break;
@@ -114,7 +111,7 @@ void pasarAReady(){
 	pthread_mutex_lock(&mutex_procesos_ready);
 	list_add(procesosReady, proceso);
 	pthread_mutex_unlock(&mutex_procesos_ready);
-	iniciarTiempoEnReady(proceso);
+	proceso->tiempoEnReady = iniciarTiempoEnReady();
 }
 
 t_pcb* planificarFIFO(){
@@ -158,6 +155,7 @@ t_pcb* planificarHRRN(double alfa){
 		for(int i = 0;i<cant;i++) {
 			proceso = list_get(procesosReady,i);
 			tiempoEnReady = temporal_gettime(proceso->tiempoEnReady);
+			printf("tiempoEnReady: %ld \n",tiempoEnReady);
 			est = proceso->estimadoAnterior;
 
 			// calculo la rafaga actual
@@ -168,15 +166,20 @@ t_pcb* planificarHRRN(double alfa){
 				int64_t realEjec;
 				realEjec = temporal_gettime(proceso->tiempoCPU);
 
-
 				estActual = alfa*realEjec + (1-alfa)*est;
 
 				proceso->estimadoAnterior = estActual;
+				//temporal_resume(proceso->tiempoCPU);
+				printf("realEjec %ld \n", realEjec);
+				printf("proceso->tiempoCPU %ld \n", temporal_gettime(proceso->tiempoCPU));
+				temporal_destroy(proceso->tiempoCPU);
+
 			}
 
 			// calculo el ratio
 			proceso->ratio = (tiempoEnReady + estActual)/estActual;
 			log_info(logger,"RATIO: %f - proceso: %d", proceso->ratio, proceso->pid);
+
 		}
 		// aca se puede usar la funcion de las commons list_get_maximum
 		proceso = list_remove(procesosReady, procesoConMayorRatio(cant));
@@ -185,9 +188,12 @@ t_pcb* planificarHRRN(double alfa){
 	list_add(procesosExecute, proceso);
 	pthread_mutex_unlock(&mutex_procesos_execute);
 
-	//TODO: DESTRUIR TIEMPO DE READY DE PROCESO ELEGIDO
+	temporal_stop(proceso->tiempoEnReady);
 	temporal_destroy(proceso->tiempoEnReady);
+	//
+
 	return proceso;
+
 }
 
 
