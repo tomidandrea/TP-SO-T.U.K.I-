@@ -80,6 +80,7 @@ void crearPlanificar(){
 	while(1);
 }
 
+
 void inicializarRecursos(){
 	char* recursos_config =  config_get_string_value(config, "RECURSOS");
 	// TODO: alejiti fijate q la cantidad es un vector
@@ -150,6 +151,28 @@ t_contexto* actualizar_pcb(t_pcb* proceso) {
 			return contexto;
 		}
 
+}
+
+void ejecutarIO(char* tiempo){
+	pthread_t hilo_bloqueoPorIO;
+	printf("%s",tiempo);
+	pthread_create(&hilo_bloqueoPorIO,NULL,(void*)bloquearYPasarAReady,(void*)tiempo);
+	pthread_detach(hilo_bloqueoPorIO);
+}
+
+void bloquearYPasarAReady(void*tiempo) {
+	t_pcb* proceso = sacarDeCPU();
+	char*t;
+	t= (char*)tiempo;
+	printf("%s\n",t);
+	int espera = atoi(t);
+	log_info(logger,"Se bloqueara el Proceso %d por IO durante %d segundos", proceso->pid,espera);
+	sleep(espera);
+	log_info(logger,"Finaliza bloqueo de Proceso %d por IO y pasa a estado ready", proceso->pid);
+	pthread_mutex_lock(&mutex_procesos_ready);
+	list_add(procesosReady, proceso);
+	pthread_mutex_unlock(&mutex_procesos_ready);
+	sem_post(&sem_ready);
 }
 
 

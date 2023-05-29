@@ -32,6 +32,8 @@ void inicializarSemoforos();
 void liberarSemoforos();
 void liberarMutex();
 
+void ejecutarIO(char* tiempo);
+void bloquearYPasarAReady(void*tiempo);
 int verificarRecursos(char* recurso);
 void wait(char* recurso);
 void ejecutarSignal(char* recurso);

@@ -67,6 +67,10 @@ void planificar(){
 
 				// Si algoritmo == HRRN -> calcular_estimado();
 				break;
+			case IO:
+				log_info(logger, "Hubo un IO\n");
+				ejecutarIO(contexto->parametros[0]);
+				break;
 			case WAIT:
 				log_info(logger, "Llego un WAIT pibe\n");
 				char* recursoW = contexto->parametros[0];
