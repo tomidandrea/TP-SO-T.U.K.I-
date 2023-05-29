@@ -23,6 +23,10 @@ t_pcb* crearPCB(t_list* listaInstrucciones){
     pcb->instrucciones = list_duplicate(listaInstrucciones);
     pcb->registros = inicializarRegistros();
     pcb->estimadoAnterior = config_get_double_value(config,"ESTIMACION_INICIAL");
+    pcb->tiempoEnReady = iniciarTiempo();
+    temporal_stop(pcb->tiempoEnReady);
+    pcb->tiempoCPU = iniciarTiempo();
+    temporal_stop(pcb->tiempoCPU);
 
     strcpy(pcb->registros->AX, "0");
     strcpy(pcb->registros->BX, "0");
@@ -163,6 +167,38 @@ t_temporal* iniciarTiempoCPU(){
 	tiempo = temporal_create();
 	//proceso->tiempoCPU = tiempo;
 	return tiempo;
+}
+
+t_temporal* iniciarTiempo(){
+	t_temporal* tiempo;
+	tiempo = temporal_create();
+	return tiempo;
+}
+
+void pararTiempoReady(t_pcb* proceso){
+	t_temporal* temporal = proceso->tiempoEnReady;
+	temporal_stop(temporal);
+	temporal_destroy(temporal);
+
+	t_temporal* nuevoTemporal;
+	nuevoTemporal = temporal_create();
+	temporal_stop(nuevoTemporal);
+	/*temporal = temporal_create();
+	temporal_stop(temporal);*/
+	proceso->tiempoEnReady = nuevoTemporal;
+}
+
+void pararTiempoCPU(t_pcb* proceso){
+	t_temporal* temporal = proceso->tiempoCPU;
+	temporal_stop(temporal);
+	temporal_destroy(temporal);
+
+	t_temporal* nuevoTemporal;
+	nuevoTemporal = temporal_create();
+	temporal_stop(nuevoTemporal);
+	/*temporal = temporal_create();
+	temporal_stop(temporal);*/
+	proceso->tiempoCPU = nuevoTemporal;
 }
 
 

@@ -115,7 +115,8 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 	    //free(inst);
 	}
 
-	proceso->tiempoCPU = iniciarTiempoCPU();
+	//proceso->tiempoCPU = iniciarTiempo();
+	temporal_resume(proceso->tiempoCPU);
 	//iniciarTiempoCPU(proceso);
 	enviar_paquete(paquete,conexionCPU);                // serializa el paquete y lo envia
 

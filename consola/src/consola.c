@@ -37,6 +37,10 @@ int main(int argc, char** argv) {
 
     uint32_t result;
     recv(conexion, &result, sizeof(uint32_t), MSG_WAITALL);
+    if(conexion==-1){
+    	log_error(logger,"Se cerró kernel");
+    	exit(1);
+    }
     if(result == 0){
     	log_info(logger, "Resultado: Termino todo bien pa");
     }else

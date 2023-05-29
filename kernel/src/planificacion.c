@@ -58,7 +58,8 @@ void planificar(){
 			case YIELD:
 				log_info(logger, "Hubo un YIELD del proceso %d\n", proceso->pid);
 
-				proceso->tiempoEnReady = iniciarTiempoEnReady();
+				//proceso->tiempoEnReady = iniciarTiempo();
+				temporal_resume(proceso->tiempoEnReady);
 				pthread_mutex_lock(&mutex_procesos_ready);
 				list_add(procesosReady, proceso);
 				pthread_mutex_unlock(&mutex_procesos_ready);
@@ -111,7 +112,8 @@ void pasarAReady(){
 	pthread_mutex_lock(&mutex_procesos_ready);
 	list_add(procesosReady, proceso);
 	pthread_mutex_unlock(&mutex_procesos_ready);
-	proceso->tiempoEnReady = iniciarTiempoEnReady();
+	//proceso->tiempoEnReady = iniciarTiempo();
+	temporal_resume(proceso->tiempoEnReady);
 }
 
 t_pcb* planificarFIFO(){
@@ -144,6 +146,8 @@ t_pcb* planificarHRRN(double alfa){
 
 	if(INICIO){
 		proceso = list_remove(procesosReady, 0);
+		//proceso->tiempoEnReady= pararTiempo(proceso->tiempoEnReady);
+		pararTiempoReady(proceso);
 		INICIO = 0;
 	}
 	else {
@@ -155,7 +159,7 @@ t_pcb* planificarHRRN(double alfa){
 		for(int i = 0;i<cant;i++) {
 			proceso = list_get(procesosReady,i);
 			tiempoEnReady = temporal_gettime(proceso->tiempoEnReady);
-			printf("tiempoEnReady: %ld \n",tiempoEnReady);
+			printf("Proceso %d tiempoEnReady : %ld \n", proceso->pid ,tiempoEnReady);
 			est = proceso->estimadoAnterior;
 
 			// calculo la rafaga actual
@@ -165,6 +169,8 @@ t_pcb* planificarHRRN(double alfa){
 			else{
 				int64_t realEjec;
 				realEjec = temporal_gettime(proceso->tiempoCPU);
+				//proceso->tiempoCPU = pararTiempo(proceso->tiempoCPU);
+				pararTiempoCPU(proceso);
 
 				estActual = alfa*realEjec + (1-alfa)*est;
 
@@ -172,7 +178,6 @@ t_pcb* planificarHRRN(double alfa){
 				//temporal_resume(proceso->tiempoCPU);
 				printf("realEjec %ld \n", realEjec);
 				printf("proceso->tiempoCPU %ld \n", temporal_gettime(proceso->tiempoCPU));
-				temporal_destroy(proceso->tiempoCPU);
 
 			}
 
@@ -183,14 +188,12 @@ t_pcb* planificarHRRN(double alfa){
 		}
 		// aca se puede usar la funcion de las commons list_get_maximum
 		proceso = list_remove(procesosReady, procesoConMayorRatio(cant));
+		//pararTiempo(proceso->tiempoEnReady);
+		pararTiempoReady(proceso);
 	}
 	pthread_mutex_lock(&mutex_procesos_execute);
 	list_add(procesosExecute, proceso);
 	pthread_mutex_unlock(&mutex_procesos_execute);
-
-	temporal_stop(proceso->tiempoEnReady);
-	temporal_destroy(proceso->tiempoEnReady);
-	//
 
 	return proceso;
 
