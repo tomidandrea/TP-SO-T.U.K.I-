@@ -36,18 +36,21 @@ int main(int argc, char** argv) {
 
 
     uint32_t result;
-    recv(conexion, &result, sizeof(uint32_t), MSG_WAITALL);
-    if(conexion==-1){
-    	log_error(logger,"Se cerró kernel");
-    	exit(1);
-    }
-    if(result == 0){
-    	log_info(logger, "Resultado: Termino todo bien pa");
-    }else
-    	log_info(logger, "Resultado: Rompiste algo");
 
-    liberar_conexion(conexion); // Libera ip y puerto
-    liberarEstructuras();
+	if(recv(conexion, &result, sizeof(uint32_t), MSG_WAITALL)> 0){
+		if(result == 0){
+				log_info(logger, "Resultado: Termino todo bien pa");
+			}else
+				log_info(logger, "Resultado: Rompiste algo");
+
+			liberar_conexion(conexion); // Libera ip y puerto
+			liberarEstructuras();
+	}else{
+		close(conexion);
+		log_error(logger,"Se cerró kernel");
+		return -1;
+	}
+
     return 0;
 }
 

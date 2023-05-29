@@ -146,8 +146,8 @@ t_pcb* planificarHRRN(double alfa){
 
 	if(INICIO){
 		proceso = list_remove(procesosReady, 0);
-		//proceso->tiempoEnReady= pararTiempo(proceso->tiempoEnReady);
-		pararTiempoReady(proceso);
+		proceso->tiempoEnReady= pararTiempo(proceso->tiempoEnReady);
+		//pararTiempoReady(proceso);
 		INICIO = 0;
 	}
 	else {
@@ -169,15 +169,15 @@ t_pcb* planificarHRRN(double alfa){
 			else{
 				int64_t realEjec;
 				realEjec = temporal_gettime(proceso->tiempoCPU);
-				//proceso->tiempoCPU = pararTiempo(proceso->tiempoCPU);
-				pararTiempoCPU(proceso);
+				proceso->tiempoCPU = pararTiempo(proceso->tiempoCPU);
+				//pararTiempoCPU(proceso);
 
 				estActual = alfa*realEjec + (1-alfa)*est;
 
 				proceso->estimadoAnterior = estActual;
 				//temporal_resume(proceso->tiempoCPU);
-				printf("realEjec %ld \n", realEjec);
-				printf("proceso->tiempoCPU %ld \n", temporal_gettime(proceso->tiempoCPU));
+				//printf("realEjec %ld \n", realEjec);
+				//printf("proceso->tiempoCPU %ld \n", temporal_gettime(proceso->tiempoCPU));
 
 			}
 
@@ -188,8 +188,8 @@ t_pcb* planificarHRRN(double alfa){
 		}
 		// aca se puede usar la funcion de las commons list_get_maximum
 		proceso = list_remove(procesosReady, procesoConMayorRatio(cant));
-		//pararTiempo(proceso->tiempoEnReady);
-		pararTiempoReady(proceso);
+		proceso->tiempoEnReady = pararTiempo(proceso->tiempoEnReady);
+		//pararTiempoReady(proceso);
 	}
 	pthread_mutex_lock(&mutex_procesos_execute);
 	list_add(procesosExecute, proceso);

@@ -175,30 +175,13 @@ t_temporal* iniciarTiempo(){
 	return tiempo;
 }
 
-void pararTiempoReady(t_pcb* proceso){
-	t_temporal* temporal = proceso->tiempoEnReady;
+t_temporal* pararTiempo(t_temporal* temporal){
 	temporal_stop(temporal);
 	temporal_destroy(temporal);
-
 	t_temporal* nuevoTemporal;
 	nuevoTemporal = temporal_create();
-	temporal_stop(nuevoTemporal);
-	/*temporal = temporal_create();
-	temporal_stop(temporal);*/
-	proceso->tiempoEnReady = nuevoTemporal;
-}
-
-void pararTiempoCPU(t_pcb* proceso){
-	t_temporal* temporal = proceso->tiempoCPU;
 	temporal_stop(temporal);
-	temporal_destroy(temporal);
-
-	t_temporal* nuevoTemporal;
-	nuevoTemporal = temporal_create();
-	temporal_stop(nuevoTemporal);
-	/*temporal = temporal_create();
-	temporal_stop(temporal);*/
-	proceso->tiempoCPU = nuevoTemporal;
+	return nuevoTemporal;
 }
 
 

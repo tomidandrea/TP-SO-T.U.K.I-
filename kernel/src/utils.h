@@ -31,9 +31,7 @@ t_temporal* iniciarTiempoCPU();
 t_temporal* iniciarTiempoEnReady();
 
 t_temporal* iniciarTiempo();
-//t_temporal* pararTiempo(t_temporal* temporal);
-void pararTiempoReady(t_pcb* proceso);
-void pararTiempoCPU(t_pcb* proceso);
+t_temporal* pararTiempo(t_temporal* temporal);
 
 void inicializarRecursos();
 void inicializarSemoforos();
