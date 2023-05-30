@@ -50,16 +50,31 @@ void planificar(){
 		switch(contexto->motivo){
 			case EXT:
 				log_info(logger, "Salimos como unos campeones\n");
+				sacarDeCPU();
 				// Pasar a estado EXIT
 				// liberar_recursos();
 				// avisar_fin_a_memoria();
 				// avisar_fin_a_consola();
+				printf("Lista procesosReady:%d\n", list_size(procesosReady));
+				if(!list_is_empty(procesosReady)){
+					printf("Entre al if\n");
+					sem_post(&sem_ready);
+				}
+				printf("POST grado multi\n");
+				sem_post(&sem_grado_multiprogramacion);
 				break;
 			case YIELD:
+<<<<<<< HEAD
 				log_info(logger, "Hubo un YIELD del proceso %d\n", proceso->pid);
 
 				//proceso->tiempoEnReady = iniciarTiempo();
 				temporal_resume(proceso->tiempoEnReady);
+=======
+				log_info(logger, "Hubo un YIELD\n");
+
+				// Lo agrego al final de la lista de ready
+				sacarDeCPU();
+>>>>>>> cpu
 				pthread_mutex_lock(&mutex_procesos_ready);
 				list_add(procesosReady, proceso);
 				pthread_mutex_unlock(&mutex_procesos_ready);
@@ -68,18 +83,36 @@ void planificar(){
 
 				// Si algoritmo == HRRN -> calcular_estimado();
 				break;
+			case IO:
+				log_info(logger, "Hubo un IO\n");
+				int tiempo = atoi(contexto->parametros[0]);
+				ejecutarIO(tiempo);
+				break;
 			case WAIT:
 				log_info(logger, "Llego un WAIT pibe\n");
-				/*if(verificarRecursos(proceso->recurso)){
-
-				}else{
-					log_error(logger, "No existe el recurso: %s", proceso->recurso);
-				}*/
+				char* recursoW = contexto->parametros[0];
+				if(verificarRecursos(recursoW)){
+					wait(recursoW);
+				} else{
+					log_error(logger, "No existe el recurso: %s", recursoW);
+					// TODO:FINALIZAR PROCESO
+				}
+				break;
+			case SIGNAL:
+				log_info(logger, "Llego un SIGNAL pibe\n");
+				char* recursoS = contexto->parametros[0];
+				if(verificarRecursos(recursoS)){
+					ejecutarSignal(recursoS);
+				} else{
+					log_error(logger, "No existe el recurso: %s", recursoS);
+					//FINALIZAR PROCESO
+				}
 				break;
 			default:
 				log_info(logger, "No se implemento xd\n");
 				break;
 		}
+		liberar_contexto(contexto);
 	}
 	free(algoritmo);
 }

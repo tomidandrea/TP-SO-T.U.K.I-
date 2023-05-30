@@ -16,6 +16,7 @@
 #include<commons/config.h>
 #include<commons/string.h>
 #include<commons/collections/list.h>
+#include<commons/collections/queue.h>
 #include<commons/string.h>
 #include<commons/temporal.h>
 #include<utils/serializacion.h>
@@ -80,11 +81,15 @@ typedef struct {
     int pc;
     t_registros* registros;
     operacion motivo;
+<<<<<<< HEAD
     //char* recurso;
     t_temporal* tiempoEnReady;
 	t_temporal* tiempoCPU;
 	double estimadoAnterior;
 	double ratio;
+=======
+    // implementar los otros xd
+>>>>>>> cpu
 } t_pcb;
 
 typedef struct {

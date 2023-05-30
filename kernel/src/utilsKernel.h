@@ -38,7 +38,19 @@ void inicializarSemoforos();
 void liberarSemoforos();
 void liberarMutex();
 
+void ejecutarIO(int tiempo);
+void bloquearYPasarAReady(int tiempo);
 int verificarRecursos(char* recurso);
-
-
+void wait(char* recurso);
+void ejecutarSignal(char* recurso);
+int indice(char* recurso);
+int cantInstancias(char* recurso);
+void crearColasDeBloqueados();
+void aumentarInstancias(char* recurso);
+void disminuirInstancias(char* recurso);
+void desbloquearPrimerProceso(char* recurso);
+void bloquear(char* recurso);
+t_pcb* sacarDeCPU();
+void agregarAlInicioDeReady(t_pcb* proceso);
+void pasarAInstanciasEnteras();
 #endif

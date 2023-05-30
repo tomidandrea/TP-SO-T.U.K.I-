@@ -1,4 +1,5 @@
-#include <utils.h>
+#include "utilsKernel.h"
+
 #include <comunicacion.h>
 
 int processID=0;
@@ -6,9 +7,13 @@ extern t_config* config;
 extern t_log* logger;
 extern t_socket conexionCPU;
 
+extern t_list* colasDeBloqueados;
 extern char** recursos;
 extern char** instanciasRecursos;
 extern int cantidad_recursos;
+extern int* instancias;
+extern t_list* procesosExecute;
+extern t_list* procesosReady;
 
 extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion;
 extern pthread_mutex_t mutex_procesos_new;
@@ -81,6 +86,7 @@ void crearPlanificar(){
 	while(1);
 }
 
+
 void inicializarRecursos(){
 	char* recursos_config =  config_get_string_value(config, "RECURSOS");
 	// TODO: alejiti fijate q la cantidad es un vector
@@ -92,9 +98,11 @@ void inicializarRecursos(){
 	recursos = config_get_array_value(config, "RECURSOS");
 	instanciasRecursos = inicializar_parametros(cantidad_recursos);
 	instanciasRecursos = config_get_array_value(config, "INSTANCIAS_RECURSOS");
-//	for (int i = 0; i < cantidad_recursos; ++i) {
-//		log_info(logger, "Recurso %d: %s tiene %s instancia/s", i, recursos[i], instanciasRecursos[i]);
-//	}
+	instancias = malloc(sizeof(int) * cantidad_recursos);
+	pasarAInstanciasEnteras();
+	for (int i = 0; i < cantidad_recursos; ++i) {
+		log_info(logger, "Recurso %d: %s tiene %d instancia/s", i, recursos[i], instancias[i]);
+	}
 }
 
 void inicializarSemoforos(){
@@ -131,6 +139,7 @@ t_contexto* actualizar_pcb(t_pcb* proceso) {
 
 					proceso->pid = contexto->pid;
 					proceso->pc = contexto->pc;
+					proceso->motivo = contexto->motivo;
 					strcpy(proceso->registros->AX, contexto->registros->AX);
 					strcpy(proceso->registros->BX, contexto->registros->BX);
 					strcpy(proceso->registros->CX, contexto->registros->CX);
@@ -144,7 +153,6 @@ t_contexto* actualizar_pcb(t_pcb* proceso) {
 					strcpy(proceso->registros->RCX, contexto->registros->RCX);
 					strcpy(proceso->registros->RDX, contexto->registros->RDX);
 
-					liberar_contexto(contexto);
 
 				} else {
 					log_error(logger,"No me llego un proceso");
@@ -154,6 +162,7 @@ t_contexto* actualizar_pcb(t_pcb* proceso) {
 
 }
 
+<<<<<<< HEAD:kernel/src/utils.c
 t_temporal* iniciarTiempoEnReady(){
 	t_temporal* tiempo;
 	tiempo = temporal_create();
@@ -182,6 +191,24 @@ t_temporal* pararTiempo(t_temporal* temporal){
 	nuevoTemporal = temporal_create();
 	temporal_stop(temporal);
 	return nuevoTemporal;
+=======
+void ejecutarIO(int tiempo) {
+	pthread_t hilo_bloqueoPorIO;
+	printf("%d\n",tiempo);
+	pthread_create(&hilo_bloqueoPorIO,NULL,(void*)bloquearYPasarAReady,tiempo);
+	pthread_detach(hilo_bloqueoPorIO);
+}
+
+void bloquearYPasarAReady(int tiempo) {
+	t_pcb* proceso = sacarDeCPU();
+	log_info(logger,"Se bloqueara el Proceso %d por IO durante %d segundos", proceso->pid,tiempo);
+	sleep(tiempo);
+	log_info(logger,"Finaliza bloqueo de Proceso %d por IO y pasa a estado ready", proceso->pid);
+	pthread_mutex_lock(&mutex_procesos_ready);
+	list_add(procesosReady, proceso);
+	pthread_mutex_unlock(&mutex_procesos_ready);
+	sem_post(&sem_ready);
+>>>>>>> cpu:kernel/src/utilsKernel.c
 }
 
 
@@ -195,6 +222,108 @@ int verificarRecursos(char* recurso){
 		}
 	}
 	return existeRecurso;
+}
+
+void wait(char* recurso) {
+
+    disminuirInstancias(recurso);
+
+    if(cantInstancias(recurso) < 0) {
+        bloquear(recurso);
+    } else {
+    t_pcb* proceso = sacarDeCPU();
+    agregarAlInicioDeReady(proceso);
+    log_info(logger, "Proceso %d vuelve a cpu por disponibilidad del recurso %s\n", proceso->pid, recurso);
+    }
+}
+
+
+void ejecutarSignal(char* recurso) {
+    aumentarInstancias(recurso);
+
+    if(cantInstancias(recurso) <= 0) {
+         desbloquearPrimerProceso(recurso);
+    }
+    t_pcb* proceso = sacarDeCPU();
+	agregarAlInicioDeReady(proceso);
+	log_info(logger, "Se realizo signal del recurso %s. El proceso %d puede seguir ejecutandose en cpu\n", recurso, proceso->pid);
+
+}
+
+int indice(char* recurso) {
+
+    for(int i=0; i < cantidad_recursos; i++) {
+        if(strcmp(recursos[i], recurso) == 0) {
+          return i;
+        }
+    }
+}
+
+int cantInstancias(char* recurso) {
+	int i =  indice(recurso);
+
+	return instancias[i];
+}
+
+void crearColasDeBloqueados() {
+    for(int i=0; i < cantidad_recursos; i++) {
+        t_queue* cola = queue_create();
+        list_add(colasDeBloqueados, cola);
+    }
+}
+
+void aumentarInstancias(char* recurso) {
+    int i =  indice(recurso);
+    instancias[i] += 1;
+    log_info(logger, "La nueva cantidad de instancias del recurso %s es: %d", recurso,instancias[i]);
+}
+
+void disminuirInstancias(char* recurso) {
+    int i =  indice(recurso);
+    instancias[i] -= 1;
+    log_info(logger, "La nueva cantidad de instancias del recurso %s es: %d", recurso,instancias[i]);
+}
+
+void desbloquearPrimerProceso(char* recurso) {
+    int i = indice(recurso);
+    t_queue* cola = list_get(colasDeBloqueados, i);
+    t_pcb* proceso = queue_peek(cola);
+    pthread_mutex_lock(&mutex_procesos_ready);
+	list_add(procesosReady, proceso);
+	pthread_mutex_unlock(&mutex_procesos_ready);
+    log_info(logger, "Se desbloqueo el proceso %d de la cola del recurso %s",proceso->pid, recurso);
+    queue_pop(cola);
+
+}
+
+void bloquear(char* recurso) {
+    int i = indice(recurso);
+    t_queue* cola = list_get(colasDeBloqueados, i);
+    t_pcb* proceso = sacarDeCPU();
+    queue_push(cola, proceso);
+    log_info(logger, "El proceso %d queda bloqueado por falta de instancias del recurso %s", proceso->pid, recurso);
+
+}
+
+t_pcb* sacarDeCPU() {
+    pthread_mutex_lock(&mutex_procesos_execute);
+	t_pcb* proceso = list_remove(procesosExecute, 0);
+	pthread_mutex_unlock(&mutex_procesos_execute);
+	printf("Proceso que sacamos de execute:%d\n", proceso->pid);
+	return proceso;
+}
+
+void agregarAlInicioDeReady(t_pcb* proceso) {
+	pthread_mutex_lock(&mutex_procesos_ready);
+	list_add_in_index(procesosReady,0,proceso);
+	pthread_mutex_unlock(&mutex_procesos_ready);
+	sem_post(&sem_ready);
+}
+
+void pasarAInstanciasEnteras() {
+	for(int i=0; i < cantidad_recursos; i++) {
+        instancias[i] = atoi(instanciasRecursos[i]);
+    }
 }
 
 

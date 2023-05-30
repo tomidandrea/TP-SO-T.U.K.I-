@@ -1,5 +1,5 @@
 #include <comunicacion.h>
-#include <utils.h>
+#include <utilsKernel.h>
 
 extern t_config* config;
 extern t_log* logger;
