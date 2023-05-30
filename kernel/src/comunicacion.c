@@ -14,19 +14,16 @@ uint32_t RESULT_OK = 0;
 uint32_t RESULT_ERROR = 1;
 
 int escucharConsolas(){
-	t_list* lista;// = list_create(); ya hacemos el create en listaAInstruccion
+	t_list* lista;
 	char* puerto = config_get_string_value(config,"PUERTO_ESCUCHA");
-
 	t_socket server_fd = iniciar_servidor(puerto, logger);
-	printf("\nSocket conexion:%d \n",server_fd);
-
+	//printf("\nSocket conexion:%d \n",server_fd);
 	free(puerto);
-
-	//t_socket socket_cliente = malloc(sizeof(t_socket));
 	t_socket socket_cliente;
+
 	while(1){
 	socket_cliente = esperar_cliente(server_fd, logger); //Hace el accept
-    printf("\nsocket cliente:%d \n",socket_cliente);
+    //printf("\nsocket cliente:%d \n",socket_cliente);
     //TODO: deberiamos agregar el socket cliente para saber que Consola finalizar
 		if(socket_cliente != -1){
 				int cod_op = recibir_operacion(socket_cliente);
@@ -41,7 +38,6 @@ int escucharConsolas(){
 
 							t_pcb* pcb = crearPCB(lista); //agregar para pasar el socket de consola
 							t_instruccion* instruc = list_get(pcb->instrucciones, 0);
-							printf("instruccion: %s\n", instruc->instruccion);
 							list_destroy(lista);
 							pthread_mutex_lock(&mutex_procesos_new);
 							list_add(procesosNew, pcb);
@@ -78,7 +74,7 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 
 	int cant = list_size(proceso->instrucciones);
 	int cant_parametros = 0;
-	log_info(logger, "PID:%d\n",proceso->pid);
+	//log_info(logger, "PID:%d\n",proceso->pid);
 	agregar_valor_estatico(paquete, &(proceso -> pid));
 	agregar_valor_estatico(paquete, &(proceso -> pc));
 	agregar_a_paquete(paquete, proceso -> registros->AX, 4);

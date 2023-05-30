@@ -15,7 +15,7 @@ void mostrarRegistros(t_registros* registros){
 	printf("R RDX: %s\n",registros->RDX);
 }
 
-void mostrarLista(t_list* lista){
+void mostrarListaProcesos(t_list* lista){
 	int tamanio = list_size(lista);
 	for(int i=0; i<tamanio; i++){
 		t_pcb* proceso = list_get(lista, i);

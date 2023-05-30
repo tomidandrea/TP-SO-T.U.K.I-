@@ -22,31 +22,31 @@ int main(int argc, char** argv) {
     logearInstrucciones(instrucciones, logger); //logeamos la lista de instrucciones
 
     conexionKernel = iniciarConexion(config, logger, "IP_KERNEL","PUERTO_KERNEL");
-
+    log_info(logger, "Enviando programa");
     // serializa y envia a kernel el programa (lista de instrucciones)
     enviar_programa(instrucciones, conexionKernel);
     liberar_instrucciones(instrucciones);
     list_destroy(instrucciones);
 
     uint32_t result;
-	if(recv(conexion, &result, sizeof(uint32_t), MSG_WAITALL)> 0){
+	if(recv(conexionKernel, &result, sizeof(uint32_t), MSG_WAITALL)> 0){
 		if(result == 0){
 				log_info(logger, "Resultado: Termino todo bien pa");
 			}else
 				log_info(logger, "Resultado: Rompiste algo");
 
-			liberar_conexion(conexionKernel); // Libera ip y puerto
-			liberarEstructuras();
+			liberarEstructuras(conexionKernel);
 	}else{
-		close(conexionKernel);
 		log_error(logger,"Se cerró kernel");
-		return -1;
+		liberarEstructuras(conexionKernel);
+		exit(1);
 	}
 
     return 0;
 }
 
-void liberarEstructuras(){
+void liberarEstructuras(t_socket conexion){
+	liberar_conexion(conexion); // Libera ip y puerto
 	log_destroy(logger);
 	config_destroy(config);
 }

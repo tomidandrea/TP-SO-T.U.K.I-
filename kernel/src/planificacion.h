@@ -6,10 +6,9 @@
 #include <semaphore.h>
 #include <pthread.h>
 #include "utilsKernel.h"
-
+#include <sincro.h>
 
 void planificar();
-void pasarAReady();
 t_pcb* planificarFIFO();
 t_pcb* planificarHRRN();
 void agregarReady();

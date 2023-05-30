@@ -19,90 +19,79 @@ void planificar(){
 	char* algoritmo = malloc(16);
 	t_pcb* proceso;
 	algoritmo = config_get_string_value(config,"ALGORITMO_PLANIFICACION");
+
 	double alfa;
 	alfa = config_get_double_value(config,"HRRN_ALFA");
 
-	while (1)
-	{
+	while (1){
 		sem_wait(&sem_ready);
-		log_info(logger, "Empezando a planificar\n");
+		log_info(logger, "Empezando a planificar");
 		//sem_wait(&sem_ready); // Agrego otro semaforo para que no empiece a planificar por ahora
 
 		if(strcmp(algoritmo,"FIFO") == 0){
 			proceso = planificarFIFO();
-			int64_t tiempo = temporal_gettime(proceso->tiempoEnReady);
-			log_info(logger, "Tiempo en ready: %ld\n", tiempo);
-			log_info(logger, "Termine de planificar FIFO\n");
+			log_info(logger, "Termine de planificar FIFO");
+		}else if(strcmp(algoritmo,"HRRN") == 0){
+			proceso = planificarHRRN(alfa);
+			log_info(logger, "Termine de planificar HRRN");
+		}else{
+			log_error(logger, "Nombre del algoritmo invalido");
 		}
 
-		if(strcmp(algoritmo,"HRRN") == 0){
-					proceso = planificarHRRN(alfa);
-
-					log_info(logger, "Termine de planificar HRRN\n");
-				}
-
 		mandar_pcb_a_CPU(proceso);
-		log_info(logger, "Proceso enviado a cpu\n");
+		log_info(logger, "Proceso %d enviado a cpu\n", proceso->pid);
 		t_contexto* contexto = actualizar_pcb(proceso);
 
 		// TODO: Quitar proceso de procesosExecute (proceso en running)
 
 		switch(contexto->motivo){
 			case EXT:
-				log_info(logger, "Salimos como unos campeones\n");
-				sacarDeCPU();
+				log_info(logger, "=== Salimos como unos campeones!!!!, PID:%d finalizó ===\n", proceso->pid);
+				proceso = removerDeExecute();
 				// Pasar a estado EXIT
 				// liberar_recursos();
 				// avisar_fin_a_memoria();
 				// avisar_fin_a_consola();
-				printf("Lista procesosReady:%d\n", list_size(procesosReady));
-				if(!list_is_empty(procesosReady)){
-					printf("Entre al if\n");
-					sem_post(&sem_ready);
-				}
-				printf("POST grado multi\n");
+				log_debug(logger, "Lista procesosReady:%d", list_size(procesosReady));
+				log_debug(logger, "POST grado multi");
 				sem_post(&sem_grado_multiprogramacion);
 				break;
 			case YIELD:
-<<<<<<< HEAD
 				log_info(logger, "Hubo un YIELD del proceso %d\n", proceso->pid);
 
 				//proceso->tiempoEnReady = iniciarTiempo();
-				temporal_resume(proceso->tiempoEnReady);
-=======
-				log_info(logger, "Hubo un YIELD\n");
-
+				//temporal_resume(proceso->tiempoEnReady);
 				// Lo agrego al final de la lista de ready
-				sacarDeCPU();
->>>>>>> cpu
-				pthread_mutex_lock(&mutex_procesos_ready);
-				list_add(procesosReady, proceso);
-				pthread_mutex_unlock(&mutex_procesos_ready);
-
-				sem_post(&sem_ready);
+				proceso = removerDeExecute();
+				pasarAReady(proceso);
 
 				// Si algoritmo == HRRN -> calcular_estimado();
 				break;
 			case IO:
-				log_info(logger, "Hubo un IO\n");
+				log_info(logger, "Hubo un IO de PID:%d\n", contexto->pid);
 				int tiempo = atoi(contexto->parametros[0]);
-				ejecutarIO(tiempo);
+				proceso = removerDeExecute();
+				io_contexto* ioContexto = inicializarIoContexto(proceso, tiempo);
+				ejecutarIO(ioContexto);
 				break;
 			case WAIT:
+				proceso = removerDeExecute();
 				log_info(logger, "Llego un WAIT pibe\n");
 				char* recursoW = contexto->parametros[0];
 				if(verificarRecursos(recursoW)){
-					wait(recursoW);
+					INICIO = wait(proceso, recursoW);
 				} else{
 					log_error(logger, "No existe el recurso: %s", recursoW);
 					// TODO:FINALIZAR PROCESO
 				}
 				break;
 			case SIGNAL:
+				INICIO = 1; //para que no haga el calculo HRRN y agarre el primero de ready
+				proceso = removerDeExecute();
 				log_info(logger, "Llego un SIGNAL pibe\n");
 				char* recursoS = contexto->parametros[0];
 				if(verificarRecursos(recursoS)){
-					ejecutarSignal(recursoS);
+					ejecutarSignal(proceso, recursoS);
 				} else{
 					log_error(logger, "No existe el recurso: %s", recursoS);
 					//FINALIZAR PROCESO
@@ -124,38 +113,16 @@ void agregarReady(){
 		sem_wait(&sem_new_a_ready);
 		sem_wait(&sem_grado_multiprogramacion);
 		log_info(logger, "Permite agregar proceso a ready por grado de multiprogramacion\n");
-		pasarAReady();
-		log_info(logger, "Paso un proceso a ready\n");
-		sem_post(&sem_ready);
+		pasarNewAReady();
 	}
 
 }
 
-void pasarAReady(){
-	t_pcb* proceso;
-	/*int cant = list_size(procesosNew);
-	for(int i = 0;i<cant;i++) {
-		proceso = list_get(procesosNew,i);
-		log_info(logger, "elemento %d: %d \n", i, proceso->pid);
-	}*/
-	pthread_mutex_lock(&mutex_procesos_new);
-	proceso = list_remove(procesosNew, 0);
-	pthread_mutex_unlock(&mutex_procesos_new);
-	
-	pthread_mutex_lock(&mutex_procesos_ready);
-	list_add(procesosReady, proceso);
-	pthread_mutex_unlock(&mutex_procesos_ready);
-	//proceso->tiempoEnReady = iniciarTiempo();
-	temporal_resume(proceso->tiempoEnReady);
-}
+
 
 t_pcb* planificarFIFO(){
-	t_pcb* proceso = list_remove(procesosReady, 0);
-
-	pthread_mutex_lock(&mutex_procesos_execute);
-	list_add(procesosExecute, proceso);
-	pthread_mutex_unlock(&mutex_procesos_execute);
-
+	t_pcb* proceso = removerPrimeroDeReady();
+	pasarAExecute(proceso);
 	return proceso;
 }
 
@@ -175,10 +142,10 @@ int procesoConMayorRatio(int cant){
 
 t_pcb* planificarHRRN(double alfa){
 
-	t_pcb* proceso;
+	t_pcb* proceso = inicializar_pcb();
 
 	if(INICIO){
-		proceso = list_remove(procesosReady, 0);
+		proceso = removerPrimeroDeReady();
 		proceso->tiempoEnReady= pararTiempo(proceso->tiempoEnReady);
 		//pararTiempoReady(proceso);
 		INICIO = 0;
@@ -192,7 +159,7 @@ t_pcb* planificarHRRN(double alfa){
 		for(int i = 0;i<cant;i++) {
 			proceso = list_get(procesosReady,i);
 			tiempoEnReady = temporal_gettime(proceso->tiempoEnReady);
-			printf("Proceso %d tiempoEnReady : %ld \n", proceso->pid ,tiempoEnReady);
+			log_debug(logger, "Proceso %d tiempoEnReady : %ld", proceso->pid ,tiempoEnReady);
 			est = proceso->estimadoAnterior;
 
 			// calculo la rafaga actual
@@ -224,9 +191,8 @@ t_pcb* planificarHRRN(double alfa){
 		proceso->tiempoEnReady = pararTiempo(proceso->tiempoEnReady);
 		//pararTiempoReady(proceso);
 	}
-	pthread_mutex_lock(&mutex_procesos_execute);
-	list_add(procesosExecute, proceso);
-	pthread_mutex_unlock(&mutex_procesos_execute);
+
+	pasarAExecute(proceso);
 
 	return proceso;
 

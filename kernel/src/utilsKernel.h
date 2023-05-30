@@ -13,6 +13,10 @@
 #define RECURSO_EXISTENTE 1
 #define RECURSO_INEXISTENTE 0
 
+typedef struct{
+	t_pcb* proceso;
+	int tiempo_sleep;
+}io_contexto;
 
 /*
 typedef struct {
@@ -23,34 +27,27 @@ typedef struct {
 
 t_pcb* crearPCB(t_list* listaInstrucciones);
 t_socket crearConexionCPU();
-void crearEscucharConsolas();
-void crearAgregarReady();
-void crearPlanificar();
 
-t_temporal* iniciarTiempoCPU();
-t_temporal* iniciarTiempoEnReady();
 
 t_temporal* iniciarTiempo();
 t_temporal* pararTiempo(t_temporal* temporal);
 
 void inicializarRecursos();
-void inicializarSemoforos();
-void liberarSemoforos();
-void liberarMutex();
 
-void ejecutarIO(int tiempo);
-void bloquearYPasarAReady(int tiempo);
+
+void ejecutarIO(io_contexto* contexto);
+void bloquearYPasarAReady(io_contexto* contexto);
 int verificarRecursos(char* recurso);
-void wait(char* recurso);
-void ejecutarSignal(char* recurso);
+uint32_t wait(t_pcb* proceso, char* recurso);
+void ejecutarSignal(t_pcb* proceso, char* recurso);
 int indice(char* recurso);
 int cantInstancias(char* recurso);
 void crearColasDeBloqueados();
 void aumentarInstancias(char* recurso);
 void disminuirInstancias(char* recurso);
 void desbloquearPrimerProceso(char* recurso);
-void bloquear(char* recurso);
-t_pcb* sacarDeCPU();
-void agregarAlInicioDeReady(t_pcb* proceso);
+void bloquear(t_pcb* proceso, char* recurso);
+
 void pasarAInstanciasEnteras();
+io_contexto* inicializarIoContexto(t_pcb* proceso, int tiempo);
 #endif

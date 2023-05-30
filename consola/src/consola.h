@@ -8,6 +8,6 @@
 #include <parser.h>
 
 void enviar_programa(t_list* instrucciones, int conexion);
-void liberarEstructuras(void);
+void liberarEstructuras(t_socket);
 
 #endif

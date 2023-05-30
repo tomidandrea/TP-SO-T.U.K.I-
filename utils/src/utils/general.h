@@ -81,15 +81,11 @@ typedef struct {
     int pc;
     t_registros* registros;
     operacion motivo;
-<<<<<<< HEAD
     //char* recurso;
     t_temporal* tiempoEnReady;
 	t_temporal* tiempoCPU;
 	double estimadoAnterior;
 	double ratio;
-=======
-    // implementar los otros xd
->>>>>>> cpu
 } t_pcb;
 
 typedef struct {
