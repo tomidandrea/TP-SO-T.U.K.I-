@@ -28,7 +28,7 @@ int escucharConsolas(){
 		if(socket_cliente != -1){
 				int cod_op = recibir_operacion(socket_cliente);
 				switch (cod_op) {
-						case PROGRAMA: //TODO
+						case PROGRAMA:
 							t_list* buffer = recibir_paquete(socket_cliente);
 							lista = listaAInstrucciones(buffer);
 							list_destroy_and_destroy_elements(buffer, free);
@@ -36,7 +36,7 @@ int escucharConsolas(){
 
 							log_info(logger, "Me llego un paquete\n");
 
-							t_pcb* pcb = crearPCB(lista); //agregar para pasar el socket de consola
+							t_pcb* pcb = crearPCB(lista, socket_cliente); //agregar para pasar el socket de consola
 							t_instruccion* instruc = list_get(pcb->instrucciones, 0);
 							list_destroy(lista);
 							pthread_mutex_lock(&mutex_procesos_new);
@@ -60,10 +60,6 @@ int escucharConsolas(){
 		}
 	}
 	return 0;
-	//TODO: hacer que salga del while
-	//send(socket_cliente, &RESULT_OK, sizeof(int), NULL);
-	//close(socket_cliente);
-	free(lista);
 }
 
 
@@ -120,4 +116,7 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 
 }
 
-
+void avisar_fin_a_consola(t_socket socket_consola){
+	log_debug(logger, "El socket de la consola es:%d", socket_consola);
+	send(socket_consola, &RESULT_OK, sizeof(int), 0);
+}

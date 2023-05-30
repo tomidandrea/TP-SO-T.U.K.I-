@@ -51,7 +51,7 @@ void planificar(){
 				// Pasar a estado EXIT
 				// liberar_recursos();
 				// avisar_fin_a_memoria();
-				// avisar_fin_a_consola();
+				avisar_fin_a_consola(proceso->socket_consola);
 				log_debug(logger, "Lista procesosReady:%d", list_size(procesosReady));
 				log_debug(logger, "POST grado multi");
 				sem_post(&sem_grado_multiprogramacion);

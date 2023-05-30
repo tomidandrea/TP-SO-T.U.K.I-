@@ -59,11 +59,12 @@ int verificarRecursos(char* recurso){
 	return existeRecurso;
 }
 
-t_pcb* crearPCB(t_list* listaInstrucciones){
+t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola){
 
 	t_pcb *pcb = malloc(sizeof(t_pcb));
     pcb->pid = ++processID;
     pcb->pc = 0;
+    pcb->socket_consola = socket_consola;
     pcb->instrucciones = list_duplicate(listaInstrucciones);
     pcb->registros = inicializarRegistros();
     pcb->estimadoAnterior = config_get_double_value(config,"ESTIMACION_INICIAL");

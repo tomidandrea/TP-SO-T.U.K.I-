@@ -23,6 +23,8 @@
 
 #define TAMANIO_OPERACION 15 //Tamaño maximo de operacion, así usamos malloc de este tamaño (14 + 1 por el \0)
 
+typedef int t_socket;
+
 typedef struct {
 	char *operacion;
 	int cantParametros;
@@ -86,6 +88,7 @@ typedef struct {
 	t_temporal* tiempoCPU;
 	double estimadoAnterior;
 	double ratio;
+	t_socket socket_consola;
 } t_pcb;
 
 typedef struct {

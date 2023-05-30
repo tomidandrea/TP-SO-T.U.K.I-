@@ -12,8 +12,6 @@
 
 #include<utils/visualizarEstructuras.h>
 
-typedef int t_socket;
-
 // Utils cliente
 t_socket iniciarConexion(t_config*, t_log*, char*, char*);
 t_socket crear_conexion(char*, char*, t_log*);

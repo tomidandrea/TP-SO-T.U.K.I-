@@ -25,7 +25,7 @@ typedef struct {
 	char RAX [16], RBX [16], RCX [16], RDX [16];
 } t_registros;*/
 
-t_pcb* crearPCB(t_list* listaInstrucciones);
+t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola);
 t_socket crearConexionCPU();
 
 

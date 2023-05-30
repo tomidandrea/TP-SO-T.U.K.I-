@@ -7,5 +7,6 @@
 
 int escucharConsolas();
 void mandar_pcb_a_CPU(t_pcb* proceso);
+void avisar_fin_a_consola(t_socket socket_consola);
 
 #endif
