@@ -153,21 +153,17 @@ t_contexto* actualizar_pcb(t_pcb* proceso) {
 
 }
 
-void ejecutarIO(char* tiempo){
+void ejecutarIO(int tiempo) {
 	pthread_t hilo_bloqueoPorIO;
-	printf("%s",tiempo);
-	pthread_create(&hilo_bloqueoPorIO,NULL,(void*)bloquearYPasarAReady,(void*)tiempo);
+	printf("%d\n",tiempo);
+	pthread_create(&hilo_bloqueoPorIO,NULL,(void*)bloquearYPasarAReady,tiempo);
 	pthread_detach(hilo_bloqueoPorIO);
 }
 
-void bloquearYPasarAReady(void*tiempo) {
+void bloquearYPasarAReady(int tiempo) {
 	t_pcb* proceso = sacarDeCPU();
-	char*t;
-	t= (char*)tiempo;
-	printf("%s\n",t);
-	int espera = atoi(t);
-	log_info(logger,"Se bloqueara el Proceso %d por IO durante %d segundos", proceso->pid,espera);
-	sleep(espera);
+	log_info(logger,"Se bloqueara el Proceso %d por IO durante %d segundos", proceso->pid,tiempo);
+	sleep(tiempo);
 	log_info(logger,"Finaliza bloqueo de Proceso %d por IO y pasa a estado ready", proceso->pid);
 	pthread_mutex_lock(&mutex_procesos_ready);
 	list_add(procesosReady, proceso);

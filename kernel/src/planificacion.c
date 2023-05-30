@@ -69,7 +69,8 @@ void planificar(){
 				break;
 			case IO:
 				log_info(logger, "Hubo un IO\n");
-				ejecutarIO(contexto->parametros[0]);
+				int tiempo = atoi(contexto->parametros[0]);
+				ejecutarIO(tiempo);
 				break;
 			case WAIT:
 				log_info(logger, "Llego un WAIT pibe\n");
