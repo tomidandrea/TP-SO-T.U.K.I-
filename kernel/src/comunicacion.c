@@ -43,7 +43,7 @@ int escucharConsolas(){
 							list_add(procesosNew, pcb);
 							pthread_mutex_unlock(&mutex_procesos_new);
 
-							log_info(logger, "Se crea el proceso:%d en NEW", pcb->pid);
+							log_info(logger, "Se crea el proceso %d en NEW", pcb->pid);
 							sem_post(&sem_new_a_ready);
 
 							break;

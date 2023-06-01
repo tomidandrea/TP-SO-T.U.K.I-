@@ -81,7 +81,11 @@ void planificar(){
 				if(verificarRecursos(recursoW)){
 					INICIO = wait(proceso, recursoW);
 				} else{
+					avisar_fin_a_consola(proceso->socket_consola);
+					sem_post(&sem_grado_multiprogramacion);
 					log_error(logger, "No existe el recurso: %s", recursoW);
+					log_error(logger, "Finalizo proceso PID: %d", proceso->pid);
+
 					// TODO:FINALIZAR PROCESO
 				}
 				break;
@@ -93,7 +97,10 @@ void planificar(){
 				if(verificarRecursos(recursoS)){
 					ejecutarSignal(proceso, recursoS);
 				} else{
+					avisar_fin_a_consola(proceso->socket_consola);
+					sem_post(&sem_grado_multiprogramacion);
 					log_error(logger, "No existe el recurso: %s", recursoS);
+					log_error(logger, "Finalizo proceso PID: %d", proceso->pid);
 					//FINALIZAR PROCESO
 				}
 				break;
