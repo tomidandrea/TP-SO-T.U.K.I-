@@ -73,6 +73,7 @@ void pasarNewAReady(){
 	pthread_mutex_unlock(&mutex_procesos_new);
 
 	pasarAReady(proceso);
+	log_info(logger, "PID: %d - Estado Anterior: NEW - Estado Actual: READY", proceso->pid);
 }
 
 void pasarAReady(t_pcb* proceso){
@@ -81,7 +82,7 @@ void pasarAReady(t_pcb* proceso){
 	pthread_mutex_unlock(&mutex_procesos_ready);
 	//proceso->tiempoEnReady = iniciarTiempo();
 	temporal_resume(proceso->tiempoEnReady);
-	log_info(logger, "Paso Proceso %d a ready", proceso->pid);
+	//log_info(logger, "Paso Proceso %d a ready", proceso->pid);
 	sem_post(&sem_ready);
 }
 
@@ -89,6 +90,7 @@ void pasarAExecute(t_pcb* proceso){
 	pthread_mutex_lock(&mutex_procesos_execute);
 	list_add(procesosExecute, proceso);
 	pthread_mutex_unlock(&mutex_procesos_execute);
+
 }
 
 void agregarAlInicioDeReady(t_pcb* proceso) {

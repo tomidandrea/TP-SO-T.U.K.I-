@@ -143,7 +143,9 @@ t_temporal* pararTiempo(t_temporal* temporal){
 
 void ejecutarIO(io_contexto* contexto) {
 	pthread_t hilo_bloqueoPorIO;
-	log_debug(logger, "Tiempo ejecucion IO: %d\n",contexto->tiempo_sleep);
+	log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: BLOCKED", contexto->proceso->pid);
+	log_info(logger, "PID: %d - Bloqueado por: IO", contexto->proceso->pid);
+	log_info(logger, "PID: %d - Ejecuta IO: %d\n",contexto->proceso->pid, contexto->tiempo_sleep);
 	pthread_create(&hilo_bloqueoPorIO,NULL,(void*)bloquearYPasarAReady,contexto);
 	pthread_detach(hilo_bloqueoPorIO);
 }
@@ -151,7 +153,8 @@ void ejecutarIO(io_contexto* contexto) {
 void bloquearYPasarAReady(io_contexto* contexto) {
 	log_info(logger,"Se bloqueara el Proceso %d por IO durante %d segundos", contexto->proceso->pid,contexto->tiempo_sleep);
 	sleep(contexto->tiempo_sleep);
-	log_info(logger,"Finaliza bloqueo de Proceso %d por IO y pasa a estado ready", contexto->proceso->pid);
+	//log_info(logger,"Finaliza bloqueo de Proceso %d por IO y pasa a estado ready", contexto->proceso->pid);
+	log_info(logger, "PID: %d - Estado Anterior: BLOCKED - Estado Actual: READY", contexto->proceso->pid);
 	pasarAReady(contexto->proceso);
 	//sem_post(&sem_ready);
 }
@@ -159,8 +162,9 @@ void bloquearYPasarAReady(io_contexto* contexto) {
 uint32_t wait(t_pcb* proceso, char* recurso) {
 
     disminuirInstancias(recurso);
-
-    if(cantInstancias(recurso) < 0) {
+    int instancias = cantInstancias(recurso);
+    log_info(logger, "PID: %d - Wait: %s - Instancias: %d", proceso->pid, recurso, instancias);
+    if(instancias < 0) {
         bloquear(proceso, recurso);
         return BLOQUEADO;
     } else {
@@ -173,8 +177,9 @@ uint32_t wait(t_pcb* proceso, char* recurso) {
 
 void ejecutarSignal(t_pcb* proceso, char* recurso) {
     aumentarInstancias(recurso);
-
-    if(cantInstancias(recurso) <= 0) {
+    int instancias = cantInstancias(recurso);
+    log_info(logger, "PID: %d - Signal: %s - Instancias: %d", proceso->pid, recurso, instancias);
+    if(instancias <= 0) {
          desbloquearPrimerProceso(recurso);
     }
 	agregarAlInicioDeReady(proceso);
@@ -222,6 +227,7 @@ void desbloquearPrimerProceso(char* recurso) {
     t_pcb* proceso = queue_peek(cola);
     pasarAReady(proceso);
     log_info(logger, "Se desbloqueo el proceso %d de la cola del recurso %s",proceso->pid, recurso);
+    log_info(logger, "PID: %d - Estado Anterior: BLOCKED - Estado Actual: READY", proceso->pid);
     queue_pop(cola);
 
 }
@@ -230,7 +236,9 @@ void bloquear(t_pcb* proceso, char* recurso) {
     int i = indice(recurso);
     t_queue* cola = list_get(colasDeBloqueados, i);
     queue_push(cola, proceso);
-    log_info(logger, "El proceso %d queda bloqueado por falta de instancias del recurso %s", proceso->pid, recurso);
+
+    log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: BLOCKED", proceso->pid);
+    log_info(logger, "PID: %d - Bloqueado por: %s", proceso->pid, recurso);
 
 }
 

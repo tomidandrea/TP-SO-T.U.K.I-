@@ -48,7 +48,7 @@ void planificar(){
 			case EXT:
 				log_info(logger, "=== Salimos como unos campeones!!!!, PID:%d finalizó ===\n", proceso->pid);
 				proceso = removerDeExecute();
-				// Pasar a estado EXIT
+				log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
 				// liberar_recursos();
 				// avisar_fin_a_memoria();
 				avisar_fin_a_consola(proceso->socket_consola);
@@ -64,6 +64,7 @@ void planificar(){
 				// Lo agrego al final de la lista de ready
 				proceso = removerDeExecute();
 				pasarAReady(proceso);
+				log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: READY", proceso->pid);
 
 				// Si algoritmo == HRRN -> calcular_estimado();
 				break;
@@ -85,6 +86,7 @@ void planificar(){
 					sem_post(&sem_grado_multiprogramacion);
 					log_error(logger, "No existe el recurso: %s", recursoW);
 					log_error(logger, "Finalizo proceso PID: %d", proceso->pid);
+					log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
 
 					// TODO:FINALIZAR PROCESO
 				}
@@ -101,6 +103,7 @@ void planificar(){
 					sem_post(&sem_grado_multiprogramacion);
 					log_error(logger, "No existe el recurso: %s", recursoS);
 					log_error(logger, "Finalizo proceso PID: %d", proceso->pid);
+					log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
 					//FINALIZAR PROCESO
 				}
 				break;
@@ -130,6 +133,7 @@ void agregarReady(){
 t_pcb* planificarFIFO(){
 	t_pcb* proceso = removerPrimeroDeReady();
 	pasarAExecute(proceso);
+	log_info(logger, "PID: %d - Estado Anterior: READY - Estado Actual: EXECUTE", proceso->pid);
 	return proceso;
 }
 
@@ -200,6 +204,8 @@ t_pcb* planificarHRRN(double alfa){
 	}
 
 	pasarAExecute(proceso);
+
+	log_info(logger, "PID: %d - Estado Anterior: READY - Estado Actual: EXECUTE", proceso->pid);
 
 	return proceso;
 

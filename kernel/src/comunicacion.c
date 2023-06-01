@@ -37,7 +37,6 @@ int escucharConsolas(){
 							log_info(logger, "Me llego un paquete\n");
 
 							t_pcb* pcb = crearPCB(lista, socket_cliente); //agregar para pasar el socket de consola
-							t_instruccion* instruc = list_get(pcb->instrucciones, 0);
 							list_destroy(lista);
 							pthread_mutex_lock(&mutex_procesos_new);
 							list_add(procesosNew, pcb);
