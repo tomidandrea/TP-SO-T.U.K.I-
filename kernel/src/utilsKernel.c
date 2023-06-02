@@ -17,7 +17,7 @@ extern int* instancias;
 extern t_list* procesosExecute;
 extern t_list* procesosReady;
 
-extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion;
+extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir, sem_execute;
 extern pthread_mutex_t mutex_procesos_new;
 extern pthread_mutex_t mutex_procesos_ready;
 extern pthread_mutex_t mutex_procesos_execute;
@@ -151,7 +151,6 @@ void ejecutarIO(io_contexto* contexto) {
 }
 
 void bloquearYPasarAReady(io_contexto* contexto) {
-	log_info(logger,"Se bloqueara el Proceso %d por IO durante %d segundos", contexto->proceso->pid,contexto->tiempo_sleep);
 	sleep(contexto->tiempo_sleep);
 	//log_info(logger,"Finaliza bloqueo de Proceso %d por IO y pasa a estado ready", contexto->proceso->pid);
 	log_info(logger, "PID: %d - Estado Anterior: BLOCKED - Estado Actual: READY", contexto->proceso->pid);
@@ -165,11 +164,14 @@ uint32_t wait(t_pcb* proceso, char* recurso) {
     int instancias = cantInstancias(recurso);
     log_info(logger, "PID: %d - Wait: %s - Instancias: %d", proceso->pid, recurso, instancias);
     if(instancias < 0) {
+    	removerDeExecute();
         bloquear(proceso, recurso);
         return BLOQUEADO;
     } else {
-		agregarAlInicioDeReady(proceso);
+		//agregarAlInicioDeReady(proceso);
 		log_info(logger, "Proceso %d vuelve a cpu por disponibilidad del recurso %s\n", proceso->pid, recurso);
+		mandar_pcb_a_CPU(proceso);
+		sem_post(&sem_recibir);
 		return CONTINUAR_EJECUTANDO;
     }
 }
@@ -182,8 +184,10 @@ void ejecutarSignal(t_pcb* proceso, char* recurso) {
     if(instancias <= 0) {
          desbloquearPrimerProceso(recurso);
     }
-	agregarAlInicioDeReady(proceso);
+	//agregarAlInicioDeReady(proceso);
 	log_info(logger, "Se realizo signal del recurso %s. El proceso %d puede seguir ejecutandose en cpu\n", recurso, proceso->pid);
+	mandar_pcb_a_CPU(proceso);
+	sem_post(&sem_recibir);
 
 }
 

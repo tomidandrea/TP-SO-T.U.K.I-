@@ -13,6 +13,7 @@
 void crearEscucharConsolas();
 void crearAgregarReady();
 void crearPlanificar();
+void crearRecibirDeCPU();
 
 void inicializarSemoforos();
 void liberarSemoforos();

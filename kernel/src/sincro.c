@@ -7,7 +7,7 @@ extern t_list* procesosExecute;
 extern t_list* procesosReady;
 extern t_list* procesosNew;
 
-extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion;
+extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir,sem_execute;
 extern pthread_mutex_t mutex_procesos_new;
 extern pthread_mutex_t mutex_procesos_ready;
 extern pthread_mutex_t mutex_procesos_execute;
@@ -41,10 +41,23 @@ void crearPlanificar(){
 	//while(1);
 }
 
+void crearRecibirDeCPU(){
+	pthread_t hilo_recibir_cpu;
+	pthread_create(&hilo_recibir_cpu,
+					NULL,
+					(void*) recibirDeCPU,
+					NULL);
+	pthread_detach(hilo_recibir_cpu);
+
+	//while(1);
+}
+
 void inicializarSemoforos(){
 	sem_init(&sem_new_a_ready, 0, 0); //Binario, iniciado en 0 para que solo agregue a ready si hay procesos en new
 	sem_init(&sem_ready, 0, 0); //Binario, solo pase a CPU si hay en ready
 	sem_init(&sem_grado_multiprogramacion, 0, config_get_int_value(config,"GRADO_MAX_MULTIPROGRAMACION"));
+	sem_init(&sem_execute, 0, 1);
+	sem_init(&sem_recibir, 0, 0);
 }
 
 
@@ -52,6 +65,8 @@ void liberarSemoforos(){
 	sem_destroy(&sem_new_a_ready);
 	sem_destroy(&sem_ready);
 	sem_destroy(&sem_grado_multiprogramacion);
+	sem_destroy(&sem_execute);
+	sem_destroy(&sem_recibir);
 	liberarMutex();
 }
 
@@ -113,6 +128,7 @@ t_pcb* removerDeExecute() {
 	t_pcb* proceso = list_remove(procesosExecute, 0);
 	pthread_mutex_unlock(&mutex_procesos_execute);
 	log_debug(logger, "Proceso que sacamos de execute:%d\n", proceso->pid);
+	sem_post(&sem_execute);
 	return proceso;
 }
 

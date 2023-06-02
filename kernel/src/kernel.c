@@ -37,6 +37,7 @@ int main(int argc, char* argv[]) {
 		crearEscucharConsolas();
 		crearAgregarReady();
 		crearPlanificar();
+		crearRecibirDeCPU();
 		while(1);
 
 		return EXIT_SUCCESS;

@@ -1,5 +1,7 @@
 #include <utils/visualizarEstructuras.h>
 
+extern t_log* logger;
+
 void mostrarRegistros(t_registros* registros){
 	printf("R AX: %s\n",registros->AX);
 	printf("R BX: %s\n",registros->BX);
@@ -19,7 +21,7 @@ void mostrarListaProcesos(t_list* lista){
 	int tamanio = list_size(lista);
 	for(int i=0; i<tamanio; i++){
 		t_pcb* proceso = list_get(lista, i);
-		printf("Proceso %d\n", proceso->pid);
+		log_info(logger,"Proceso %d\n", proceso->pid);
 	}
 }
 

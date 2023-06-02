@@ -9,7 +9,7 @@ extern t_list* procesosNew;
 
 uint32_t INICIO = 1;
 
-sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion;
+sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir, sem_execute;
 pthread_mutex_t mutex_procesos_new = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_procesos_ready = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_procesos_execute = PTHREAD_MUTEX_INITIALIZER;
@@ -24,8 +24,13 @@ void planificar(){
 	alfa = config_get_double_value(config,"HRRN_ALFA");
 
 	while (1){
+
+		sem_wait(&sem_execute);
 		sem_wait(&sem_ready);
+
 		log_info(logger, "Empezando a planificar");
+		log_info(logger, "Cola Ready %s:", algoritmo);
+		mostrarListaProcesos(procesosReady);
 		//sem_wait(&sem_ready); // Agrego otro semaforo para que no empiece a planificar por ahora
 
 		if(strcmp(algoritmo,"FIFO") == 0){
@@ -40,7 +45,18 @@ void planificar(){
 
 		mandar_pcb_a_CPU(proceso);
 		log_info(logger, "Proceso %d enviado a cpu\n", proceso->pid);
-		t_contexto* contexto = actualizar_pcb(proceso);
+		sem_post(&sem_recibir);
+
+	}
+	free(algoritmo);
+}
+
+void recibirDeCPU() {
+
+	while(1) {
+	sem_wait(&sem_recibir);
+	t_pcb* proceso = list_get(procesosExecute, 0);
+	t_contexto* contexto = actualizar_pcb(proceso);
 
 		// TODO: Quitar proceso de procesosExecute (proceso en running)
 
@@ -76,7 +92,7 @@ void planificar(){
 				ejecutarIO(ioContexto);
 				break;
 			case WAIT:
-				proceso = removerDeExecute();
+				//proceso = removerDeExecute();
 				log_info(logger, "Llego un WAIT pibe\n");
 				char* recursoW = contexto->parametros[0];
 				if(verificarRecursos(recursoW)){
@@ -93,7 +109,7 @@ void planificar(){
 				break;
 			case SIGNAL:
 				INICIO = 1; //para que no haga el calculo HRRN y agarre el primero de ready
-				proceso = removerDeExecute();
+				//proceso = removerDeExecute();
 				log_info(logger, "Llego un SIGNAL pibe\n");
 				char* recursoS = contexto->parametros[0];
 				if(verificarRecursos(recursoS)){
@@ -113,7 +129,6 @@ void planificar(){
 		}
 		liberar_contexto(contexto);
 	}
-	free(algoritmo);
 }
 
 void agregarReady(){
