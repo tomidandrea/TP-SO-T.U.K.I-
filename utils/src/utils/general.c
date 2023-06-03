@@ -146,6 +146,16 @@ t_pcb* inicializar_pcb(){
 	return pcb;
 }
 
+void liberar_pcb(t_pcb* pcb){
+	liberar_instrucciones(pcb->instrucciones);
+	free(pcb->registros);
+	temporal_stop(pcb->tiempoEnReady);
+	temporal_destroy(pcb->tiempoEnReady);
+	temporal_stop(pcb->tiempoCPU);
+	temporal_destroy(pcb->tiempoCPU);
+	free(pcb);
+}
+
 t_contexto* inicializar_contexto(){
 	t_contexto* contexto = malloc(sizeof(t_contexto));
 	contexto->registros = inicializarRegistros();

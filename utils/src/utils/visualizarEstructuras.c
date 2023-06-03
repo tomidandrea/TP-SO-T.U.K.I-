@@ -25,4 +25,19 @@ void mostrarListaProcesos(t_list* lista){
 	}
 }
 
+char* lista_procesos_string(t_list* lista){
+	int tamanio = list_size(lista);
+	char* mensaje = copiar("");
+		for(int i=0; i<tamanio; i++){
+			t_pcb* proceso = list_get(lista, i);
+			char* pid = string_itoa(proceso->pid);
+			string_append(&mensaje, pid);
+			free(pid);
+			if(i < tamanio-1){
+				string_append(&mensaje, ",");
+			}
+		}
+	return mensaje;
+}
+
 

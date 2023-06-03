@@ -29,8 +29,12 @@ void planificar(){
 		sem_wait(&sem_ready);
 
 		log_info(logger, "Empezando a planificar");
-		log_info(logger, "Cola Ready %s:", algoritmo);
-		mostrarListaProcesos(procesosReady);
+		pthread_mutex_lock(&mutex_procesos_ready);
+		char* mensaje = lista_procesos_string(procesosReady);
+		pthread_mutex_unlock(&mutex_procesos_ready);
+		log_info(logger, "Cola Ready %s: [%s]", algoritmo, mensaje);
+		free(mensaje);
+		//mostrarListaProcesos(procesosReady);
 		//sem_wait(&sem_ready); // Agrego otro semaforo para que no empiece a planificar por ahora
 
 		if(strcmp(algoritmo,"FIFO") == 0){
@@ -58,8 +62,6 @@ void recibirDeCPU() {
 	t_pcb* proceso = list_get(procesosExecute, 0);
 	t_contexto* contexto = actualizar_pcb(proceso);
 
-		// TODO: Quitar proceso de procesosExecute (proceso en running)
-
 		switch(contexto->motivo){
 			case EXT:
 				log_info(logger, "=== Salimos como unos campeones!!!!, PID:%d finalizó ===\n", proceso->pid);
@@ -68,6 +70,7 @@ void recibirDeCPU() {
 				// liberar_recursos();
 				// avisar_fin_a_memoria();
 				avisar_fin_a_consola(proceso->socket_consola);
+				liberar_pcb(proceso);
 				log_debug(logger, "Lista procesosReady:%d", list_size(procesosReady));
 				log_debug(logger, "POST grado multi");
 				sem_post(&sem_grado_multiprogramacion);
@@ -96,19 +99,18 @@ void recibirDeCPU() {
 				log_info(logger, "Llego un WAIT pibe\n");
 				char* recursoW = contexto->parametros[0];
 				if(verificarRecursos(recursoW)){
-					INICIO = wait(proceso, recursoW);
+					wait(proceso, recursoW);
 				} else{
 					avisar_fin_a_consola(proceso->socket_consola);
+					liberar_pcb(proceso);
 					sem_post(&sem_grado_multiprogramacion);
 					log_error(logger, "No existe el recurso: %s", recursoW);
 					log_error(logger, "Finalizo proceso PID: %d", proceso->pid);
 					log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
-
-					// TODO:FINALIZAR PROCESO
 				}
 				break;
 			case SIGNAL:
-				INICIO = 1; //para que no haga el calculo HRRN y agarre el primero de ready
+				//INICIO = 1; //para que no haga el calculo HRRN y agarre el primero de ready
 				//proceso = removerDeExecute();
 				log_info(logger, "Llego un SIGNAL pibe\n");
 				char* recursoS = contexto->parametros[0];
@@ -124,7 +126,7 @@ void recibirDeCPU() {
 				}
 				break;
 			default:
-				log_info(logger, "No se implemento xd\n");
+				log_debug(logger, "No se implemento la instruccion");
 				break;
 		}
 		liberar_contexto(contexto);

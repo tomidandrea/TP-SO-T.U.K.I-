@@ -105,6 +105,7 @@ typedef struct {
 
 
 t_pcb* inicializar_pcb();
+void liberar_pcb(t_pcb* pcb);
 t_contexto* inicializar_contexto();
 void logearInstrucciones(t_list* instrucciones, t_log* logger);
 

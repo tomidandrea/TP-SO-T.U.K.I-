@@ -38,7 +38,7 @@ void inicializarRecursos();
 void ejecutarIO(io_contexto* contexto);
 void bloquearYPasarAReady(io_contexto* contexto);
 int verificarRecursos(char* recurso);
-uint32_t wait(t_pcb* proceso, char* recurso);
+void wait(t_pcb* proceso, char* recurso);
 void ejecutarSignal(t_pcb* proceso, char* recurso);
 int indice(char* recurso);
 int cantInstancias(char* recurso);

@@ -12,6 +12,7 @@
 
 void mostrarRegistros(t_registros* registros);
 void mostrarListaProcesos(t_list* lista);
+char* lista_procesos_string(t_list* lista);
 
 
 #endif /* SRC_UTILS_VISUALIZARESTRUCTURAS_H_ */

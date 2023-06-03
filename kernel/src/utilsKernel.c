@@ -158,7 +158,7 @@ void bloquearYPasarAReady(io_contexto* contexto) {
 	//sem_post(&sem_ready);
 }
 
-uint32_t wait(t_pcb* proceso, char* recurso) {
+void wait(t_pcb* proceso, char* recurso) {
 
     disminuirInstancias(recurso);
     int instancias = cantInstancias(recurso);
@@ -166,13 +166,11 @@ uint32_t wait(t_pcb* proceso, char* recurso) {
     if(instancias < 0) {
     	removerDeExecute();
         bloquear(proceso, recurso);
-        return BLOQUEADO;
     } else {
 		//agregarAlInicioDeReady(proceso);
 		log_info(logger, "Proceso %d vuelve a cpu por disponibilidad del recurso %s\n", proceso->pid, recurso);
 		mandar_pcb_a_CPU(proceso);
 		sem_post(&sem_recibir);
-		return CONTINUAR_EJECUTANDO;
     }
 }
 
