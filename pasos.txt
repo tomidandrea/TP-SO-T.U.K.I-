@@ -1,0 +1,25 @@
+-Vincular VM con cmd de la compu
+Dentro de la VM ir a maquina→configuración→red y tocar reenvío de puertos.
+Crear regla, puerto anfitrión poner 2222 (puede ser cualquiera, lo suficientemente grande) y puerto invitado si tiene que ser 22.
+Luego poner en cmd: 
+ssh utnso@localhost -p 2222
+
+-Crear key posta
+ssh-keygen -t ecdsa -b 521 -C "your_email@example.com"
+cat ~/.ssh/id_ecdsa.pub
+
+Luego del primer comando, dar todo Enter. Deben aparecer unos símbolos raros, despúes mandan el segundo comando, copian lo que generó y lo pegan en Github->Settings->SSH->New Key. 
+Cuando hagan git clone por primera vez puede aparecer una pregunta, pongan yes y ya les  dejaría clonar.
+
+-Make de los módulos
+Entrar en la carpeta del módulo (donde está el makefile) y hacer make all
+Te genera todos los ejecutables, entonces hacemos cd bin
+Ahi tenemos el ejecutable que nos genera el make y solo tenemos que hacer:
+./consola.out <carpetaDondeEsteUbicada>/consola.config <carpetaDondeEsteUbicada>/<pseudoParaEjecutar>
+
+./cpu.out <carpetaDondeEsteUbicada>/cpu.config
+
+./kernel.out <carpetaDondeEsteUbicada>/kernel.config
+
+
+<carpetaDondeEsteUbicada> depende de la prueba que queramos ejecutar 
