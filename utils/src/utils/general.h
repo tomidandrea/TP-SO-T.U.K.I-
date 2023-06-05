@@ -77,13 +77,21 @@ typedef enum {
 	F_CLOSE,
 	EXT
 } operacion;
+
+typedef struct {
+	char* base;
+	char* limite;
+} t_segmento;
+
+typedef t_list* tabla_segmentos;
+
 typedef struct {
     int pid;
     t_list* instrucciones;
     int pc;
     t_registros* registros;
+    tabla_segmentos tablaSegmentos;
     operacion motivo;
-    //char* recurso;
     t_temporal* tiempoEnReady;
 	t_temporal* tiempoCPU;
 	double estimadoAnterior;

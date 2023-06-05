@@ -78,14 +78,10 @@ void recibirDeCPU() {
 			case YIELD:
 				log_info(logger, "Hubo un YIELD del proceso %d\n", proceso->pid);
 
-				//proceso->tiempoEnReady = iniciarTiempo();
-				//temporal_resume(proceso->tiempoEnReady);
-				// Lo agrego al final de la lista de ready
 				proceso = removerDeExecute();
 				pasarAReady(proceso);
 				log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: READY", proceso->pid);
 
-				// Si algoritmo == HRRN -> calcular_estimado();
 				break;
 			case IO:
 				log_info(logger, "Hubo un IO de PID:%d\n", contexto->pid);

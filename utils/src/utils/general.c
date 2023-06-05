@@ -143,6 +143,7 @@ t_pcb* inicializar_pcb(){
 	t_pcb* pcb = malloc(sizeof(t_pcb));
 	pcb->instrucciones = list_create();
 	pcb->registros = inicializarRegistros();
+	pcb->tablaSegmentos = list_create();
 	return pcb;
 }
 
