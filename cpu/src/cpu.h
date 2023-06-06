@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include "utilsCpu.h"
 
@@ -36,16 +37,26 @@ typedef struct {
 } t_pcb;*/
 
 typedef struct {
-	int numero;
+	int numero_segmento;
 	int desplazamiento;
-
-} t_segmento;
+} direc_logica ;
 
 t_instruccion* realizar_ciclo_instruccion(t_pcb * pcb);
 t_instruccion* fetch(t_list* instrucciones, uint32_t pc);
-int decode(char* instruccion);
+void decode(char* instruccion);
 int requiere_memoria(char* instruccion);
 estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb *pcb);
-estado_ejec ejecutar_set(char* registro, char* valor);
+estado_ejec set_registro(char* registro, char* valor);
+char* get_registro(char*registro);
+estado_ejec ejecutar_mov_in(char* registro, char* direc, tabla_segmentos tabla_de_segmentos);
+estado_ejec ejecutar_mov_out(char* direc,char* registro, tabla_segmentos tabla_de_segmentos);
+estado_ejec ejecutar_mov(char* registro, direc_logica direcLogica, tabla_segmentos tabla_de_segmentos);
+direc_logica crear_direc_logica(char* direc);
+int verificar_num_segmento(int num_segmento,tabla_segmentos tabla_de_segmentos);
+int no_produce_seg_fault(int desplazamiento,int tamanio_a_leer, t_segmento*segmento, int num_segmento);
+int tamanio_registro(char*registro);
+int obtener_direc_fisica(direc_logica direcLogica,tabla_segmentos tabla_de_segmentos);
+
+
 
 #endif /* SRC_CPU_H_ */
