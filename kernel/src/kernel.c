@@ -8,6 +8,7 @@ t_list* procesosReady;
 t_list* procesosNew;
 t_list* colasDeBloqueados;
 t_socket conexionCPU;
+t_socket conexionMemoria;
 char** recursos;
 char** instanciasRecursos;
 int cantidad_recursos;
@@ -32,6 +33,7 @@ int main(int argc, char* argv[]) {
     procesosExecute = list_create();
 
     conexionCPU = crearConexionCPU();
+    conexionMemoria = crearConexionMemoria();
 	// Hilo que atiende consolas
 
 		crearEscucharConsolas();

@@ -121,6 +121,14 @@ void recibirDeCPU() {
 					//FINALIZAR PROCESO
 				}
 				break;
+			case CREATE_SEGMENT:
+				log_info(logger, "Llego un CREATE_SEGMENT uacho\n");
+				enviarAMemoria(contexto->id_segmento,contexto->tamanio_segmento);
+				break;
+			case DELETE_SEGMENT:
+				log_info(logger, "Llego un DELETE_SEGMENT uachin\n");
+
+				break;
 			default:
 				log_debug(logger, "No se implemento la instruccion");
 				break;

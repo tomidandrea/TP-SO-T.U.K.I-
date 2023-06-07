@@ -29,6 +29,13 @@ t_socket crearConexionCPU(){
 	return conexion;
 }
 
+t_socket crearConexionMemoria(){
+	char* ip = config_get_string_value(config,"IP_MEMORIA");
+	char* puerto = config_get_string_value(config,"PUERTO_MEMORIA");
+	t_socket conexion = crear_conexion(ip, puerto, logger);
+	return conexion;
+}
+
 void inicializarRecursos(){
 	char* recursos_config =  config_get_string_value(config, "RECURSOS");
 	// TODO: alejiti fijate q la cantidad es un vector
@@ -116,7 +123,6 @@ t_contexto* actualizar_pcb(t_pcb* proceso) {
 					strcpy(proceso->registros->RBX, contexto->registros->RBX);
 					strcpy(proceso->registros->RCX, contexto->registros->RCX);
 					strcpy(proceso->registros->RDX, contexto->registros->RDX);
-
 
 				} else {
 					log_error(logger,"No me llego un proceso");

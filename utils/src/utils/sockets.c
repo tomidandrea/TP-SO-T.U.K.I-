@@ -209,6 +209,12 @@ t_contexto* recibir_contexto(int socket_cliente) {
 		memcpy(&(contexto->motivo), buffer + desplazamiento, sizeof(int));
 		desplazamiento+=sizeof(int);
 
+		memcpy(&(contexto->id_segmento), buffer + desplazamiento, sizeof(int));
+				desplazamiento+=sizeof(int);
+
+		memcpy(&(contexto->tamanio_segmento), buffer + desplazamiento, sizeof(int));
+				desplazamiento+=sizeof(int);
+
 		memcpy(&(contexto->cantidadParametros), buffer + desplazamiento, sizeof(int));
 		desplazamiento+=sizeof(int);
 		int cantParametros = contexto->cantidadParametros;

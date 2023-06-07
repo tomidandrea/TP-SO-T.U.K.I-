@@ -4,6 +4,7 @@
 extern t_config* config;
 extern t_log* logger;
 extern t_socket conexionCPU;
+extern t_socket conexionMemoria;
 
 extern pthread_mutex_t mutex_procesos_new;
 extern t_list* procesosNew;
@@ -112,6 +113,16 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 	enviar_paquete(paquete,conexionCPU);                // serializa el paquete y lo envia
 
 	eliminar_paquete(paquete);                //elimina el paquete y lo que contiene
+
+}
+
+void enviarAMemoria(int id_segmento, int tamanio_segmento){
+	t_paquete *paquete = crear_paquete(CREATE_SEGMENT_OP);
+	agregar_valor_estatico(paquete,tamanio_segmento);
+	agregar_valor_estatico(paquete,id_segmento);
+
+	enviar_paquete(CREATE_SEGMENT_OP, conexionMemoria);
+	eliminar_paquete(CREATE_SEGMENT_OP, conexionMemoria);
 
 }
 

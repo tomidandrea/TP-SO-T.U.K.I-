@@ -79,8 +79,10 @@ typedef enum {
 } operacion;
 
 typedef struct {
-	char* base;
-	char* limite;
+	int id;
+	int tamanio;
+	//char* base;
+	//char* limite;
 } t_segmento;
 
 typedef t_list* tabla_segmentos;
@@ -106,6 +108,8 @@ typedef struct {
     operacion motivo;
     char** parametros;
     int cantidadParametros;
+    int id_segmento;
+	int tamanio_segmento;
 } t_contexto;
 
 #define CANT_IDENTIFICADORES (sizeof(tablaIdentificadores)/sizeof(t_identificador))

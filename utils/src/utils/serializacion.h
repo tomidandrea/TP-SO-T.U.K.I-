@@ -10,7 +10,9 @@ typedef enum
 	MENSAJE,
 	PROGRAMA,
 	PROCESO,
-	CONTEXTO
+	CONTEXTO,
+	CREATE_SEGMENT_OP,
+	DELETE_SEGMENT_OP
 }op_code;
 
 typedef struct
