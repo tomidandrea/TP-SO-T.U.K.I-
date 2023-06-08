@@ -123,7 +123,9 @@ void recibirDeCPU() {
 				break;
 			case CREATE_SEGMENT:
 				log_info(logger, "Llego un CREATE_SEGMENT uacho\n");
-				enviarAMemoria(contexto->id_segmento,contexto->tamanio_segmento);
+				int id_segmento = atoi(contexto->parametros[0]);
+				int tamanio_segmento = atoi(contexto->parametros[1]);
+				enviarAMemoria(id_segmento, tamanio_segmento);
 				break;
 			case DELETE_SEGMENT:
 				log_info(logger, "Llego un DELETE_SEGMENT uachin\n");

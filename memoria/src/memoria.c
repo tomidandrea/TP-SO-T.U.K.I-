@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
 
 	t_socket server_fd = iniciarServidor(config, logger,"PUERTO_ESCUCHA");
 
-
+	inicializarEstructuras(config);
 
 	while(1){
 		t_socket socket_cliente = esperar_cliente(server_fd, logger);

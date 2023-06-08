@@ -108,8 +108,6 @@ typedef struct {
     operacion motivo;
     char** parametros;
     int cantidadParametros;
-    int id_segmento;
-	int tamanio_segmento;
 } t_contexto;
 
 #define CANT_IDENTIFICADORES (sizeof(tablaIdentificadores)/sizeof(t_identificador))
