@@ -79,8 +79,9 @@ typedef enum {
 } operacion;
 
 typedef struct {
-	char* base;
-	char* limite;
+	int id;
+	int base;
+	int tamanio;
 } t_segmento;
 
 typedef t_list* tabla_segmentos;

@@ -3,6 +3,7 @@
 t_log* logger;
 t_config* config;
 t_registros* registros;
+t_socket conexionMemoria;
 uint32_t RESULT_OK = 0;
 uint32_t RESULT_ERROR = 1;
 
@@ -13,7 +14,7 @@ int main(int argc, char* argv[]) {
 	logger = iniciar_logger("cpu.log", "CPU", true, LOG_LEVEL_DEBUG);
 	config = iniciar_config(argv[1]);
 
-    t_socket conexionMemoria = iniciarConexion(config, logger, "IP_MEMORIA","PUERTO_MEMORIA");
+    conexionMemoria = iniciarConexion(config, logger, "IP_MEMORIA","PUERTO_MEMORIA");
 
 	t_socket server_fd = iniciarServidor(config,logger, "PUERTO_ESCUCHA");
 
@@ -55,7 +56,7 @@ t_instruccion* realizar_ciclo_instruccion(t_pcb * pcb){
 	return instruccion_ejecutar;
 }
 
-t_instruccion* fetch(t_list* instrucciones, uint32_t pc){
+t_instruccion* fetch(t_list* instrucciones, int pc){
 	log_info(logger, "Entro en fetch");
 	return list_get(instrucciones,pc);
 }
@@ -124,13 +125,13 @@ estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb* pcb){
 					return FIN;
 		case MOV_IN:
 			        log_info(logger,"PID: %d - Ejecutando: %s - %s %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar-> parametros[0],instruccion_ejecutar-> parametros[1]);
-			        estado_ejec estado_mov_in = ejecutar_mov_in(instruccion_ejecutar->parametros[0],instruccion_ejecutar->parametros[1], pcb->tablaSegmentos);
+			        estado_ejec estado_mov_in = ejecutar_mov_in(pcb->pid, instruccion_ejecutar->parametros[0],instruccion_ejecutar->parametros[1], pcb->tablaSegmentos);
 			        if(estado_mov_in == ERROR)
 					   pcb->motivo = EXT;
 					return estado_mov_in;
 		case MOV_OUT:
 		    		log_info(logger,"PID: %d - Ejecutando: %s - %s %s", pcb->pid, instruccion_ejecutar-> instruccion,instruccion_ejecutar-> parametros[0], instruccion_ejecutar-> parametros[1]);
-		    		estado_ejec estado_mov_out = ejecutar_mov_out(instruccion_ejecutar->parametros[0],instruccion_ejecutar->parametros[1], pcb->tablaSegmentos);
+		    		estado_ejec estado_mov_out = ejecutar_mov_out(pcb->pid, instruccion_ejecutar->parametros[0],instruccion_ejecutar->parametros[1], pcb->tablaSegmentos);
 		    		if(estado_mov_out == ERROR)
 		    		pcb->motivo = EXT;
 					return estado_mov_out;
@@ -254,44 +255,49 @@ char* get_registro(char*registro) {
 }
 
 
-estado_ejec ejecutar_mov_in(char* registro, char* direc, tabla_segmentos tabla_de_segmentos) {
+estado_ejec ejecutar_mov_in(int pid, char* registro, char* direc, tabla_segmentos tabla_de_segmentos) {
 
 direc_logica direcLogica = crear_direc_logica(direc);
-estado_ejec resultado = ejecutar_mov(registro,direcLogica,tabla_de_segmentos);
+int tamanio_a_leer = tamanio_registro(registro);
+estado_ejec resultado = ejecutar_mov(pid, tamanio_a_leer,direcLogica,tabla_de_segmentos);
 
 if(resultado == CONTINUAR) {
 
 	int direc_fisica = obtener_direc_fisica(direcLogica,tabla_de_segmentos);
-	 //char* valor = leer_memoria(direc_fisica,tamanio_a_leer);
-	 //set_registro(registro,valor);
+	char* valor = leer_memoria(direc_fisica,tamanio_a_leer);
+	set_registro(registro,valor);
+	log_info(logger, "PID: %d - Acción: LEER - Segmento: %d - Dirección Física: %d - Valor: %s", pid, direcLogica.numero_segmento, direc_fisica, valor);
+	free(valor);
 }
+
 return resultado;
-
 }
 
-estado_ejec ejecutar_mov_out(char* direc,char* registro, tabla_segmentos tabla_de_segmentos) {
+estado_ejec ejecutar_mov_out(int pid, char* direc,char* registro, tabla_segmentos tabla_de_segmentos) {
 
 direc_logica direcLogica = crear_direc_logica(direc);
-estado_ejec resultado = ejecutar_mov(registro, direcLogica, tabla_de_segmentos);
+int tamanio_a_escribir = tamanio_registro(registro);
+estado_ejec resultado = ejecutar_mov(pid,tamanio_a_escribir, direcLogica, tabla_de_segmentos);
+
 
 if(resultado == CONTINUAR) {
 	 int direc_fisica = obtener_direc_fisica(direcLogica,tabla_de_segmentos);
-	 char*valor = get_registro(registro);
-	 //escribir_memoria(direc_fisica,valor);
+	 char* valor = get_registro(registro);
+	 escribir_memoria(direc_fisica,valor, tamanio_a_escribir);
+	 log_info(logger, "PID: %d - Acción: ESCRIBIR - Segmento: %d - Dirección Física: %d - Valor: %s", pid, direcLogica.numero_segmento, direc_fisica, valor);
+	 free(valor);
 }
 return resultado;
 
 }
 
 
-estado_ejec ejecutar_mov(char* registro, direc_logica direcLogica, tabla_segmentos tabla_de_segmentos) {
-
-		int tamanio_a_leer = tamanio_registro(registro);
+estado_ejec ejecutar_mov(int pid, int tamanio_valor, direc_logica direcLogica, tabla_segmentos tabla_de_segmentos) {
 
 		if (verificar_num_segmento(direcLogica.numero_segmento,tabla_de_segmentos))
 			{
 			 t_segmento*segmento = list_get(tabla_de_segmentos,direcLogica.numero_segmento);
-			 if (no_produce_seg_fault(direcLogica.desplazamiento,tamanio_a_leer, segmento, direcLogica.numero_segmento) == 1)
+			 if (no_produce_seg_fault(pid, direcLogica.desplazamiento,tamanio_valor, segmento) == 1)
 				 return CONTINUAR;
 			}
 		return ERROR;
@@ -320,11 +326,12 @@ int verificar_num_segmento(int num_segmento,tabla_segmentos tabla_de_segmentos) 
 	return 0;
 }
 
-int no_produce_seg_fault(int desplazamiento,int tamanio_a_leer, t_segmento*segmento, int num_segmento) {
+int no_produce_seg_fault(int pid, int desplazamiento,int tamanio_a_leer, t_segmento*segmento) {
 
-	if ((desplazamiento + tamanio_a_leer) > atoi(segmento->limite))
+	if ((desplazamiento + tamanio_a_leer) > segmento->tamanio)
 	{
-		log_error(logger,"SEGEMENTATION FAULT en segmento %d",num_segmento);
+		log_info(logger, "PID: %d - Error SEG_FAULT- Segmento: %d  - Offset: %d - Tamaño: %d"
+,pid,segmento->id, desplazamiento, segmento->tamanio);
 		return 0;
 	}
 
@@ -344,7 +351,7 @@ int tamanio_registro(char*registro) {
 int obtener_direc_fisica(direc_logica direcLogica,tabla_segmentos tabla_de_segmentos){
 
 	t_segmento*segmento = list_get(tabla_de_segmentos,direcLogica.numero_segmento);
-	int direc_fisica = atoi(segmento->base) + direcLogica.desplazamiento;
+	int direc_fisica = segmento->base + direcLogica.desplazamiento;
 
 	return direc_fisica;
 }

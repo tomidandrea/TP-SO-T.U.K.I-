@@ -10,7 +10,9 @@ typedef enum
 	MENSAJE,
 	PROGRAMA,
 	PROCESO,
-	CONTEXTO
+	CONTEXTO,
+	ESCRIBIR,
+	LEER
 }op_code;
 
 typedef struct
