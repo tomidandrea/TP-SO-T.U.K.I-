@@ -80,9 +80,8 @@ typedef enum {
 
 typedef struct {
 	int id;
-	int tamanio;
-	//char* base;
-	//char* limite;
+	u_int32_t base;
+	u_int32_t limite;
 } t_segmento;
 
 typedef t_list* tabla_segmentos;
