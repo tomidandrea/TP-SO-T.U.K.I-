@@ -34,7 +34,6 @@ int main(int argc, char* argv[]) {
 
     conexionCPU = crearConexionCPU();
     conexionMemoria = crearConexionMemoria();
-	// Hilo que atiende consolas
 
 		crearEscucharConsolas();
 		crearAgregarReady();

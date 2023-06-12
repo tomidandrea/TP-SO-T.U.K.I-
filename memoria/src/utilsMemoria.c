@@ -4,9 +4,10 @@ extern void* espacioMemoria;
 tabla_segmentos* tablaSegmentos;
 extern t_config* config;
 
-void inicializarEstructuras(config){
 
-	tablaSegmentos = create_list();
+void inicializarEstructuras(){
+
+	tablaSegmentos = list_create();
 	t_segmento* segmento0;
 	int tamanioMemoria = config_get_int_value(config,"TAM_MEMORIA");
 	int tamanioSegmento0 = config_get_int_value(config,"TAM_SEGMENTO_0");
@@ -20,7 +21,7 @@ void inicializarEstructuras(config){
 
 }
 
-void enviarSegmentosKernel(){
+void enviarSegmentosKernel(t_socket socket_kernel){
 
 	t_paquete *paquete = crear_paquete(TABLA_SEGMENTOS_INICIAL);
 	int cantidad = list_size(tablaSegmentos);
@@ -33,8 +34,8 @@ void enviarSegmentosKernel(){
 	}
 
 	//TODO Ver estas conxiones
-	enviar_paquete(TABLA_SEGMENTOS_INICIAL, conexionMemoria);
-	eliminar_paquete(TABLA_SEGMENTOS_INICIAL, conexionMemoria);
+	enviar_paquete(TABLA_SEGMENTOS_INICIAL, socket_kernel);
+	eliminar_paquete(TABLA_SEGMENTOS_INICIAL);
 }
 
 
