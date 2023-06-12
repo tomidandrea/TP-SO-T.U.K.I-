@@ -8,7 +8,6 @@
 #ifndef SRC_FILE_SYSTEM_H_
 #define SRC_FILE_SYSTEM_H_
 
-#include <utils/general.h>
-#include <utils/sockets.h>
+#include <utilsFileSystem.h>
 
 #endif /* SRC_FILE_SYSTEM_H_ */
