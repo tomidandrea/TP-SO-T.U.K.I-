@@ -39,6 +39,7 @@ int main(int argc, char* argv[]) {
 		crearAgregarReady();
 		crearPlanificar();
 		crearRecibirDeCPU();
+		//TODO jarwi agus: falta hilo para escuchar de memoria, ver como hay que sincronizar
 		while(1);
 
 		return EXIT_SUCCESS;

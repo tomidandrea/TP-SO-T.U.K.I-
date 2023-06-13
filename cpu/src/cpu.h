@@ -34,12 +34,11 @@ typedef struct {
     int pc;
     t_registros* registros;
 } t_pcb;*/
-
-typedef struct {
+/*
+typedef struct{
 	int numero;
 	int desplazamiento;
-
-} t_segmento;
+} t_segmento;*/
 
 t_instruccion* realizar_ciclo_instruccion(t_pcb * pcb);
 t_instruccion* fetch(t_list* instrucciones, uint32_t pc);

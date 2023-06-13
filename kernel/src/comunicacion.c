@@ -122,7 +122,7 @@ void enviarAMemoria(int id_segmento, int tamanio_segmento){
 	agregar_valor_estatico(paquete,id_segmento);
 
 	enviar_paquete(CREATE_SEGMENT_OP, conexionMemoria);
-	eliminar_paquete(CREATE_SEGMENT_OP, conexionMemoria);
+	//eliminar_paquete(CREATE_SEGMENT_OP, conexionMemoria);
 
 }
 
