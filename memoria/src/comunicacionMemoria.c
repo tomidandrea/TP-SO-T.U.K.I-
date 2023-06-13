@@ -26,12 +26,24 @@ void escucharKernel(){
 	 * luego kernel haga un recv y memoria el send
 	 * (capaz lo tienen que meter en el while)
 	*/
-	//enviarSegmentosKernel(socket_kernel);
+	//
 	while(1){
 		if(socket_kernel != -1){
-			log_debug(logger, "Espero operacion");
-			int cod_op = recibir_operacion(socket_kernel);
+			log_debug(logger, "Espero solicitud de creación inicial de estructuras");
+			uint32_t pedido;
+				if(recv(socket_kernel, &pedido, sizeof(uint32_t), MSG_WAITALL)> 0){
+					if(pedido == 1){
+							log_info(logger, "Kernel solicita la tabla de segmentos como un chamaco");
+							log_info(logger, "Inicializando estructuras...");
+							inicializarEstructuras();
+							log_info(logger, "Enviando tabla de segmentos...");
+							//enviarSegmentosKernel(socket_kernel);
+						}else
+							log_info(logger, "Resultado: Rompiste algo");
+				}
+				int cod_op = recibir_operacion(socket_kernel);
 			switch (cod_op) {
+
 			case CREATE_SEGMENT:
 				//list_add(nuevoSegmento, segmento);
 				break;

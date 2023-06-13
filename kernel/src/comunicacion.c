@@ -13,6 +13,7 @@ extern sem_t sem_new_a_ready;
 
 uint32_t RESULT_OK = 0;
 uint32_t RESULT_ERROR = 1;
+uint32_t PIDE_TABLA = 1;
 
 int escucharConsolas(){
 	t_list* lista;
@@ -36,6 +37,9 @@ int escucharConsolas(){
 							//send(socket_cliente, &RESULT_OK, sizeof(int), NULL);
 
 							log_info(logger, "Me llego un paquete\n");
+
+							pedirTablaSegmentos();
+							//t_list* tabla = recibirTablaSegmentos();
 
 							t_pcb* pcb = crearPCB(lista, socket_cliente); //agregar para pasar el socket de consola
 							list_destroy(lista);
@@ -129,4 +133,8 @@ void enviarAMemoria(int id_segmento, int tamanio_segmento){
 void avisar_fin_a_consola(t_socket socket_consola){
 	log_debug(logger, "El socket de la consola es:%d", socket_consola);
 	send(socket_consola, &RESULT_OK, sizeof(int), 0);
+}
+
+void pedirTablaSegmentos() {
+	send(conexionMemoria, &PIDE_TABLA, sizeof(int), 0);
 }
