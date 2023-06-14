@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <utils/general.h>
+#include <utils/sockets.h>
 
 
 #endif /* SRC_UTILSMEMORIA_H_ */

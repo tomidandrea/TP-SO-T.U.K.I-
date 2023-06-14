@@ -252,6 +252,30 @@ t_contexto* recibir_contexto(int socket_cliente) {
 	    return contexto;
 }
 
+t_list* recibirTablaSegmentos(int socket_memoria){
+	void * buffer;
+	int size;
+	int tamanio_tabla;
+	int desplazamiento = 0;
+	t_segmento* segmento = malloc(sizeof(t_segmento));
+	t_list* tabla = list_create();
+
+	buffer = recibir_buffer(&size, socket_memoria);
+	memcpy(&(tamanio_tabla), buffer + desplazamiento, sizeof(int));
+	desplazamiento+=sizeof(int);
+
+	for(int i=0; i<tamanio_tabla;i++){
+		memcpy(&(segmento->id), buffer + desplazamiento, sizeof(int));
+		desplazamiento+=sizeof(int);
+		memcpy(&(segmento->base), buffer + desplazamiento, sizeof(int));
+		desplazamiento+=sizeof(int);
+		memcpy(&(segmento->limite), buffer + desplazamiento, sizeof(int));
+		desplazamiento+=sizeof(int);
+		list_add(tabla, segmento);
+	}
+	return tabla;
+}
+
 
 
 

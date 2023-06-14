@@ -5,16 +5,18 @@ t_log* logger;
 t_config* config;
 t_socket server_fd;
 void* espacioMemoria;
-extern tabla_segmentos* tablaSegmentos;
+sem_t sem_cpu, sem_kernel;
 
 int main(int argc, char* argv[]) {
+	sem_init(&sem_cpu, 0, 0);
+	sem_init(&sem_kernel, 0, 0);
 	logger = iniciar_logger("memoria.log", "MEMORIA", true, LOG_LEVEL_DEBUG);
 	config = iniciar_config(argv[1]);
 	server_fd = iniciarServidor(config, logger,"PUERTO_ESCUCHA");
 	log_debug(logger, "Iniciando memoria");
-	crearEscucharKernel();
 	crearEscucharCPU();
-	crearEscucharFS();
+	crearEscucharKernel();
+	//crearEscucharFS();
 
 	while(1);
 

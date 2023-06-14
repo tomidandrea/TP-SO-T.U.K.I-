@@ -58,6 +58,17 @@ void agregar_valor_estatico(t_paquete* paquete, int* valor)
     paquete->buffer->size += sizeof(*valor);
 }
 
+void agregar_valor_uint(t_paquete* paquete, u_int32_t* valor)
+{
+	/*printf("Dentro de la funcion\n");
+	printf("Valor %d\n", *valor);
+	printf("Sizeof %d\n", sizeof(*valor));*/
+    paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + sizeof(*valor));
+    memcpy(paquete->buffer->stream + paquete->buffer->size, valor, sizeof(*valor));
+
+    paquete->buffer->size += sizeof(*valor);
+}
+
 void eliminar_paquete(t_paquete* paquete)
 {
 	free(paquete->buffer->stream);

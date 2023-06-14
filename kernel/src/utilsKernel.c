@@ -8,6 +8,7 @@ uint32_t CONTINUAR_EJECUTANDO = 1;
 extern t_config* config;
 extern t_log* logger;
 extern t_socket conexionCPU;
+extern t_socket conexionMemoria;
 
 extern t_list* colasDeBloqueados;
 extern char** recursos;
@@ -92,6 +93,14 @@ t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola){
 	strcpy(pcb->registros->RBX, "0");
 	strcpy(pcb->registros->RCX, "0");
 	strcpy(pcb->registros->RDX, "0");
+
+	pedirTablaSegmentos();
+	int cod_op = recibir_operacion(conexionMemoria);
+	if(cod_op == TABLA_SEGMENTOS){
+		pcb->tablaSegmentos = recibirTablaSegmentos(conexionMemoria);
+
+	}else
+		log_error(logger, "Recibiste cualquier cosa pa");
 
     return pcb;
 }

@@ -38,10 +38,10 @@ int escucharConsolas(){
 
 							log_info(logger, "Me llego un paquete\n");
 
-							pedirTablaSegmentos();
-							//t_list* tabla = recibirTablaSegmentos();
+							t_pcb* pcb = crearPCB(lista, socket_cliente);
 
-							t_pcb* pcb = crearPCB(lista, socket_cliente); //agregar para pasar el socket de consola
+							t_segmento* segmento_0 = list_get(pcb->tablaSegmentos,0);
+							printf("El segmento 0: Id: %d | Base: %d| Limite: %d",segmento_0->id, segmento_0->base, segmento_0->limite);
 							list_destroy(lista);
 							pthread_mutex_lock(&mutex_procesos_new);
 							list_add(procesosNew, pcb);
@@ -135,6 +135,7 @@ void avisar_fin_a_consola(t_socket socket_consola){
 	send(socket_consola, &RESULT_OK, sizeof(int), 0);
 }
 
-void pedirTablaSegmentos() {
+void pedirTablaSegmentos(){
 	send(conexionMemoria, &PIDE_TABLA, sizeof(int), 0);
 }
+

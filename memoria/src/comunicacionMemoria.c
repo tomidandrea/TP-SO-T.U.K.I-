@@ -5,6 +5,7 @@ extern t_log* logger;
 extern t_config* config;
 uint32_t RESULT_OK = 0;
 uint32_t RESULT_ERROR = 1;
+extern sem_t sem_cpu, sem_kernel;
 
 /*ACLARACION: memoria tiene que hacer todos los accept(en esperar_cliente())
  * para ponerse a ejecutar, porque se queda bloqueado hasta que se conecten
@@ -17,6 +18,7 @@ uint32_t RESULT_ERROR = 1;
 void escucharKernel(){
 	log_debug(logger, "Entro hilo para escuchar kernel");
 	log_debug(logger, "socket memoria: %d", server_fd);
+	sem_wait(&sem_cpu);
 	t_socket socket_kernel = esperar_cliente(server_fd, logger);
 	log_debug(logger, "socket kernel: %d", socket_kernel);
 	//inicializarEstructuras();
@@ -27,6 +29,9 @@ void escucharKernel(){
 	 * (capaz lo tienen que meter en el while)
 	*/
 	//
+	log_info(logger, "Inicializando estructuras...");
+
+	inicializarEstructuras();
 	while(1){
 		if(socket_kernel != -1){
 			log_debug(logger, "Espero solicitud de creación inicial de estructuras");
@@ -34,10 +39,9 @@ void escucharKernel(){
 				if(recv(socket_kernel, &pedido, sizeof(uint32_t), MSG_WAITALL)> 0){
 					if(pedido == 1){
 							log_info(logger, "Kernel solicita la tabla de segmentos como un chamaco");
-							log_info(logger, "Inicializando estructuras...");
-							inicializarEstructuras();
+
 							log_info(logger, "Enviando tabla de segmentos...");
-							//enviarSegmentosKernel(socket_kernel);
+							enviarSegmentosKernel(socket_kernel);
 						}else
 							log_info(logger, "Resultado: Rompiste algo");
 				}
@@ -61,6 +65,7 @@ void escucharKernel(){
 void escucharCPU(){
 	log_debug(logger, "Entro hilo para escuchar CPU");
 	t_socket socket_cpu = esperar_cliente(server_fd, logger);
+	sem_post(&sem_cpu);
 	while(1){
 		if(socket_cpu != -1){
 			int cod_op = recibir_operacion(socket_cpu);
