@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include "utilsCpu.h"
 
@@ -34,17 +35,28 @@ typedef struct {
     int pc;
     t_registros* registros;
 } t_pcb;*/
-/*
-typedef struct{
-	int numero;
+
+typedef struct {
+	int numero_segmento;
 	int desplazamiento;
-} t_segmento;*/
+} direc_logica ;
 
 t_instruccion* realizar_ciclo_instruccion(t_pcb * pcb);
-t_instruccion* fetch(t_list* instrucciones, uint32_t pc);
-int decode(char* instruccion);
-int requiere_memoria(char* instruccion);
+t_instruccion* fetch(t_list* instrucciones, int pc);
+void decode(char* instruccion);
+//int requiere_memoria(char* instruccion);
 estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb *pcb);
-estado_ejec ejecutar_set(char* registro, char* valor);
+estado_ejec set_registro(char* registro, char* valor);
+char* get_registro(char*registro);
+estado_ejec ejecutar_mov_in(int pid, char* registro, char* direc, tabla_segmentos tabla_de_segmentos);
+estado_ejec ejecutar_mov_out(int pid, char* direc,char* registro, tabla_segmentos tabla_de_segmentos);
+estado_ejec ejecutar_mov(int pid,int tamanio_valor, direc_logica direcLogica, tabla_segmentos tabla_de_segmentos);
+direc_logica crear_direc_logica(char* direc);
+int verificar_num_segmento(int num_segmento,tabla_segmentos tabla_de_segmentos);
+int no_produce_seg_fault(int pid, int desplazamiento,int tamanio_a_leer, t_segmento*segmento);
+int tamanio_registro(char*registro);
+u_int32_t obtener_direc_fisica(direc_logica direcLogica,tabla_segmentos tabla_de_segmentos);
+
+
 
 #endif /* SRC_CPU_H_ */

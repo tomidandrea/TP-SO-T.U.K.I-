@@ -277,3 +277,50 @@ io_contexto* inicializarIoContexto(t_pcb* proceso, int tiempo){
 	return contexto;
 }
 
+
+void solicitarCrearSegmento(int id, int tamanio, t_pcb* proceso) {
+	t_paquete *paquete = crear_paquete(CREATE_SEGMENT);
+
+		agregar_valor_estatico(paquete, &(proceso->pid));
+		agregar_valor_estatico(paquete, &(id));
+		agregar_valor_estatico(paquete, &(tamanio));
+
+		//enviar_paquete(paquete,conexionMemoria);
+		eliminar_paquete(paquete);
+}
+
+void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
+	int cod ;// = recibirOperacion(conexionMemoria)
+	switch(cod) {
+	case CREACION_EXITOSA:
+		t_segmento* segmento = malloc(sizeof(t_segmento));
+		segmento->id = id;
+		//recv(conexionMemoria, &segmento->base, sizeof(int) , MSG_WAITALL);
+		segmento->limite = segmento->base + tamanio;
+		//crearSegmento(proceso->tablaSegmentos, segmento) agrega el segmento en la tabla
+		free(segmento);
+		break;
+	case OUT_OF_MEMORY:
+		avisar_fin_a_consola(proceso->socket_consola);
+		sem_post(&sem_grado_multiprogramacion);
+		log_info(logger, "Finaliza el proceso %d - Motivo: OUT_OF_MEMORY", proceso->pid);
+		log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
+		liberar_pcb(proceso);
+		break;
+	}
+}
+
+void eliminarSegmento(int id, t_pcb* proceso) {
+	t_paquete *paquete = crear_paquete(DELETE_SEGMENT);
+
+	agregar_valor_estatico(paquete, &(proceso->pid));
+	agregar_valor_estatico(paquete, &(id));
+
+	//enviar_paquete(paquete,conexionMemoria);
+	eliminar_paquete(paquete);
+}
+
+void recibirTablaActualizada(t_pcb* proceso) {
+
+}
+

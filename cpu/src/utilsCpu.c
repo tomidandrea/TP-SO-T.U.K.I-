@@ -1,6 +1,8 @@
 #include "utilsCpu.h"
 
 extern t_registros* registros;
+extern t_socket conexionMemoria;
+extern t_log* logger;
 
 t_pcb* recibir_proceso(int socket_cliente) {
 	    int size;
@@ -149,5 +151,40 @@ void enviar_contexto(t_pcb* proceso, t_instruccion* inst, int conexion){
 	eliminar_paquete(paquete);                //elimina el paquete y lo que contiene
 
 }
+//solo para mov_out
+void escribir_memoria(u_int32_t direc_fisica,char* valor, int tamanio_valor) {
+	t_paquete *paquete = crear_paquete(ESCRIBIR);
+
+	agregar_valor_uint(paquete, &(direc_fisica));
+	agregar_a_paquete(paquete, valor, tamanio_valor);
+
+	enviar_paquete(paquete,conexionMemoria);
+		eliminar_paquete(paquete);
+
+}
+
+//solo para mov_in
+
+char* leer_memoria(u_int32_t direc_fisica, int tamanio_a_leer) {
+	t_paquete *paquete = crear_paquete(LEER);
+	char* valor_leido = malloc(sizeof(tamanio_a_leer));
+
+	agregar_valor_uint(paquete, &(direc_fisica));
+	agregar_valor_estatico(paquete, &(tamanio_a_leer));
+
+	enviar_paquete(paquete,conexionMemoria);
+	eliminar_paquete(paquete);
+
+	//hago el recv y devuelvo el valor leido
+
+	if(conexionMemoria != -1){
+		recv(conexionMemoria, valor_leido, sizeof(tamanio_a_leer) , MSG_WAITALL);
+		log_debug(logger,"Me llego el valor leido de memoria");
+	} else {
+		log_error(logger,"No me llego el valor leido de memoria");
+	}
+	return valor_leido;
+}
+
 
 
