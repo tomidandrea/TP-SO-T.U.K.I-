@@ -12,7 +12,9 @@ typedef enum
 	PROCESO,
 	CONTEXTO,
 	ESCRIBIR,
-	LEER
+	LEER,
+	CREACION_EXITOSA,
+	OUT_OF_MEMORY
 }op_code;
 
 typedef struct
@@ -37,6 +39,7 @@ void* serializar_paquete(t_paquete*, int);
 t_paquete* crear_paquete(op_code);
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
 void agregar_valor_estatico(t_paquete* paquete, int* valor);
+void agregar_valor_uint(t_paquete* paquete, u_int32_t* valor);
 void eliminar_paquete(t_paquete* paquete);
 
 #endif /* SRC_UTILS_SERIALIZACION_H_ */

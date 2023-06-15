@@ -47,7 +47,11 @@ void aumentarInstancias(char* recurso);
 void disminuirInstancias(char* recurso);
 void desbloquearPrimerProceso(char* recurso);
 void bloquear(t_pcb* proceso, char* recurso);
-
 void pasarAInstanciasEnteras();
 io_contexto* inicializarIoContexto(t_pcb* proceso, int tiempo);
+void solicitarCrearSegmento(int id, int tamanio, t_pcb* proceso);
+void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso);
+void eliminarSegmento(int id, t_pcb* proceso);
+void recibirTablaActualizada(t_pcb* proceso);
+
 #endif

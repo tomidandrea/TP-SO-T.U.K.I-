@@ -44,7 +44,7 @@ typedef struct {
 t_instruccion* realizar_ciclo_instruccion(t_pcb * pcb);
 t_instruccion* fetch(t_list* instrucciones, int pc);
 void decode(char* instruccion);
-int requiere_memoria(char* instruccion);
+//int requiere_memoria(char* instruccion);
 estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb *pcb);
 estado_ejec set_registro(char* registro, char* valor);
 char* get_registro(char*registro);
@@ -55,7 +55,7 @@ direc_logica crear_direc_logica(char* direc);
 int verificar_num_segmento(int num_segmento,tabla_segmentos tabla_de_segmentos);
 int no_produce_seg_fault(int pid, int desplazamiento,int tamanio_a_leer, t_segmento*segmento);
 int tamanio_registro(char*registro);
-int obtener_direc_fisica(direc_logica direcLogica,tabla_segmentos tabla_de_segmentos);
+u_int32_t obtener_direc_fisica(direc_logica direcLogica,tabla_segmentos tabla_de_segmentos);
 
 
 

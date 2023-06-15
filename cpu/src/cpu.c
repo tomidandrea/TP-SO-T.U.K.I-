@@ -102,10 +102,8 @@ estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb* pcb){
 		case IO:
 			log_info(logger,"PID: %d - Ejecutando: %s - %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar->parametros[0]);
 			pcb->motivo = IO;
-			//TODO ver si tengo que tener el parametro de la instruccion en el pcb que envio a kernel (que indica el tiempo de bloqueo) o lo podemos buscar directo desde el kernel haciendo un listget pc-1  de la lista de instrucciones (obtengo la instruccion anterior y de ahi saco los parametros)
 			return FIN;
 
-		//TODO ver lo mismo del parametro que pasa en IO para WAIT Y SIGNAL (en este caso el parametro es un recurso)
 		case WAIT:
 			log_info(logger,"PID: %d - Ejecutando: %s - %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar-> parametros[0]);
 			pcb->motivo = WAIT;
@@ -115,27 +113,30 @@ estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb* pcb){
 			log_info(logger,"PID: %d - Ejecutando: %s - %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar-> parametros[0]);
 		    pcb->motivo = SIGNAL;
 			return FIN;
-		case CREATE_SEGMENT:
-					log_info(logger,"PID: %d - Ejecutando: %s - %s %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar-> parametros[0], instruccion_ejecutar-> parametros[1]);
-				    pcb->motivo = CREATE_SEGMENT;
-					return FIN;
-		case DELETE_SEGMENT:
-					log_info(logger,"PID: %d - Ejecutando: %s - %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar-> parametros[0]);
-				    pcb->motivo = DELETE_SEGMENT;
-					return FIN;
-		case MOV_IN:
-			        log_info(logger,"PID: %d - Ejecutando: %s - %s %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar-> parametros[0],instruccion_ejecutar-> parametros[1]);
-			        estado_ejec estado_mov_in = ejecutar_mov_in(pcb->pid, instruccion_ejecutar->parametros[0],instruccion_ejecutar->parametros[1], pcb->tablaSegmentos);
-			        if(estado_mov_in == ERROR)
-					   pcb->motivo = EXT;
-					return estado_mov_in;
-		case MOV_OUT:
-		    		log_info(logger,"PID: %d - Ejecutando: %s - %s %s", pcb->pid, instruccion_ejecutar-> instruccion,instruccion_ejecutar-> parametros[0], instruccion_ejecutar-> parametros[1]);
-		    		estado_ejec estado_mov_out = ejecutar_mov_out(pcb->pid, instruccion_ejecutar->parametros[0],instruccion_ejecutar->parametros[1], pcb->tablaSegmentos);
-		    		if(estado_mov_out == ERROR)
-		    		pcb->motivo = EXT;
-					return estado_mov_out;
 
+		case CREATE_SEGMENT:
+			log_info(logger,"PID: %d - Ejecutando: %s - %s %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar-> parametros[0], instruccion_ejecutar-> parametros[1]);
+			pcb->motivo = CREATE_SEGMENT;
+		    return FIN;
+
+		case DELETE_SEGMENT:
+			log_info(logger,"PID: %d - Ejecutando: %s - %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar-> parametros[0]);
+			pcb->motivo = DELETE_SEGMENT;
+			return FIN;
+
+		case MOV_IN:
+			log_info(logger,"PID: %d - Ejecutando: %s - %s %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar-> parametros[0],instruccion_ejecutar-> parametros[1]);
+			estado_ejec estado_mov_in = ejecutar_mov_in(pcb->pid, instruccion_ejecutar->parametros[0],instruccion_ejecutar->parametros[1], pcb->tablaSegmentos);
+			if(estado_mov_in == ERROR)
+				pcb->motivo = EXT;
+			return estado_mov_in;
+
+		case MOV_OUT:
+		    log_info(logger,"PID: %d - Ejecutando: %s - %s %s", pcb->pid, instruccion_ejecutar-> instruccion,instruccion_ejecutar-> parametros[0], instruccion_ejecutar-> parametros[1]);
+		    estado_ejec estado_mov_out = ejecutar_mov_out(pcb->pid, instruccion_ejecutar->parametros[0],instruccion_ejecutar->parametros[1], pcb->tablaSegmentos);
+		    if(estado_mov_out == ERROR)
+		    	pcb->motivo = EXT;
+			return estado_mov_out;
 
 		default:
 			log_error(logger,"Error en execute. La CPU no conoce todavia la operacion: %s ",instruccion_ejecutar-> instruccion);
@@ -328,10 +329,11 @@ int verificar_num_segmento(int num_segmento,tabla_segmentos tabla_de_segmentos) 
 
 int no_produce_seg_fault(int pid, int desplazamiento,int tamanio_a_leer, t_segmento*segmento) {
 
-	if ((desplazamiento + tamanio_a_leer) > segmento->tamanio)
+	u_int32_t tamanio = segmento->limite - segmento->base;
+	if ((desplazamiento + tamanio_a_leer) > tamanio)
 	{
 		log_info(logger, "PID: %d - Error SEG_FAULT- Segmento: %d  - Offset: %d - Tamaño: %d"
-,pid,segmento->id, desplazamiento, segmento->tamanio);
+,pid,segmento->id, desplazamiento, tamanio);
 		return 0;
 	}
 
@@ -348,7 +350,7 @@ int tamanio_registro(char*registro) {
 }
 
 
-int obtener_direc_fisica(direc_logica direcLogica,tabla_segmentos tabla_de_segmentos){
+u_int32_t obtener_direc_fisica(direc_logica direcLogica,tabla_segmentos tabla_de_segmentos){
 
 	t_segmento*segmento = list_get(tabla_de_segmentos,direcLogica.numero_segmento);
 	int direc_fisica = segmento->base + direcLogica.desplazamiento;
