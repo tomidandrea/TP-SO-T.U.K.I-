@@ -136,8 +136,7 @@ void avisar_fin_a_consola(t_socket socket_consola){
 }
 
 void pedirTablaSegmentos(){
-	t_paquete *paquete = crear_paquete(TABLA_SEGMENTOS);
-	enviar_paquete(paquete, conexionMemoria);
-	eliminar_paquete(paquete);
+	op_code cod = TABLA_SEGMENTOS;
+	send(conexionMemoria, &cod, sizeof(op_code), 0);
 }
 
