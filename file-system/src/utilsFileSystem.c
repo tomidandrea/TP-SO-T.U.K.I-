@@ -43,3 +43,24 @@ int mapearArchivo(void*buffer,void*path,size_t cantidad_bytes){
 
 }
 
+
+void recibo_parametros(t_socket socket_cliente,char** parametros) {
+
+	int size,tamanio;
+	int desplazamiento = 0;
+	int i=0;
+	void * buffer;
+
+	buffer = recibir_buffer(&size, socket_cliente);
+
+	while(desplazamiento < size)
+		{
+			memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
+			desplazamiento+=sizeof(int);
+			char* valor = malloc(tamanio);
+			memcpy(valor, buffer+desplazamiento, tamanio);
+			desplazamiento+=tamanio;
+			strcpy(parametros[i],valor);
+			i++;
+        }
+}

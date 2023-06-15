@@ -19,5 +19,6 @@
 #include <unistd.h>
 
 int mapearArchivo(void*espacio_memoria,void*path,size_t cantidad_bytes);
+void recibo_parametros(t_socket socket_cliente,char** parametros);
 
 #endif /* SRC_UTILSFILESYSTEM_H_ */
