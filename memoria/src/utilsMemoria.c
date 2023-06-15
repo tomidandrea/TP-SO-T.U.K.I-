@@ -23,7 +23,7 @@ void inicializarEstructuras(){
 	segmento0->limite = tamanioSegmento0;
 }
 
-void enviarSegmentosKernel(t_socket socket_kernel){
+void enviarSegmentosKernel(t_socket socket_kernel, tabla_segmentos tablaSegmentos){
 
 	t_paquete* paquete = crear_paquete(TABLA_SEGMENTOS);
 	t_segmento* segmento;

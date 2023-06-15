@@ -15,6 +15,6 @@
 #include <commons/collections/dictionary.h>
 
 void inicializarEstructuras();
-void enviarSegmentosKernel(int socket_kernel);
+void enviarSegmentosKernel(int socket_kernel, tabla_segmentos tablaSegmentos);
 
 #endif /* SRC_UTILSMEMORIA_H_ */

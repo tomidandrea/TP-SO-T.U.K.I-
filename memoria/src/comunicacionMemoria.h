@@ -5,6 +5,7 @@
 #include <utils/general.h>
 #include <utilsMemoria.h>
 #include <semaphore.h>
+#include <commons/string.h>
 
 void escucharKernel();
 void escucharCPU();

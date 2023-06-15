@@ -10,6 +10,8 @@ t_pcb* recibir_proceso(int socket_cliente) {
 		void * buffer;
 		t_list* valores = list_create();
 		int tamanio;
+		int tamanio_tabla;
+		t_segmento* segmento = malloc(sizeof(t_segmento));
         t_pcb* pcb = inicializar_pcb();
 		t_list* instrucciones = list_create();
 
@@ -29,6 +31,19 @@ t_pcb* recibir_proceso(int socket_cliente) {
 		memcpy(&(pcb->pc), buffer + desplazamiento, sizeof(int));
 		desplazamiento+=sizeof(int);
 
+		memcpy(&(tamanio_tabla), buffer + desplazamiento, sizeof(int));
+			desplazamiento+=sizeof(int);
+
+			for(int i=0; i<tamanio_tabla;i++){
+				memcpy(&(segmento->id), buffer + desplazamiento, sizeof(int));
+				desplazamiento+=sizeof(int);
+				memcpy(&(segmento->base), buffer + desplazamiento, sizeof(u_int32_t));
+				desplazamiento+=sizeof(u_int32_t);
+				memcpy(&(segmento->limite), buffer + desplazamiento, sizeof(u_int32_t));
+				desplazamiento+=sizeof(u_int32_t);
+				list_add(pcb->tablaSegmentos, segmento);
+			}
+
 		/* alternativa con vectores por tamaño
 		recibir_registros(buffer,&desplazamiento, 4,registros_>tamanio_4);
 		pcb->registros->tamanio_4 = registros->tamanio_4;
@@ -38,7 +53,7 @@ t_pcb* recibir_proceso(int socket_cliente) {
 		pcb->registros->tamanio_16 = registros->tamanio_16;
 		*/
 
-		while(desplazamiento < size)                                           //recivo todos los registros y las instrucciones y los meto en una lista de strings
+		while(desplazamiento < size)                                           //recibo todos los registros y las instrucciones y los meto en una lista de strings
 		{
 			memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
 			desplazamiento+=sizeof(int);
@@ -123,6 +138,7 @@ void enviar_contexto(t_pcb* proceso, t_instruccion* inst, int conexion){
 
 	t_paquete *paquete = crear_paquete(CONTEXTO);
 	int cant_parametros = cantParametros(inst->instruccion);
+	t_segmento* segmento = malloc(sizeof(t_segmento));
 
 	agregar_valor_estatico(paquete, &(proceso -> pid));
 	agregar_valor_estatico(paquete, &(proceso -> pc));
@@ -144,7 +160,14 @@ void enviar_contexto(t_pcb* proceso, t_instruccion* inst, int conexion){
 	agregar_a_paquete(paquete, proceso -> registros->RCX, 16);
 	agregar_a_paquete(paquete, proceso -> registros->RDX, 16);
 
-	//TODO: tabla de segmentos
+	int cantidad = list_size(proceso->tablaSegmentos);
+		agregar_valor_estatico(paquete,&cantidad);
+		for (int i = 0; i<cantidad; i++){
+			segmento = list_get(proceso->tablaSegmentos, i);
+			agregar_valor_estatico(paquete,&(segmento->id));
+			agregar_valor_uint(paquete,&(segmento->base));
+			agregar_valor_uint(paquete,&(segmento->limite));
+	}
 
 	enviar_paquete(paquete,conexion);                // serializa el paquete y lo envia
 

@@ -78,6 +78,16 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 	//log_info(logger, "PID:%d\n",proceso->pid);
 	agregar_valor_estatico(paquete, &(proceso -> pid));
 	agregar_valor_estatico(paquete, &(proceso -> pc));
+
+	int cantidad = list_size(proceso->tablaSegmentos);
+		agregar_valor_estatico(paquete,&cantidad);
+		for (int i = 0; i<cantidad; i++){
+			segmento = list_get(proceso->tablaSegmentos, i);
+			agregar_valor_estatico(paquete,&(segmento->id));
+			agregar_valor_uint(paquete,&(segmento->base));
+			agregar_valor_uint(paquete,&(segmento->limite));
+		}
+
 	agregar_a_paquete(paquete, proceso -> registros->AX, 4);
 	agregar_a_paquete(paquete, proceso -> registros->BX, 4);
 	agregar_a_paquete(paquete, proceso -> registros->CX, 4);
@@ -91,15 +101,6 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 	agregar_a_paquete(paquete, proceso -> registros->RCX, 16);
 	agregar_a_paquete(paquete, proceso -> registros->RDX, 16);
 
-
-	int cantidad = list_size(proceso->tablaSegmentos);
-	agregar_valor_estatico(paquete,&cantidad);
-	for (int i = 0; i<cantidad; i++){
-		segmento = list_get(proceso->tablaSegmentos, i);
-		agregar_valor_estatico(paquete,&(segmento->id));
-		agregar_valor_uint(paquete,&(segmento->base));
-		agregar_valor_uint(paquete,&(segmento->limite));
-	}
 
 	t_instruccion* inst;
 	for(int i = 0;i<cant;i++) {
@@ -144,8 +145,10 @@ void avisar_fin_a_consola(t_socket socket_consola){
 	send(socket_consola, &RESULT_OK, sizeof(int), 0);
 }
 
-void pedirTablaSegmentos(){
-	op_code cod = TABLA_SEGMENTOS;
-	send(conexionMemoria, &cod, sizeof(op_code), 0);
+void pedirTablaSegmentos(int pid){
+	t_paquete* paquete = crear_paquete(TABLA_SEGMENTOS);
+	agregar_valor_estatico(paquete,&pid);
+	enviar_paquete(paquete, conexionMemoria);
+	eliminar_paquete(paquete);
 }
 

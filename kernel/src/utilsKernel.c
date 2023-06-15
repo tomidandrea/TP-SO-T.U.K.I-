@@ -94,7 +94,7 @@ t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola){
 	strcpy(pcb->registros->RCX, "0");
 	strcpy(pcb->registros->RDX, "0");
 
-	pedirTablaSegmentos();
+	pedirTablaSegmentos(pcb->pid);
 	int cod_op = recibir_operacion(conexionMemoria);
 	if(cod_op == TABLA_SEGMENTOS){
 //		t_list* lista = recibirTablaSegmentos(conexionMemoria);
@@ -134,6 +134,7 @@ t_contexto* actualizar_pcb(t_pcb* proceso) {
 					strcpy(proceso->registros->RBX, contexto->registros->RBX);
 					strcpy(proceso->registros->RCX, contexto->registros->RCX);
 					strcpy(proceso->registros->RDX, contexto->registros->RDX);
+
 
 				} else {
 					log_error(logger,"No me llego un proceso");

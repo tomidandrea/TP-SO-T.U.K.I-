@@ -195,6 +195,8 @@ t_contexto* recibir_contexto(int socket_cliente) {
 		void * buffer;
 		t_list* valores = list_create();
 		int tamanio;
+		int tamanio_tabla;
+		t_segmento* segmento = malloc(sizeof(t_segmento));
         t_contexto* contexto = inicializar_contexto();
 
 		buffer = recibir_buffer(&size, socket_cliente);
@@ -223,7 +225,8 @@ t_contexto* recibir_contexto(int socket_cliente) {
 		 }
 
 
-		while(desplazamiento < size)
+		//while(desplazamiento < size)
+		for(int i=0; i< 12;i++)
 		{
 			memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
 			desplazamiento+=sizeof(int);
@@ -245,6 +248,19 @@ t_contexto* recibir_contexto(int socket_cliente) {
 		strncpy(contexto->registros->RBX, list_get(valores,9), 16);
 		strncpy(contexto->registros->RCX, list_get(valores,10), 16);
 		strncpy(contexto->registros->RDX, list_get(valores,11), 16);
+
+		memcpy(&(tamanio_tabla), buffer + desplazamiento, sizeof(int));
+			desplazamiento+=sizeof(int);
+
+			for(int i=0; i<tamanio_tabla;i++){
+				memcpy(&(segmento->id), buffer + desplazamiento, sizeof(int));
+				desplazamiento+=sizeof(int);
+				memcpy(&(segmento->base), buffer + desplazamiento, sizeof(u_int32_t));
+				desplazamiento+=sizeof(u_int32_t);
+				memcpy(&(segmento->limite), buffer + desplazamiento, sizeof(u_int32_t));
+				desplazamiento+=sizeof(u_int32_t);
+				list_add(contexto->tablaSegmentos, segmento);
+			}
 
 		free(buffer);
 		list_destroy_and_destroy_elements(valores, free);
@@ -276,7 +292,7 @@ t_list* recibirTablaSegmentos(t_socket socket_memoria){
 	return tabla;
 }
 
-t_pedido_segmento* recibirPedirSegmento(t_socket socket_kernel){
+t_pedido_segmento* recibirPedidoSegmento(t_socket socket_kernel){
 	void * buffer;
 	int size;
 	int desplazamiento = 0;
@@ -296,6 +312,20 @@ t_pedido_segmento* recibirPedirSegmento(t_socket socket_kernel){
 	return pedido;
 }
 
+int recibirPID(t_socket socket){
+	void * buffer;
+	int size;
+	int desplazamiento = 0;
+	int pid;
+
+	buffer = recibir_buffer(&size, socket);
+
+	memcpy(&(pid), buffer + desplazamiento, sizeof(int));
+	desplazamiento+=sizeof(int);
+
+	free(buffer);
+	return pid;
+}
 
 
 

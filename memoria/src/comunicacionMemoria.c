@@ -35,32 +35,25 @@ void escucharKernel(){
 
 	while(1){
 		if(socket_kernel != -1){
-			/*log_debug(logger, "Espero solicitud de creación inicial de estructuras");
-			uint32_t pedido;
-				if(recv(socket_kernel, &pedido, sizeof(uint32_t), MSG_WAITALL)> 0){
-					if(pedido == 1){
-
-						}else
-							log_info(logger, "Resultado: Rompiste algo");
-				}*/
 			int cod_op = recibir_operacion(socket_kernel);
-
 			switch (cod_op) {
 			case TABLA_SEGMENTOS:
 				tabla_segmentos tablaSegmentos = list_create();
+				int pid_int = recibirPID(socket_kernel);
+				char* pid = string_itoa(pid_int);
+				list_add(tablaSegmentos, segmento0);
+
+				dictionary_put(diccionarioTablas, pid, tablaSegmentos);
 
 				log_info(logger, "Enviando tabla de segmentos...");
-				list_add(tablaSegmentos, segmento0);
-				//todo esto agus hoy 15/6
-				dictionary_put(diccionarioTablas, pasoelcoso, tablaSegmentos);
-				enviarSegmentosKernel(socket_kernel);
+				enviarSegmentosKernel(socket_kernel, tablaSegmentos);
 				break;
 			case CREATE_SEGMENT_OP:
-				t_pedido_segmento* pedido = recibirCrearSegmento(socket_kernel);
+				//t_pedido_segmento* pedido = recibirCrearSegmento(socket_kernel);
 				//todo hacer toda la vaina de verificar cosas xd chamaco
 				break;
 			case DELETE_SEGMENT_OP:
-				t_pedido_segmento* pedido = recibirCrearSegmento(socket_kernel);
+				//t_pedido_segmento* pedido = recibirCrearSegmento(socket_kernel);
 				break;
 			default:
 				send(socket_kernel, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);
