@@ -79,6 +79,12 @@ typedef enum {
 } operacion;
 
 typedef struct {
+	int pid;
+	int id_segmento;
+	u_int32_t tamanio;
+} t_pedido_segmento;
+
+typedef struct {
 	int id;
 	u_int32_t base;
 	u_int32_t limite;

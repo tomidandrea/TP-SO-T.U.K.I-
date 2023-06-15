@@ -1,15 +1,18 @@
 #include "utilsMemoria.h"
 
 extern void* espacioMemoria;
-tabla_segmentos tablaSegmentos;
+t_dictionary* diccionarioTablas;
+t_segmento* segmento0;
+
 //TODO: tendria que ser existir una lista de tablas de segmentos o un diccionario (preferiblemente)
 extern t_config* config;
 
 
 void inicializarEstructuras(){
 
-	tablaSegmentos = list_create();
-	t_segmento* segmento0 = malloc(sizeof(t_segmento));
+	diccionarioTablas = dictionary_create();
+
+	segmento0 = malloc(sizeof(t_segmento));
 	int tamanioMemoria = config_get_int_value(config,"TAM_MEMORIA");
 	int tamanioSegmento0 = config_get_int_value(config,"TAM_SEGMENTO_0");
 	int cantidadSegmentos = config_get_int_value(config,"CANT_SEGMENTOS");
@@ -18,8 +21,6 @@ void inicializarEstructuras(){
 	segmento0->base = 0;
 	segmento0->id = 0;
 	segmento0->limite = tamanioSegmento0;
-	list_add(tablaSegmentos, segmento0);
-
 }
 
 void enviarSegmentosKernel(t_socket socket_kernel){

@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <utils/sockets.h>
 #include <utils/general.h>
+#include <commons/collections/dictionary.h>
 
 void inicializarEstructuras();
 void enviarSegmentosKernel(int socket_kernel);

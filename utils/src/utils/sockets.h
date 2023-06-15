@@ -30,5 +30,5 @@ t_list* recibir_paquete(int);
 t_pcb* inicializar_pcb();
 t_contexto* recibir_contexto(int);
 t_list* recibirTablaSegmentos(t_socket socket_memoria);
-
+t_pedido_segmento* recibirPedirSegmento(t_socket);
 #endif

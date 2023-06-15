@@ -71,6 +71,7 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 	char* operacion;
 	t_paquete *paquete = crear_paquete(PROCESO);
 	int op_tamanio = 0;
+	t_segmento* segmento;
 
 	int cant = list_size(proceso->instrucciones);
 	int cant_parametros = 0;
@@ -90,7 +91,15 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 	agregar_a_paquete(paquete, proceso -> registros->RCX, 16);
 	agregar_a_paquete(paquete, proceso -> registros->RDX, 16);
 
-	//TODO: tabla de segmentos
+
+	int cantidad = list_size(proceso->tablaSegmentos);
+	agregar_valor_estatico(paquete,&cantidad);
+	for (int i = 0; i<cantidad; i++){
+		segmento = list_get(proceso->tablaSegmentos, i);
+		agregar_valor_estatico(paquete,&(segmento->id));
+		agregar_valor_uint(paquete,&(segmento->base));
+		agregar_valor_uint(paquete,&(segmento->limite));
+	}
 
 	t_instruccion* inst;
 	for(int i = 0;i<cant;i++) {

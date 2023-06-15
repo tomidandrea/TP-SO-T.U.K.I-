@@ -6,7 +6,8 @@ extern t_config* config;
 uint32_t RESULT_OK = 0;
 uint32_t RESULT_ERROR = 1;
 extern sem_t sem_cpu, sem_kernel;
-
+extern t_dictionary* diccionarioTablas;
+extern t_segmento* segmento0;
 /*ACLARACION: memoria tiene que hacer todos los accept(en esperar_cliente())
  * para ponerse a ejecutar, porque se queda bloqueado hasta que se conecten
  * todos los modulos primero
@@ -43,15 +44,23 @@ void escucharKernel(){
 							log_info(logger, "Resultado: Rompiste algo");
 				}*/
 			int cod_op = recibir_operacion(socket_kernel);
+
 			switch (cod_op) {
 			case TABLA_SEGMENTOS:
+				tabla_segmentos tablaSegmentos = list_create();
+
 				log_info(logger, "Enviando tabla de segmentos...");
+				list_add(tablaSegmentos, segmento0);
+				//todo esto agus hoy 15/6
+				dictionary_put(diccionarioTablas, pasoelcoso, tablaSegmentos);
 				enviarSegmentosKernel(socket_kernel);
 				break;
 			case CREATE_SEGMENT_OP:
-				//list_add(nuevoSegmento, segmento);
+				t_pedido_segmento* pedido = recibirCrearSegmento(socket_kernel);
+				//todo hacer toda la vaina de verificar cosas xd chamaco
 				break;
 			case DELETE_SEGMENT_OP:
+				t_pedido_segmento* pedido = recibirCrearSegmento(socket_kernel);
 				break;
 			default:
 				send(socket_kernel, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);
