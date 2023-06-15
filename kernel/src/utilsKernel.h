@@ -27,6 +27,7 @@ typedef struct {
 
 t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola);
 t_socket crearConexionCPU();
+t_socket crearConexionMemoria();
 
 
 t_temporal* iniciarTiempo();
@@ -47,6 +48,9 @@ void aumentarInstancias(char* recurso);
 void disminuirInstancias(char* recurso);
 void desbloquearPrimerProceso(char* recurso);
 void bloquear(t_pcb* proceso, char* recurso);
+
+
+t_contexto* actualizar_pcb(t_pcb*);
 
 void pasarAInstanciasEnteras();
 io_contexto* inicializarIoContexto(t_pcb* proceso, int tiempo);

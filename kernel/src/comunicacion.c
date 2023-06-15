@@ -13,7 +13,7 @@ extern sem_t sem_new_a_ready;
 
 uint32_t RESULT_OK = 0;
 uint32_t RESULT_ERROR = 1;
-uint32_t PIDE_TABLA = 1;
+uint32_t PIDE_TABLA = 1; //TODO: eliminar
 
 int escucharConsolas(){
 	t_list* lista;
@@ -41,7 +41,7 @@ int escucharConsolas(){
 							t_pcb* pcb = crearPCB(lista, socket_cliente);
 
 							t_segmento* segmento_0 = list_get(pcb->tablaSegmentos,0);
-							printf("El segmento 0: Id: %d | Base: %d| Limite: %d",segmento_0->id, segmento_0->base, segmento_0->limite);
+							log_debug(logger, "El segmento 0: Id: %d | Base: %d| Limite: %d",segmento_0->id, segmento_0->base, segmento_0->limite);
 							list_destroy(lista);
 							pthread_mutex_lock(&mutex_procesos_new);
 							list_add(procesosNew, pcb);
@@ -121,12 +121,12 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 }
 
 void enviarAMemoria(int id_segmento, int tamanio_segmento){
-	t_paquete *paquete = crear_paquete(CREATE_SEGMENT_OP);
+	t_paquete* paquete = crear_paquete(CREATE_SEGMENT_OP);
 	agregar_valor_estatico(paquete,&tamanio_segmento);
 	agregar_valor_estatico(paquete,&id_segmento);
 
-	enviar_paquete(CREATE_SEGMENT_OP, conexionMemoria);
-	//eliminar_paquete(CREATE_SEGMENT_OP, conexionMemoria);
+	enviar_paquete(paquete, conexionMemoria);
+	eliminar_paquete(paquete);
 
 }
 
@@ -136,6 +136,8 @@ void avisar_fin_a_consola(t_socket socket_consola){
 }
 
 void pedirTablaSegmentos(){
-	send(conexionMemoria, &PIDE_TABLA, sizeof(int), 0);
+	t_paquete *paquete = crear_paquete(TABLA_SEGMENTOS);
+	enviar_paquete(paquete, conexionMemoria);
+	eliminar_paquete(paquete);
 }
 

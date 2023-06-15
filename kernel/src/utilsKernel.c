@@ -140,7 +140,8 @@ t_contexto* actualizar_pcb(t_pcb* proceso) {
 				}
 			return contexto;
 		}
-
+	log_error(logger, "Se rompio la conexion con CPU");
+	exit(1);
 }
 
 t_temporal* iniciarTiempo(){
@@ -213,6 +214,7 @@ int indice(char* recurso) {
           return i;
         }
     }
+    return -1;
 }
 
 int cantInstancias(char* recurso) {

@@ -131,7 +131,7 @@ t_socket esperar_cliente(int socket_servidor, t_log* logger) //agrego que mande 
 	return socket_cliente;
 }
 
-int recibir_operacion(int socket_cliente)
+int recibir_operacion(t_socket socket_cliente)
 {
 	int cod_op;
 	if(recv(socket_cliente, &cod_op, sizeof(int), MSG_WAITALL) > 0)

@@ -1,7 +1,8 @@
 #include "utilsMemoria.h"
 
 extern void* espacioMemoria;
-tabla_segmentos* tablaSegmentos;
+tabla_segmentos tablaSegmentos;
+//TODO: tendria que ser existir una lista de tablas de segmentos o un diccionario (preferiblemente)
 extern t_config* config;
 
 

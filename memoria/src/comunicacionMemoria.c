@@ -30,34 +30,36 @@ void escucharKernel(){
 	*/
 	//
 	log_info(logger, "Inicializando estructuras...");
-
 	inicializarEstructuras();
+
 	while(1){
 		if(socket_kernel != -1){
-			log_debug(logger, "Espero solicitud de creación inicial de estructuras");
+			/*log_debug(logger, "Espero solicitud de creación inicial de estructuras");
 			uint32_t pedido;
 				if(recv(socket_kernel, &pedido, sizeof(uint32_t), MSG_WAITALL)> 0){
 					if(pedido == 1){
-							log_info(logger, "Kernel solicita la tabla de segmentos como un chamaco");
 
-							log_info(logger, "Enviando tabla de segmentos...");
-							enviarSegmentosKernel(socket_kernel);
 						}else
 							log_info(logger, "Resultado: Rompiste algo");
-				}
-				int cod_op = recibir_operacion(socket_kernel);
+				}*/
+			int cod_op = recibir_operacion(socket_kernel);
 			switch (cod_op) {
-
-			case CREATE_SEGMENT:
+			case TABLA_SEGMENTOS:
+				log_info(logger, "Enviando tabla de segmentos...");
+				enviarSegmentosKernel(socket_kernel);
+				break;
+			case CREATE_SEGMENT_OP:
 				//list_add(nuevoSegmento, segmento);
 				break;
-			case DELETE_SEGMENT:
+			case DELETE_SEGMENT_OP:
 				break;
 			default:
 				send(socket_kernel, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);
 				log_error(logger,"Se cerró la conexión");
 				exit(1);
 			}
+		}else{
+			log_error(logger,"Socket kernel == -1, la conexión se cerró");
 		}
 	}
 }

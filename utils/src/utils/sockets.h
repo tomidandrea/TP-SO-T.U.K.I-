@@ -23,7 +23,7 @@ void liberar_conexion(int);
 t_socket iniciarServidor(t_config*, t_log*, char*);
 t_socket iniciar_servidor(char* , t_log*);
 t_socket esperar_cliente(int, t_log*);
-int recibir_operacion(int);
+int recibir_operacion(t_socket);
 void* recibir_buffer(int*, int);
 void recibir_mensaje(int, t_log*);
 t_list* recibir_paquete(int);
