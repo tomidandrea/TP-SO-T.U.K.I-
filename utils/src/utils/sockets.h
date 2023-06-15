@@ -29,5 +29,6 @@ void recibir_mensaje(int, t_log*);
 t_list* recibir_paquete(int);
 t_pcb* inicializar_pcb();
 t_contexto* recibir_contexto(int);
+t_list* recibirTablaSegmentos(t_socket socket_memoria);
 
 #endif

@@ -122,8 +122,8 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 
 void enviarAMemoria(int id_segmento, int tamanio_segmento){
 	t_paquete *paquete = crear_paquete(CREATE_SEGMENT_OP);
-	agregar_valor_estatico(paquete,tamanio_segmento);
-	agregar_valor_estatico(paquete,id_segmento);
+	agregar_valor_estatico(paquete,&tamanio_segmento);
+	agregar_valor_estatico(paquete,&id_segmento);
 
 	enviar_paquete(CREATE_SEGMENT_OP, conexionMemoria);
 	//eliminar_paquete(CREATE_SEGMENT_OP, conexionMemoria);

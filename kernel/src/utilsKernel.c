@@ -97,6 +97,8 @@ t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola){
 	pedirTablaSegmentos();
 	int cod_op = recibir_operacion(conexionMemoria);
 	if(cod_op == TABLA_SEGMENTOS){
+//		t_list* lista = recibirTablaSegmentos(conexionMemoria);
+//		pcb->tablaSegmentos = list_duplicate(lista);
 		pcb->tablaSegmentos = recibirTablaSegmentos(conexionMemoria);
 
 	}else
