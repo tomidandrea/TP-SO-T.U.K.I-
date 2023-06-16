@@ -286,12 +286,12 @@ void solicitarCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 		agregar_valor_estatico(paquete, &(id));
 		agregar_valor_estatico(paquete, &(tamanio));
 		// El tamanio es el limite
-		//enviar_paquete(paquete,conexionMemoria);
+		enviar_paquete(paquete,conexionMemoria);
 		eliminar_paquete(paquete);
 }
 
 void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
-	int cod ;// = recibirOperacion(conexionMemoria)
+	int cod = recibir_operacion(conexionMemoria);
 	switch(cod) {
 	case CREACION_EXITOSA:
 		t_segmento* segmento = malloc(sizeof(t_segmento));
@@ -307,6 +307,10 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 		log_info(logger, "Finaliza el proceso %d - Motivo: OUT_OF_MEMORY", proceso->pid);
 		log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
 		liberar_pcb(proceso);
+		break;
+	case TABLA_SEGMENTOS: //TODO: case temporal, despues borrar
+		proceso->tablaSegmentos = recibirTablaSegmentos(conexionMemoria);
+		log_info(logger, "Recibimos la tabla pibe");
 		break;
 	}
 }

@@ -14,7 +14,17 @@
 #include <utils/general.h>
 #include <commons/collections/dictionary.h>
 
+typedef enum {
+    HAY_ESPACIO_CONTIGUO,
+    ESPACIO_NO_CONTIGUO,
+    SIN_ESPACIO
+}EstadoMemoria;
+
 void inicializarEstructuras();
+tabla_segmentos inicializarTablaHuecosLibres(int tamanioMemoria,int tamanioSegmento0);
 void enviarSegmentosKernel(int socket_kernel, tabla_segmentos tablaSegmentos);
+int hayEspacio(t_pedido_segmento* pedido);
+void crearSegmento(t_pedido_segmento* pedido);
+u_int32_t obtenerTamanioSegmento(t_segmento* segmento);
 
 #endif /* SRC_UTILSMEMORIA_H_ */

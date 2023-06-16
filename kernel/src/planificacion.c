@@ -126,9 +126,11 @@ void recibirDeCPU() {
 				log_info(logger, "Llego un CREATE_SEGMENT pibe\n");
 				id = atoi(contexto->parametros[0]);
 				int tamanio = atoi(contexto->parametros[1]);
-				solicitarCrearSegmento(id,tamanio, proceso);
+				solicitarCrearSegmento(id,tamanio, proceso); //mandamos a memoria
 				log_info(logger, "PID: %d - Crear Segmento - Id: %d - Tamaño: %d", proceso->pid, id, tamanio);
 				recibirCrearSegmento(id, tamanio, proceso);
+				mandar_pcb_a_CPU(proceso);
+				sem_post(&sem_recibir);
 				break;
 			case DELETE_SEGMENT:
 				log_info(logger, "Llego un DELETE_SEGMENT pibe\n");
@@ -137,6 +139,7 @@ void recibirDeCPU() {
 				eliminarSegmento(id, proceso);
 				log_info(logger, "PID: %d - Eliminar Segmento - Id: %d", proceso->pid, id);
 				recibirTablaActualizada(proceso);
+
 				break;
 			default:
 				log_debug(logger, "No se implemento la instruccion");

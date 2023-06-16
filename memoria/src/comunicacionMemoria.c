@@ -3,18 +3,11 @@
 extern t_socket server_fd;
 extern t_log* logger;
 extern t_config* config;
-uint32_t RESULT_OK = 0;
-uint32_t RESULT_ERROR = 1;
 extern sem_t sem_cpu, sem_kernel;
 extern t_dictionary* diccionarioTablas;
 extern t_segmento* segmento0;
-/*ACLARACION: memoria tiene que hacer todos los accept(en esperar_cliente())
- * para ponerse a ejecutar, porque se queda bloqueado hasta que se conecten
- * todos los modulos primero
- *
- * Orden de ejecución: Memoria, CPU, Kernel
- * por ahora le saque el esperar al FS
- */
+
+uint32_t RESULT_ERROR = 1;
 
 void escucharKernel(){
 	log_debug(logger, "Entro hilo para escuchar kernel");
@@ -22,16 +15,6 @@ void escucharKernel(){
 	sem_wait(&sem_cpu);
 	t_socket socket_kernel = esperar_cliente(server_fd, logger);
 	log_debug(logger, "socket kernel: %d", socket_kernel);
-	//inicializarEstructuras();
-	//TODO jarwi agus:kernel no está esperando todavia que le manden nada
-	/*aca tendrian que hacer un recv (para que memoria se bloquee)
-	 * y en kernel un send para pedir la tabla de segmentos
-	 * luego kernel haga un recv y memoria el send
-	 * (capaz lo tienen que meter en el while)
-	*/
-	//
-	log_info(logger, "Inicializando estructuras...");
-	inicializarEstructuras();
 
 	while(1){
 		if(socket_kernel != -1){
@@ -39,17 +22,39 @@ void escucharKernel(){
 			switch (cod_op) {
 			case TABLA_SEGMENTOS:
 				tabla_segmentos tablaSegmentos = list_create();
-				int pid_int = recibirPID(socket_kernel);
-				char* pid = string_itoa(pid_int);
 				list_add(tablaSegmentos, segmento0);
 
+				int pid_int = recibirPID(socket_kernel);
+				char* pid = string_itoa(pid_int);
 				dictionary_put(diccionarioTablas, pid, tablaSegmentos);
 
-				log_info(logger, "Enviando tabla de segmentos...");
+				log_info(logger, "Enviando tabla de segmentos de proceso %d", pid_int);
 				enviarSegmentosKernel(socket_kernel, tablaSegmentos);
 				break;
 			case CREATE_SEGMENT_OP:
-				//t_pedido_segmento* pedido = recibirCrearSegmento(socket_kernel);
+				t_pedido_segmento* pedido = recibirPedidoSegmento(socket_kernel);
+				char* pid1 = string_itoa(pedido->pid);
+				crearSegmento(pedido);
+				tabla_segmentos tablaSegmentos1 = dictionary_get(diccionarioTablas, pid1);
+				enviarSegmentosKernel(socket_kernel, tablaSegmentos1);
+
+//				                switch (estado) {
+//				                    case HAY_ESPACIO_CONTIGUO:
+//				                        log_info(logger, "Creando segmento...");
+//
+//				                        break;
+//				                    case ESPACIO_NO_CONTIGUO:
+//				                        log_info(logger, "Debe compactarse el espacio");
+//				                        break;
+//				                    case SIN_ESPACIO:
+//				                        log_info(logger, "Out of memory");
+//				                        //TODO: informar a kernel
+//				                        break;
+//				                    default:
+//				                    	log_error(logger,"Error en obtener estado memoria");
+//				                    	break;
+//				                }
+
 				//todo hacer toda la vaina de verificar cosas xd chamaco
 				break;
 			case DELETE_SEGMENT_OP:
