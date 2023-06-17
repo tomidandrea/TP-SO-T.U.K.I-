@@ -15,10 +15,15 @@
 #include <commons/collections/dictionary.h>
 
 typedef enum {
-    HAY_ESPACIO_CONTIGUO,
-    ESPACIO_NO_CONTIGUO,
-    SIN_ESPACIO
+    HAY_HUECO_ASIGNABLE,
+	HAY_ESPACIO_AL_COMPACTAR,
+	NO_HAY_HUECO_ASIGNABLE
 }EstadoMemoria;
+
+typedef enum {
+    SEGMENTO_CREADO,
+	NO_PUDO_CREARSE_SEGMENTO
+}EstadoCreacion;
 
 t_segmento* crear_t_segmento(int id, u_int32_t base, u_int32_t limite);
 void inicializarEstructuras();

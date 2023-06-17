@@ -6,10 +6,9 @@ extern t_log* logger;
 extern t_config* config;
 t_dictionary* diccionarioTablas;
 t_segmento* segmento0;
+int huecoDisponible;
+EstadoCreacion estadoCreacion;
 //TODO alejiti: ver si necesitamos mutex para el diccionario y tabla de huecos
-
-#define NO_HAY_HUECO_ASIGNABLE -1
-#define HAY_ESPACIO_AL_COMPACTAR -2
 
 t_segmento* crear_t_segmento(int id, u_int32_t base, u_int32_t limite){
 	t_segmento* segmento = malloc(sizeof(t_segmento));
@@ -73,12 +72,13 @@ int hayEspacio(t_pedido_segmento* pedido){
 		log_debug(logger, "Hueco %d tiene tamaño: %d", i, tamanio);
 		if(pedido->tamanio <= tamanio){
 			log_info(logger, "Hueco libre disponible");
-			return hueco->id;
+			huecoDisponible = hueco->id; // guardo el hueco en una variable global
+			return HAY_HUECO_ASIGNABLE;
 		}else{
 			tamanioTotal += tamanio;
 		}
 	}
-	if(tamanioTotal>pedido->tamanio){
+	if(tamanioTotal > pedido->tamanio){
 		log_debug(logger, "Hay espacio si compactamos");
 		return HAY_ESPACIO_AL_COMPACTAR;
 	}
@@ -86,28 +86,35 @@ int hayEspacio(t_pedido_segmento* pedido){
 }
 
 void crearSegmento(t_pedido_segmento* pedido) {
-	int espacio = hayEspacio(pedido);
-	if(espacio >= 0){ //hay hueco disponible
-		t_segmento* hueco = list_get(tabla_huecos, espacio);
-		char* pid = string_itoa(pedido->pid);
-		tabla_segmentos tabla_del_proceso = dictionary_get(diccionarioTablas, pid);
+	int estadoEspacio = hayEspacio(pedido);
+	switch(estadoEspacio){
+	case HAY_HUECO_ASIGNABLE:
+		t_segmento* hueco = list_get(tabla_huecos, huecoDisponible);
+				char* pid = string_itoa(pedido->pid);
+				tabla_segmentos tabla_del_proceso = dictionary_get(diccionarioTablas, pid);
 
-		u_int32_t limiteSegmento = hueco->base + pedido->tamanio;
-		t_segmento* nuevoSegmento = crear_t_segmento(pedido->id_segmento, hueco->base, limiteSegmento);
-		list_add(tabla_del_proceso, nuevoSegmento);
-		log_info(logger, "Nuevo segmento: id %d, base %d, limite %d", nuevoSegmento->id, nuevoSegmento->base, nuevoSegmento->limite);
+				u_int32_t limiteSegmento = hueco->base + pedido->tamanio;
+				t_segmento* nuevoSegmento = crear_t_segmento(pedido->id_segmento, hueco->base, limiteSegmento);
+				list_add(tabla_del_proceso, nuevoSegmento);
+				log_info(logger, "Nuevo segmento: id %d, base %d, limite %d", nuevoSegmento->id, nuevoSegmento->base, nuevoSegmento->limite);
 
-		if(hueco->limite == nuevoSegmento->limite){
-			//TODO: eliminar el hueco, ya que el segmento lo ocupo entero
-		}else
-			hueco->base = nuevoSegmento->limite;
+				if(hueco->limite == nuevoSegmento->limite){
+					//TODO: eliminar el hueco, ya que el segmento lo ocupo entero
+				}else
+					hueco->base = nuevoSegmento->limite;
 
-	}else if (espacio == NO_HAY_HUECO_ASIGNABLE){ //TODO: si no hay hueco
-
+				estadoCreacion = SEGMENTO_CREADO;
+		break;
+	case NO_HAY_HUECO_ASIGNABLE:
+		//TODO: si no hay hueco
 		log_error(logger, "No hay hueco libre disponible");
-	}else if (espacio == HAY_ESPACIO_AL_COMPACTAR){ //TODO: si hay que compactar
-
-	}else{
+		estadoCreacion = NO_PUDO_CREARSE_SEGMENTO;
+		break;
+	case HAY_ESPACIO_AL_COMPACTAR:
+		//TODO: si hay que compactar
+		estadoCreacion = SEGMENTO_CREADO;
+		break;
+	default:
 		log_error(logger, "Espacio invalido");
 	}
 }

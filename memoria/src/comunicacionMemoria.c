@@ -6,6 +6,7 @@ extern t_config* config;
 extern sem_t sem_cpu, sem_kernel;
 extern t_dictionary* diccionarioTablas;
 extern t_segmento* segmento0;
+extern EstadoCreacion estadoCreacion;
 
 uint32_t RESULT_ERROR = 1;
 
@@ -37,25 +38,21 @@ void escucharKernel(){
 				t_pedido_segmento* pedido = recibirPedidoSegmento(socket_kernel);
 				pid = string_itoa(pedido->pid);
 				crearSegmento(pedido);
-				tablaSegmentos = dictionary_get(diccionarioTablas, pid);
-				enviarSegmentosKernel(socket_kernel, tablaSegmentos);
 
-//				                switch (estado) {
-//				                    case HAY_ESPACIO_CONTIGUO:
-//				                        log_info(logger, "Creando segmento...");
-//
-//				                        break;
-//				                    case ESPACIO_NO_CONTIGUO:
-//				                        log_info(logger, "Debe compactarse el espacio");
-//				                        break;
-//				                    case SIN_ESPACIO:
-//				                        log_info(logger, "Out of memory");
-//				                        //TODO: informar a kernel
-//				                        break;
-//				                    default:
-//				                    	log_error(logger,"Error en obtener estado memoria");
-//				                    	break;
-//				                }
+				switch (estadoCreacion) {
+				case SEGMENTO_CREADO:
+					tablaSegmentos = dictionary_get(diccionarioTablas, pid);
+					log_info(logger, "Enviando segmentos a kernel...");
+					enviarSegmentosKernel(socket_kernel, tablaSegmentos);
+					break;
+				case NO_PUDO_CREARSE_SEGMENTO:
+					log_info(logger, "Enviando repsuesta a kernel");
+					//todo: enviar un out of memory
+					break;
+				default:
+					log_error(logger,"Error en obtener estado memoria");
+					break;
+				}
 
 				//todo hacer toda la vaina de verificar cosas xd chamaco
 				break;
