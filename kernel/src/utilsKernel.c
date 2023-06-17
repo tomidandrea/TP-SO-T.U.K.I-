@@ -337,7 +337,8 @@ void eliminarSegmento(int id, t_pcb* proceso) {
 }
 
 void recibirTablaActualizada(t_pcb* proceso) {
-//xddddddddddddddddddddddxdxdxd
-	// la derivada de x es 1
+	proceso->tablaSegmentos = recibirTablaSegmentos(conexionMemoria);
+	log_info(logger, "Recibimos la tabla actualizada dsp de eliminar el segmentoide");
+
 }
 

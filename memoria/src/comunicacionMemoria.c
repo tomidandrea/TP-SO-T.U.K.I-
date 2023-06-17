@@ -63,7 +63,9 @@ void escucharKernel(){
 
 				break;
 			case DELETE_SEGMENT_OP:
-				//t_pedido_segmento* pedido = recibirCrearSegmento(socket_kernel);
+				t_pedido_segmento* pedido = recibirPedidoSegmento(socket_kernel);
+				eliminarSegmento(pedido);
+				enviarSegmentosKernel(socket_kernel, tablaSegmentos);
 				break;
 			default:
 				send(socket_kernel, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);

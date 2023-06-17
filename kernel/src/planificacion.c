@@ -136,7 +136,9 @@ void recibirDeCPU() {
 				//TODO verificar que exista el segmento y no sea el 0
 				eliminarSegmento(id, proceso);
 				log_info(logger, "PID: %d - Eliminar Segmento - Id: %d", proceso->pid, id);
+
 				recibirTablaActualizada(proceso);
+				avisar_fin_a_consola(proceso->socket_consola);
 
 				break;
 			default:

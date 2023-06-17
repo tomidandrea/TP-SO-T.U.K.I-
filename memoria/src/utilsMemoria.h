@@ -27,5 +27,6 @@ void enviarSegmentosKernel(int socket_kernel, tabla_segmentos tablaSegmentos);
 int hayEspacio(t_pedido_segmento* pedido);
 void crearSegmento(t_pedido_segmento* pedido);
 u_int32_t obtenerTamanioSegmento(t_segmento* segmento);
+void eliminarSegmento (t_pedido_segmento*);
 
 #endif /* SRC_UTILSMEMORIA_H_ */

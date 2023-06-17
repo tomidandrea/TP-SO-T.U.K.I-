@@ -118,6 +118,7 @@ void crearSegmento(t_pedido_segmento* pedido) {
 		break;
 	case HAY_ESPACIO_AL_COMPACTAR:
 		//TODO: compactacion
+		compactarTabla();
 		estadoCreacion = CREACION_EXITOSA;
 		break;
 	default:
@@ -125,4 +126,10 @@ void crearSegmento(t_pedido_segmento* pedido) {
 	}
 }
 
+void eliminarSegmento (t_pedido_segmento* pedido) {
+	char* pid = string_itoa(pedido->pid);
+	tabla_segmentos tabla_del_proceso = dictionary_get(diccionarioTablas, pid);
 
+	list_remove(tabla_del_proceso, pedido->id_segmento);
+
+}
