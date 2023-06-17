@@ -67,6 +67,7 @@ t_list* listaAInstrucciones(t_list* list) {
 		}
 		list_add(instrucciones, inst);
 		i+= cant + 1;
+		//liberar_instruccion(inst);
 	}
 
 	return instrucciones;
@@ -171,3 +172,5 @@ void liberar_contexto(t_contexto* contexto){ //por ahora contexto seria lo que n
 	liberar_parametros(contexto->parametros, contexto->cantidadParametros);
 	free(contexto);
 }
+
+

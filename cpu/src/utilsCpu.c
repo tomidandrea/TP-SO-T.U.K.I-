@@ -68,6 +68,10 @@ t_pcb* recibir_proceso(int socket_cliente) {
 		actualizar_registros_cpu(pcb,lista_registros);                          // actualizo los registros de la cpu
 		instrucciones = listaAInstrucciones(valores);              // paso de lista de strings a lista de instrucciones
 	    pcb->instrucciones = instrucciones;                             // actualizo lista de instrucciones en el pcb
+	    list_destroy(lista_registros);
+	    list_destroy(valores);
+	    //liberar_instrucciones(instrucciones);
+	    free(buffer);
 
 	    return pcb;
 }
@@ -171,6 +175,7 @@ void enviar_contexto(t_pcb* proceso, t_instruccion* inst, int conexion){
 
 	enviar_paquete(paquete,conexion);                // serializa el paquete y lo envia
 
+	//free(segmento);
 	eliminar_paquete(paquete);                //elimina el paquete y lo que contiene
 
 }

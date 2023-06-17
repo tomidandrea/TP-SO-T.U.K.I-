@@ -144,4 +144,5 @@ int contar(char* cadena, char caracter);
 
 void liberar_contexto(t_contexto* contexto);
 
+
 #endif /* SRC_UTILS_GENERAL_H_ */

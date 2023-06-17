@@ -286,7 +286,7 @@ void solicitarCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 		agregar_valor_estatico(paquete, &(id));
 		agregar_valor_estatico(paquete, &(tamanio));
 		// El tamanio es el limite
-		//enviar_paquete(paquete,conexionMemoria);
+		enviar_paquete(paquete,conexionMemoria);
 		eliminar_paquete(paquete);
 }
 
@@ -312,7 +312,7 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 }
 
 void eliminarSegmento(int id, t_pcb* proceso) {
-	t_paquete *paquete = crear_paquete(DELETE_SEGMENT);
+	t_paquete *paquete = crear_paquete(DELETE_SEGMENT_OP);
 
 	agregar_valor_estatico(paquete, &(proceso->pid));
 	agregar_valor_estatico(paquete, &(id));
