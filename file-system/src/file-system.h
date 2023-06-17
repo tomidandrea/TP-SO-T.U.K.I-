@@ -16,12 +16,13 @@ typedef struct {
 	int tamanio;
 	uint32_t* puntero_directo;
 	uint32_t* puntero_indirecto;
+	t_config*config;
 
 } t_fcb;
 
 
-void crear_fcb(char* archivo, t_list*fcbs);
+void crear_fcb(char* archivo, t_list*fcbs, char*path);
 int existe_fcb(char*archivo, t_list*fcbs);
-int compararNombres(t_fcb*fcb, char*archivo);
+void liberar_fcb(t_fcb*fcb);
 
 #endif /* SRC_FILE_SYSTEM_H_ */

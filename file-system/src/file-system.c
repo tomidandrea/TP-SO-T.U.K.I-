@@ -4,15 +4,15 @@ t_log* logger;
 t_config* config;
 t_socket conexionMemoria;
 
-uint32_t RESULT_OK = 1;
-uint32_t RESULT_ERROR = 0;
+bool RESULT_OK = 1;
+bool RESULT_ERROR = 0;
 
 
 int main(int argc, char* argv[]) {
 
 	size_t cantidad_bloques, cantidad_bytes;
 	t_list* fcbs = list_create();
-	int result_map, result_operacion;
+	bool result_operacion;
 
 	logger = iniciar_logger("file-system.log", "FILE SYSTEM", true, LOG_LEVEL_DEBUG);
 	config = iniciar_config(argv[1]);
@@ -28,26 +28,20 @@ int main(int argc, char* argv[]) {
 
 	free(path_superbloque);
 
-	//creo bitmap en memoria
+
 	cantidad_bloques = config_get_int_value(superbloque,"BLOCK_COUNT");
 
-	cantidad_bytes = cantidad_bloques/8;                                 //cantidad bloques = cantidad bits
+	cantidad_bytes = ceil(cantidad_bloques/8);                 //si da con coma redondea al proximo entero / cantidad bloques = cantidad bits
 
-	void *puntero_a_bits = malloc(cantidad_bytes);
+	//seteo con ceros el archivo bitmap
+	char* path_bitmap = config_get_string_value(config,"PATH_BITMAP");
+	set_archivo_bitmap(path_bitmap,cantidad_bloques);
 
-	t_bitarray* bitmap = bitarray_create_with_mode(puntero_a_bits, cantidad_bytes, LSB_FIRST);
+	//mapeo bitmap en memoria
+	t_bitarray* bitmap = mapear_bitmap(cantidad_bloques, cantidad_bytes,path_bitmap);  // devuelve bitarray creado despues de mapear
+
 
 	//mapeo archvivo de bitmap al bitmap creado en memoria
-
-	char* path_bitmap = config_get_string_value(config,"PATH_BITMAP");
-
-	 printf("empiezo a mapear bitmap\n");
-
-     result_map = mapearArchivo(bitmap->bitarray,path_bitmap,cantidad_bytes);
-     if (result_map == 0) {
-    	 log_error(logger,"error al mapear archivo de bitmap");
-    	 exit(1);
-     }
 
      free(path_bitmap);
 
@@ -63,14 +57,16 @@ int main(int argc, char* argv[]) {
      //mapeo archivo de bloques con el array de bloques
      char* path_bloques = config_get_string_value(config,"PATH_BLOQUES");
 
-     printf("empiezo a mapear bloques\n");
-     result_map = mapearArchivo(bloques,path_bloques,tamanio_total);
-         if (result_map == RESULT_ERROR) {
-        	 log_error(logger,"error al mapear archivo de bloques");
-        	 exit(1);
-         }
+     //mapear_bloques(bloques,path_bloques);
 
      free(path_bloques);
+
+    //obtengo path del directorio de fcbs
+     char* path_fcbs = config_get_string_value(config,"PATH_FCB");
+
+     crear_fcb("/pruebafcb",fcbs,path_fcbs);
+
+
 
     //inicio servidor para kernel
 	t_socket server_fd = iniciarServidor(config, logger,"PUERTO_ESCUCHA");
@@ -84,9 +80,9 @@ int main(int argc, char* argv[]) {
 
 		switch (cod_op) {
 
-		        case F_CREATE:
+		        case CREAR_ARCHIVO:
 					 log_info(logger, "Crear Archivo: %s ", parametros[0]);
-					 crear_fcb(parametros[0],fcbs);
+					 crear_fcb(parametros[0],fcbs,path_fcbs);
 		        	 result_operacion = RESULT_OK;
 					 break;
 
@@ -108,29 +104,50 @@ int main(int argc, char* argv[]) {
 					//result_operacion = escribir_archivo(parametros[0],parametros[1],parametros[2]);
 					break;
 
-		 string_array_destroy(parametros);
+		string_array_destroy(parametros);
 		}
 
 		send(socket_cliente, (void *)(intptr_t)result_operacion, sizeof(uint32_t), (intptr_t)NULL);
+
 	}
+
+	free(path_fcbs);
 
 	return EXIT_SUCCESS;
 }
 
 
 
+void crear_fcb(char* archivo, t_list*fcbs, char*path) {
 
-void crear_fcb(char* archivo, t_list*fcbs) {
+	printf("creando fcb del archivo %s\n", archivo);
 
-	t_fcb* fcb;
-	strcpy(fcb->nombre,archivo);
+	t_fcb* fcb = malloc(sizeof(t_fcb));
+	fcb->nombre = string_duplicate(archivo);
 	fcb->tamanio = 0;
 	fcb->puntero_directo = NULL;
 	fcb->puntero_indirecto = NULL;
 
+	printf("persisto fcb del archivo %s\n", archivo);
+
+
+	//TODO ver si esta bien persistirlo asi
+
+	strcat(path,"/");
+	strcat(path,archivo);
+	FILE * archivo_fcb = fopen(path, "w+");
+
+	fprintf(archivo_fcb,"NOMBRE_ARCHIVO = %s\n",fcb->nombre);
+	fprintf(archivo_fcb,"TAMANIO_ARCHIVO = %d\n",fcb->tamanio);
+	fprintf(archivo_fcb,"PUNTERO_DIRECTO = %d\n",0);
+	fprintf(archivo_fcb,"PUNTERO_INDIRECTO = %d\n",0);
+
+	fclose(archivo_fcb);
+	t_config* config = iniciar_config(path);
+	fcb->config = config;
 	list_add(fcbs,fcb);
 
-	//TODO ver como y cuando persistirlo en disco
+	config_destroy(config);
 }
 
 
@@ -142,12 +159,26 @@ int existe_fcb(char*archivo, t_list*fcbs) {
 	for(i=0; i<tamanio; i++) {
 		t_fcb*fcb = list_get(fcbs,i);
 
-		if (strcmp(archivo,fcb->nombre) == 0)
+		if (strcmp(archivo,fcb->nombre) == 0) {
+			liberar_fcb(fcb);
+			log_debug(logger,"archvivo %s abierto",archivo);
 			return 1;
+		}
+	liberar_fcb(fcb);
 	}
+
+	log_debug(logger,"el archvivo %s no existe",archivo);
 	return 0;
 
 // ver sino list_any_satisfy() de las commons;
+
 }
 
+
+void liberar_fcb(t_fcb*fcb) {
+	free(fcb->nombre);
+	free(fcb->puntero_directo);
+	free(fcb->puntero_indirecto);
+	free(fcb);
+}
 

@@ -75,7 +75,7 @@ typedef enum {
 	F_READ,
 	DELETE_SEGMENT,
 	F_CLOSE,
-	F_CREATE,
+	CREAR_ARCHIVO,
 	EXT
 } operacion;
 typedef struct {

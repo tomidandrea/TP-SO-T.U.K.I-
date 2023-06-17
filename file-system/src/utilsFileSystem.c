@@ -1,36 +1,102 @@
 #include <utilsFileSystem.h>
 
-int mapearArchivo(void*buffer,void*path,size_t cantidad_bytes){
+extern t_log* logger;
 
-	 int fd = open(path, O_RDWR);
-	    if(fd < 0){
+
+void inicializar_bitarray(t_bitarray*bitarray,size_t cant_bits){
+	int i = 0;
+	for(i=0;i<cant_bits;i++){
+	  bitarray_clean_bit(bitarray,i);
+	}
+}
+
+
+void set_archivo_bitmap(char*path,size_t cant_bits) {
+
+	FILE* archivo_bitmap = fopen(path,"w+");
+	for(int i = 0;i<cant_bits;i++){
+		fputs("0",archivo_bitmap);
+	}
+	fclose(archivo_bitmap);
+
+}
+
+t_bitarray* mapear_bitmap(size_t cant_bits,size_t cant_bytes, char*path){
+
+	int fd;
+
+	printf("empiezo a mapear bitmap\n");
+
+	//creo bitarray
+	void*buffer = malloc(cant_bytes);
+
+	t_bitarray* bitmap = bitarray_create_with_mode(buffer,cant_bytes, LSB_FIRST);
+
+	inicializar_bitarray(bitmap,cant_bits);
+
+	printf("testeo bits del bitarray\n");
+	for(int i=0;i<cant_bits;i++)
+	printf("%d",bitarray_test_bit(bitmap,i));
+
+	bitmap->bitarray = mapearArchivo(path,&fd);
+
+	close(fd);
+
+	/*
+	printf("seteo bits del archivo bitmap mapeado\n");
+	for(int i=0;i<cant_bits;i++){
+		    	bitmap->bitarray[i]='1';
+    }
+    */
+
+    printf("archivo bitmap cerrado\n");
+
+    return bitmap;
+
+}
+
+/*
+void mapear_bloques(void*bloques,char*path){
+
+	int fd;
+	printf("empiezo a mapear bloques\n");
+	bloques  = mapearArchivo(path,&fd);
+
+	close(fd);
+	printf("archivo bloques cerrado\n");
+}
+
+*/
+
+void* mapearArchivo(void*path,int*fd){
+
+     struct stat statbuf;
+
+	 *fd = open(path, O_RDWR);
+	    if(*fd < 0){
 	        printf("\n\"%p \" no se pudo abrir \n",path);
 	        exit(1);
 	    }
 
 	    printf("archivo abierto, empezando a mapear\n");
 
-	    buffer = mmap(NULL,cantidad_bytes,
-	            PROT_READ|PROT_WRITE,MAP_SHARED,
-	            fd,0);
+	    printf("path archivo =  %s\n", path);
+
+	    //write(*fd,"hola",4);
+
+	    fstat(*fd,&statbuf);
+
+	    char* buffer = mmap(NULL,statbuf.st_size, PROT_WRITE, MAP_SHARED,*fd,0);
 	    if(buffer == MAP_FAILED){
 	        printf("Mapping Failed\n");
-	        return 0;
+	        exit(2);
 	    }
-	    close(fd);
-        printf("archivo cerrado\n");
 
 
-        // ver como escribir lo del buffer al archivo mapeado
 
-        /*
-        ssize_t n = write(1,buffer,cantidad_bytes);
-       	    if(n != cantidad_bytes){
-       	        printf("Write failed\n");
-       	    }
+	    return buffer;
 
-        */
-
+/*
         // desmapeo
 	    int err = munmap(buffer, cantidad_bytes);
 
@@ -38,8 +104,7 @@ int mapearArchivo(void*buffer,void*path,size_t cantidad_bytes){
 	        printf("UnMapping Failed\n");
 	        return 0;
 	    }
-
-	    return 1;
+*/
 
 }
 
