@@ -4,10 +4,11 @@ extern void* espacioMemoria;
 extern tabla_segmentos tabla_huecos;
 extern t_log* logger;
 extern t_config* config;
+int cantidadMaxSegmentos;
 t_dictionary* diccionarioTablas;
 t_segmento* segmento0;
 int huecoDisponible;
-EstadoCreacion estadoCreacion;
+op_code estadoCreacion;
 //TODO alejiti: ver si necesitamos mutex para el diccionario y tabla de huecos
 
 t_segmento* crear_t_segmento(int id, u_int32_t base, u_int32_t limite){
@@ -24,7 +25,7 @@ void inicializarEstructuras(){
 
 	int tamanioMemoria = config_get_int_value(config,"TAM_MEMORIA");
 	int tamanioSegmento0 = config_get_int_value(config,"TAM_SEGMENTO_0");
-	int cantidadSegmentos = config_get_int_value(config,"CANT_SEGMENTOS");
+	cantidadMaxSegmentos = config_get_int_value(config,"CANT_SEGMENTOS");
 
 	espacioMemoria = malloc(tamanioMemoria);
 
@@ -63,8 +64,11 @@ u_int32_t obtenerTamanioSegmento(t_segmento* segmento){
 int hayEspacio(t_pedido_segmento* pedido){
 	t_segmento* hueco;
 	u_int32_t tamanio;
-	u_int32_t tamanioTotal = 0;
+	u_int32_t tamanioTotal = 0; // acumula el tamaño de los huecos
 	int cantidadHuecos = list_size(tabla_huecos);
+
+	log_debug(logger, "Llegó un pedido de segmento: Id: %d - Tamaño: %d", pedido->id_segmento, pedido->tamanio);
+
 	//TODO alejiti: switch segun el algoritmo de asignacion en config
 	for(int i=0;i<cantidadHuecos;i++){ //por ahora esto solo funciona con FIRST FIT
 		hueco = list_get(tabla_huecos, i);
@@ -99,20 +103,22 @@ void crearSegmento(t_pedido_segmento* pedido) {
 				log_info(logger, "Nuevo segmento: id %d, base %d, limite %d", nuevoSegmento->id, nuevoSegmento->base, nuevoSegmento->limite);
 
 				if(hueco->limite == nuevoSegmento->limite){
-					//TODO: eliminar el hueco, ya que el segmento lo ocupo entero
+					t_segmento* huecoOcupado = list_remove(tabla_huecos, huecoDisponible);
+					log_info(logger, "Se ocupó completamente el hueco");
+					free(huecoOcupado);
+
 				}else
 					hueco->base = nuevoSegmento->limite;
 
-				estadoCreacion = SEGMENTO_CREADO;
+				estadoCreacion = CREACION_EXITOSA;
 		break;
 	case NO_HAY_HUECO_ASIGNABLE:
-		//TODO: si no hay hueco
 		log_error(logger, "No hay hueco libre disponible");
-		estadoCreacion = NO_PUDO_CREARSE_SEGMENTO;
+		estadoCreacion = OUT_OF_MEMORY;
 		break;
 	case HAY_ESPACIO_AL_COMPACTAR:
-		//TODO: si hay que compactar
-		estadoCreacion = SEGMENTO_CREADO;
+		//TODO: compactacion
+		estadoCreacion = CREACION_EXITOSA;
 		break;
 	default:
 		log_error(logger, "Espacio invalido");

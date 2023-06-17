@@ -6,7 +6,8 @@ extern t_config* config;
 extern sem_t sem_cpu, sem_kernel;
 extern t_dictionary* diccionarioTablas;
 extern t_segmento* segmento0;
-extern EstadoCreacion estadoCreacion;
+extern int cantidadMaxSegmentos;
+extern op_code estadoCreacion;
 
 uint32_t RESULT_ERROR = 1;
 
@@ -37,24 +38,29 @@ void escucharKernel(){
 			case CREATE_SEGMENT_OP:
 				t_pedido_segmento* pedido = recibirPedidoSegmento(socket_kernel);
 				pid = string_itoa(pedido->pid);
-				crearSegmento(pedido);
+				tablaSegmentos = dictionary_get(diccionarioTablas, pid);
+				int cantidadSegmentos = list_size(tablaSegmentos);
+				if(cantidadSegmentos < cantidadMaxSegmentos) {
+					crearSegmento(pedido);
 
-				switch (estadoCreacion) {
-				case SEGMENTO_CREADO:
-					tablaSegmentos = dictionary_get(diccionarioTablas, pid);
-					log_info(logger, "Enviando segmentos a kernel...");
-					enviarSegmentosKernel(socket_kernel, tablaSegmentos);
-					break;
-				case NO_PUDO_CREARSE_SEGMENTO:
-					log_info(logger, "Enviando repsuesta a kernel");
-					//todo: enviar un out of memory
-					break;
-				default:
-					log_error(logger,"Error en obtener estado memoria");
-					break;
+					switch (estadoCreacion) {
+					case CREACION_EXITOSA:
+						log_info(logger, "Enviando segmentos a kernel...");
+						enviarSegmentosKernel(socket_kernel, tablaSegmentos);
+						break;
+					case OUT_OF_MEMORY:
+						log_error(logger,"Límite de segmentos máximos alcanzado - Limite: %d", cantidadMaxSegmentos);
+						send(socket_kernel, &estadoCreacion, sizeof(op_code), 0);
+						break;
+					default:
+						log_error(logger,"Error en obtener estado memoria");
+						break;
+					}
 				}
+				else
+					estadoCreacion = LIMITE_SEGMENTOS_SUPERADO;
+					send(socket_kernel, &estadoCreacion, sizeof(op_code), 0);
 
-				//todo hacer toda la vaina de verificar cosas xd chamaco
 				break;
 			case DELETE_SEGMENT_OP:
 				//t_pedido_segmento* pedido = recibirCrearSegmento(socket_kernel);

@@ -129,8 +129,6 @@ void recibirDeCPU() {
 				solicitarCrearSegmento(id,tamanio, proceso); //mandamos a memoria
 				log_info(logger, "PID: %d - Crear Segmento - Id: %d - Tamaño: %d", proceso->pid, id, tamanio);
 				recibirCrearSegmento(id, tamanio, proceso);
-				mandar_pcb_a_CPU(proceso);
-				sem_post(&sem_recibir);
 				break;
 			case DELETE_SEGMENT:
 				log_info(logger, "Llego un DELETE_SEGMENT pibe\n");

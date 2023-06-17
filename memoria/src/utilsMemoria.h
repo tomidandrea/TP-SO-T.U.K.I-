@@ -20,11 +20,6 @@ typedef enum {
 	NO_HAY_HUECO_ASIGNABLE
 }EstadoMemoria;
 
-typedef enum {
-    SEGMENTO_CREADO,
-	NO_PUDO_CREARSE_SEGMENTO
-}EstadoCreacion;
-
 t_segmento* crear_t_segmento(int id, u_int32_t base, u_int32_t limite);
 void inicializarEstructuras();
 tabla_segmentos inicializarTablaHuecosLibres(int tamanioMemoria,int tamanioSegmento0);

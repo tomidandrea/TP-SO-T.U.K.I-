@@ -300,6 +300,8 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 		segmento->limite = segmento->base + tamanio;
 		//crearSegmento(proceso->tablaSegmentos, segmento) agrega el segmento en la tabla
 		free(segmento);
+		mandar_pcb_a_CPU(proceso);
+		sem_post(&sem_recibir);
 		break;
 	case OUT_OF_MEMORY:
 		avisar_fin_a_consola(proceso->socket_consola);
@@ -308,9 +310,18 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 		log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
 		liberar_pcb(proceso);
 		break;
+	case LIMITE_SEGMENTOS_SUPERADO: //todo: mejorar esto, con solo un case de error de creacion reicibiendo el motivo x socket
+		avisar_fin_a_consola(proceso->socket_consola);
+		sem_post(&sem_grado_multiprogramacion);
+		log_info(logger, "Finaliza el proceso %d - Motivo: LIMITE_SEGMENTOS_SUPERADO", proceso->pid);
+		log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
+		liberar_pcb(proceso);
+		break;
 	case TABLA_SEGMENTOS: //TODO: case temporal, despues borrar
 		proceso->tablaSegmentos = recibirTablaSegmentos(conexionMemoria);
 		log_info(logger, "Recibimos la tabla pibe");
+		mandar_pcb_a_CPU(proceso);
+		sem_post(&sem_recibir);
 		break;
 	}
 }
