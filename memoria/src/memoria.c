@@ -1,5 +1,4 @@
 #include <memoria.h>
-#include <sincro.h>
 
 t_log* logger;
 t_config* config;
@@ -9,9 +8,7 @@ tabla_segmentos tabla_huecos;
 sem_t sem_cpu, sem_kernel;
 
 int main(int argc, char* argv[]) {
-	logger = iniciar_logger("memoria.log", "MEMORIA", true, LOG_LEVEL_DEBUG);
-	config = iniciar_config(argv[1]);
-	server_fd = iniciarServidor(config, logger,"PUERTO_ESCUCHA");
+	iniciarConexionMemoria(argv[1]);
 
 	log_info(logger, "Inicializando estructuras...");
 	inicializarEstructuras();
@@ -19,12 +16,19 @@ int main(int argc, char* argv[]) {
 	sem_init(&sem_cpu, 0, 0);
 	sem_init(&sem_kernel, 0, 0);
 
-	log_debug(logger, "Iniciando memoria");
+	log_debug(logger, "Iniciando hilos memoria");
 	crearEscucharCPU();
 	crearEscucharKernel();
 	//crearEscucharFS();
 
 	while(1);
 
+}
+
+void iniciarConexionMemoria(char* path){
+	logger = iniciar_logger("memoria.log", "MEMORIA", true, LOG_LEVEL_DEBUG);
+	config = iniciar_config(path);
+	server_fd = iniciarServidor(config, logger,"PUERTO_ESCUCHA");
+	log_debug(logger, "Conexion iniciada");
 }
 

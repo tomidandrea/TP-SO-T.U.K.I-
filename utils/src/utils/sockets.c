@@ -312,16 +312,19 @@ t_pedido_segmento* recibirPedidoSegmento(t_socket socket_kernel){
 	return pedido;
 }
 
-int recibirPID(t_socket socket){
+char* recibirPID(t_socket socket){
 	void * buffer;
 	int size;
 	int desplazamiento = 0;
-	int pid;
+	int pid_int;
+	char* pid;
 
 	buffer = recibir_buffer(&size, socket);
 
-	memcpy(&(pid), buffer + desplazamiento, sizeof(int));
+	memcpy(&(pid_int), buffer + desplazamiento, sizeof(int));
 	desplazamiento+=sizeof(int);
+
+	pid = string_itoa(pid_int);
 
 	free(buffer);
 	return pid;

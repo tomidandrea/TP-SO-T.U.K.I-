@@ -11,32 +11,34 @@ uint32_t RESULT_ERROR = 1;
 
 void escucharKernel(){
 	log_debug(logger, "Entro hilo para escuchar kernel");
-	log_debug(logger, "socket memoria: %d", server_fd);
-	sem_wait(&sem_cpu);
+	//log_debug(logger, "socket memoria: %d", server_fd);
+	sem_wait(&sem_cpu); //esperar que se conecte primero cpu
 	t_socket socket_kernel = esperar_cliente(server_fd, logger);
-	log_debug(logger, "socket kernel: %d", socket_kernel);
-
+	//log_debug(logger, "socket kernel: %d", socket_kernel);
+	char* pid;
+	tabla_segmentos tablaSegmentos;
 	while(1){
 		if(socket_kernel != -1){
 			int cod_op = recibir_operacion(socket_kernel);
 			switch (cod_op) {
 			case TABLA_SEGMENTOS:
-				tabla_segmentos tablaSegmentos = list_create();
+				tablaSegmentos = list_create();
 				list_add(tablaSegmentos, segmento0);
 
-				int pid_int = recibirPID(socket_kernel);
-				char* pid = string_itoa(pid_int);
+				pid = recibirPID(socket_kernel);
 				dictionary_put(diccionarioTablas, pid, tablaSegmentos);
 
-				log_info(logger, "Enviando tabla de segmentos de proceso %d", pid_int);
+				log_info(logger, "Enviando tabla de segmentos de proceso %s", pid);
 				enviarSegmentosKernel(socket_kernel, tablaSegmentos);
+
+				free(pid);
 				break;
 			case CREATE_SEGMENT_OP:
 				t_pedido_segmento* pedido = recibirPedidoSegmento(socket_kernel);
-				char* pid1 = string_itoa(pedido->pid);
+				pid = string_itoa(pedido->pid);
 				crearSegmento(pedido);
-				tabla_segmentos tablaSegmentos1 = dictionary_get(diccionarioTablas, pid1);
-				enviarSegmentosKernel(socket_kernel, tablaSegmentos1);
+				tablaSegmentos = dictionary_get(diccionarioTablas, pid);
+				enviarSegmentosKernel(socket_kernel, tablaSegmentos);
 
 //				                switch (estado) {
 //				                    case HAY_ESPACIO_CONTIGUO:

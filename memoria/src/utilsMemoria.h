@@ -20,6 +20,7 @@ typedef enum {
     SIN_ESPACIO
 }EstadoMemoria;
 
+t_segmento* crear_t_segmento(int id, u_int32_t base, u_int32_t limite);
 void inicializarEstructuras();
 tabla_segmentos inicializarTablaHuecosLibres(int tamanioMemoria,int tamanioSegmento0);
 void enviarSegmentosKernel(int socket_kernel, tabla_segmentos tablaSegmentos);

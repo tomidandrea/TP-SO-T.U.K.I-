@@ -31,5 +31,5 @@ t_pcb* inicializar_pcb();
 t_contexto* recibir_contexto(int);
 t_list* recibirTablaSegmentos(t_socket socket_memoria);
 t_pedido_segmento* recibirPedidoSegmento(t_socket);
-int recibirPID(t_socket socket);
+char* recibirPID(t_socket socket);
 #endif
