@@ -1,8 +1,10 @@
 #include "utilsMemoria.h"
 
 extern void* espacioMemoria;
+extern t_log* logger;
 t_dictionary* diccionarioTablas;
 t_segmento* segmento0;
+
 
 //TODO: tendria que ser existir una lista de tablas de segmentos o un diccionario (preferiblemente)
 extern t_config* config;
@@ -39,6 +41,20 @@ void enviarSegmentosKernel(t_socket socket_kernel, tabla_segmentos tablaSegmento
 	//TODO Ver estas conxiones
 	enviar_paquete(paquete, socket_kernel);
 	eliminar_paquete(paquete);
+}
+
+void* leer(u_int32_t direc, int tamanio, int pid) {
+	void* valor = malloc(tamanio);
+	memcpy(valor, espacioMemoria + direc, tamanio);
+	log_info(logger,  "PID: %d- Acción: LEER - Dirección física: %d - Tamaño: %d- Origen: CPU", pid, direc, tamanio);
+
+	return valor;
+}
+
+void escribir(u_int32_t direc, int tamanio, char* valor, int pid) {
+
+	memcpy(espacioMemoria + direc, valor, tamanio);
+	log_info(logger,  "PID: %d- Acción: ESCRIBIR - Dirección física: %d - Tamaño: %d- Origen: CPU", pid, direc, tamanio);
 }
 
 

@@ -16,5 +16,6 @@
 
 void inicializarEstructuras();
 void enviarSegmentosKernel(int socket_kernel, tabla_segmentos tablaSegmentos);
-
+void* leer(u_int32_t direc, int tamanio, int pid);
+void escribir(u_int32_t direc, int tamanio, char* valor, int pid);
 #endif /* SRC_UTILSMEMORIA_H_ */
