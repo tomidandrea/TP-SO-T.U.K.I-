@@ -9,8 +9,11 @@ extern t_segmento* segmento0;
 extern void* espacioMemoria;
 extern int retardo_memoria;
 
-uint32_t RESULT_OK = 0;
+
+extern int cantidadMaxSegmentos;
+extern op_code estadoCreacion;
 uint32_t RESULT_ERROR = 1;
+uint32_t RESULT_OK = 0;
 
 void escucharKernel(){
 	log_debug(logger, "Entro hilo para escuchar kernel");
@@ -20,6 +23,7 @@ void escucharKernel(){
 	//log_debug(logger, "socket kernel: %d", socket_kernel);
 	char* pid;
 	tabla_segmentos tablaSegmentos;
+	t_pedido_segmento* pedido;
 	while(1){
 		if(socket_kernel != -1){
 			int cod_op = recibir_operacion(socket_kernel);
@@ -37,33 +41,35 @@ void escucharKernel(){
 				free(pid);
 				break;
 			case CREATE_SEGMENT_OP:
-				t_pedido_segmento* pedido = recibirPedidoSegmento(socket_kernel);
+				pedido = recibirPedidoSegmento(socket_kernel);
 				pid = string_itoa(pedido->pid);
-				//crearSegmento(pedido);
 				tablaSegmentos = dictionary_get(diccionarioTablas, pid);
-				enviarSegmentosKernel(socket_kernel, tablaSegmentos);
+				int cantidadSegmentos = list_size(tablaSegmentos);
+				if(cantidadSegmentos < cantidadMaxSegmentos) {
+					crearSegmento(pedido);
 
-//				                switch (estado) {
-//				                    case HAY_ESPACIO_CONTIGUO:
-//				                        log_info(logger, "Creando segmento...");
-//
-//				                        break;
-//				                    case ESPACIO_NO_CONTIGUO:
-//				                        log_info(logger, "Debe compactarse el espacio");
-//				                        break;
-//				                    case SIN_ESPACIO:
-//				                        log_info(logger, "Out of memory");
-//				                        //TODO: informar a kernel
-//				                        break;
-//				                    default:
-//				                    	log_error(logger,"Error en obtener estado memoria");
-//				                    	break;
-//				                }
-
-				//todo hacer toda la vaina de verificar cosas xd chamaco
+					switch (estadoCreacion) {
+					case CREACION_EXITOSA:
+						log_info(logger, "Enviando segmentos a kernel...");
+						enviarSegmentosKernel(socket_kernel, tablaSegmentos);
+						break;
+					case OUT_OF_MEMORY:
+						log_error(logger,"Límite de segmentos máximos alcanzado - Limite: %d", cantidadMaxSegmentos);
+						send(socket_kernel, &estadoCreacion, sizeof(op_code), 0);
+						break;
+					default:
+						log_error(logger,"Error en obtener estado memoria");
+						break;
+					}
+				}
+				else
+					estadoCreacion = LIMITE_SEGMENTOS_SUPERADO;
+					//send(socket_kernel, &estadoCreacion, sizeof(op_code), 0);
 				break;
 			case DELETE_SEGMENT_OP:
-				//t_pedido_segmento* pedido = recibirCrearSegmento(socket_kernel);
+				pedido = recibirPedidoSegmento(socket_kernel);
+				eliminarSegmento(pedido);
+				enviarSegmentosKernel(socket_kernel, tablaSegmentos);
 				break;
 			default:
 				send(socket_kernel, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);

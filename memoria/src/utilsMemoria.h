@@ -14,8 +14,22 @@
 #include <utils/general.h>
 #include <commons/collections/dictionary.h>
 
+typedef enum {
+    HAY_HUECO_ASIGNABLE,
+	HAY_ESPACIO_AL_COMPACTAR,
+	NO_HAY_HUECO_ASIGNABLE
+}EstadoMemoria;
+
+t_segmento* crear_t_segmento(int id, u_int32_t base, u_int32_t limite);
 void inicializarEstructuras();
+tabla_segmentos inicializarTablaHuecosLibres(int tamanioMemoria,int tamanioSegmento0);
 void enviarSegmentosKernel(int socket_kernel, tabla_segmentos tablaSegmentos);
 void* leer(u_int32_t direc, int tamanio, int pid);
 void escribir(u_int32_t direc, int tamanio, char* valor, int pid);
+int hayEspacio(t_pedido_segmento* pedido);
+void crearSegmento(t_pedido_segmento* pedido);
+u_int32_t obtenerTamanioSegmento(t_segmento* segmento);
+void eliminarSegmento (t_pedido_segmento*);
+
+
 #endif /* SRC_UTILSMEMORIA_H_ */

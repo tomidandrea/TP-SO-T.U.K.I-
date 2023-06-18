@@ -288,8 +288,15 @@ t_list* recibirTablaSegmentos(t_socket socket_memoria){
 		memcpy(&(segmento->limite), buffer + desplazamiento, sizeof(u_int32_t));
 		desplazamiento+=sizeof(int);
 		list_add(tabla, segmento);
+		t_segmento* seg = list_get(tabla, i);
+		printf("Segmento %d\n", seg->id);
+	}
+	for(int i=0; i<list_size(tabla);i++){
+		t_segmento* seg = list_get(tabla, i);
+		printf("Segmento %d\n", seg->id);
 	}
 	return tabla;
+
 }
 
 t_pedido_segmento* recibirPedidoSegmento(t_socket socket_kernel){
@@ -312,16 +319,19 @@ t_pedido_segmento* recibirPedidoSegmento(t_socket socket_kernel){
 	return pedido;
 }
 
-int recibirPID(t_socket socket){
+char* recibirPID(t_socket socket){
 	void * buffer;
 	int size;
 	int desplazamiento = 0;
-	int pid;
+	int pid_int;
+	char* pid;
 
 	buffer = recibir_buffer(&size, socket);
 
-	memcpy(&(pid), buffer + desplazamiento, sizeof(int));
+	memcpy(&(pid_int), buffer + desplazamiento, sizeof(int));
 	desplazamiento+=sizeof(int);
+
+	pid = string_itoa(pid_int);
 
 	free(buffer);
 	return pid;

@@ -126,7 +126,7 @@ void recibirDeCPU() {
 				log_info(logger, "Llego un CREATE_SEGMENT pibe\n");
 				id = atoi(contexto->parametros[0]);
 				int tamanio = atoi(contexto->parametros[1]);
-				solicitarCrearSegmento(id,tamanio, proceso);
+				solicitarCrearSegmento(id,tamanio, proceso); //mandamos a memoria
 				log_info(logger, "PID: %d - Crear Segmento - Id: %d - Tamaño: %d", proceso->pid, id, tamanio);
 				recibirCrearSegmento(id, tamanio, proceso);
 				break;
@@ -136,7 +136,10 @@ void recibirDeCPU() {
 				//TODO verificar que exista el segmento y no sea el 0
 				eliminarSegmento(id, proceso);
 				log_info(logger, "PID: %d - Eliminar Segmento - Id: %d", proceso->pid, id);
+
 				recibirTablaActualizada(proceso);
+				avisar_fin_a_consola(proceso->socket_consola);
+
 				break;
 			default:
 				log_debug(logger, "No se implemento la instruccion");
