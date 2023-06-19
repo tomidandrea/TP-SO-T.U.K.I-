@@ -26,6 +26,8 @@ tabla_segmentos inicializarTablaHuecosLibres(int tamanioMemoria,int tamanioSegme
 void enviarSegmentosKernel(int socket_kernel, tabla_segmentos tablaSegmentos);
 int hayEspacio(t_pedido_segmento* pedido);
 void crearSegmento(t_pedido_segmento* pedido);
+t_segmento* obtenerHuecoMenorTamanio(t_segmento*, t_segmento*);
+t_segmento* obtenerHuecoMayorTamanio(t_segmento*, t_segmento*);
 u_int32_t obtenerTamanioSegmento(t_segmento* segmento);
 void eliminarSegmento (t_pedido_segmento*);
 

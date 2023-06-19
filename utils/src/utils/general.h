@@ -32,6 +32,11 @@ typedef struct {
 } t_identificador;
 
 typedef struct {
+	char *operacion;
+	int id;
+} t_algoritmo;
+
+typedef struct {
 	char* instruccion;
 	char **parametros;
 
@@ -83,6 +88,13 @@ typedef struct {
 	int id_segmento;
 	u_int32_t tamanio;
 } t_pedido_segmento;
+
+typedef enum {
+	FIRST_FIT,
+	BEST_FIT,
+	WORST_FIT
+} t_algoritmo_memoria;
+
 
 typedef struct {
 	int id;

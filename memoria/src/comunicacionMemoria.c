@@ -63,7 +63,7 @@ void escucharKernel(){
 
 				break;
 			case DELETE_SEGMENT_OP:
-				t_pedido_segmento* pedido = recibirPedidoSegmento(socket_kernel);
+				t_pedido_segmento* pedido1 = recibirPedidoSegmento(socket_kernel);
 				eliminarSegmento(pedido);
 				enviarSegmentosKernel(socket_kernel, tablaSegmentos);
 				break;

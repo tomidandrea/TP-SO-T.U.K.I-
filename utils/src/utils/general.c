@@ -8,6 +8,10 @@ static t_identificador tablaIdentificadores[] = {
 		{"F_WRITE",3,F_WRITE},{"F_READ",3,F_READ},{"DELETE_SEGMENT",1,DELETE_SEGMENT},{"F_CLOSE",1,F_CLOSE},{"EXIT",0,EXT}
 };
 
+static t_algoritmo tabla_algoritmo_memoria[] = {
+		{"FIRST", FIRST_FIT},{"BEST", BEST_FIT},{"WORST", WORST_FIT}
+};
+
 void logearInstrucciones(t_list* instrucciones, t_log* logger){
 	int cant = list_size(instrucciones);
 		for(int i = 0;i<cant;i++) {
@@ -36,6 +40,16 @@ int id(char * instruccion) {
 	        if(strcmp(sym.operacion,instruccion)==0) return sym.id;
 	    }
 	    printf("error operacion invalida\n");
+	    exit(EXIT_FAILURE);
+}
+
+int idAlgoritmo(char * algoritmo) {
+	for(int i=0;i < 3;i++){
+	        t_algoritmo sym;
+	        sym = tabla_algoritmo_memoria[i];
+	        if(strcmp(sym.operacion,algoritmo)==0) return sym.id;
+	    }
+	    printf("error algoritmo invalido\n");
 	    exit(EXIT_FAILURE);
 }
 
