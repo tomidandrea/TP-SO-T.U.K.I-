@@ -258,7 +258,7 @@ char* get_registro(char*registro) {
 
 estado_ejec ejecutar_mov_in(int pid, char* registro, char* direc, tabla_segmentos tabla_de_segmentos) {
 
-direc_logica direcLogica = crear_direc_logica(direc);
+direc_logica* direcLogica = crear_direc_logica(direc);
 int tamanio_a_leer = tamanio_registro(registro);
 estado_ejec resultado = ejecutar_mov(pid, tamanio_a_leer,direcLogica,tabla_de_segmentos);
 
@@ -267,7 +267,7 @@ if(resultado == CONTINUAR) {
 	int direc_fisica = obtener_direc_fisica(direcLogica,tabla_de_segmentos);
 	char* valor = leer_memoria(direc_fisica,tamanio_a_leer);
 	set_registro(registro,valor);
-	log_info(logger, "PID: %d - Acción: LEER - Segmento: %d - Dirección Física: %d - Valor: %s", pid, direcLogica.numero_segmento, direc_fisica, valor);
+	log_info(logger, "PID: %d - Acción: LEER - Segmento: %d - Dirección Física: %d - Valor: %s", pid, direcLogica->numero_segmento, direc_fisica, valor);
 	free(valor);
 }
 
@@ -276,7 +276,7 @@ return resultado;
 
 estado_ejec ejecutar_mov_out(int pid, char* direc,char* registro, tabla_segmentos tabla_de_segmentos) {
 
-direc_logica direcLogica = crear_direc_logica(direc);
+direc_logica* direcLogica = crear_direc_logica(direc);
 int tamanio_a_escribir = tamanio_registro(registro);
 estado_ejec resultado = ejecutar_mov(pid,tamanio_a_escribir, direcLogica, tabla_de_segmentos);
 
@@ -285,7 +285,7 @@ if(resultado == CONTINUAR) {
 	 int direc_fisica = obtener_direc_fisica(direcLogica,tabla_de_segmentos);
 	 char* valor = get_registro(registro);
 	 escribir_memoria(direc_fisica,valor, tamanio_a_escribir);
-	 log_info(logger, "PID: %d - Acción: ESCRIBIR - Segmento: %d - Dirección Física: %d - Valor: %s", pid, direcLogica.numero_segmento, direc_fisica, valor);
+	 log_info(logger, "PID: %d - Acción: ESCRIBIR - Segmento: %d - Dirección Física: %d - Valor: %s", pid, direcLogica->numero_segmento, direc_fisica, valor);
 	 free(valor);
 }
 return resultado;
@@ -293,25 +293,25 @@ return resultado;
 }
 
 
-estado_ejec ejecutar_mov(int pid, int tamanio_valor, direc_logica direcLogica, tabla_segmentos tabla_de_segmentos) {
+estado_ejec ejecutar_mov(int pid, int tamanio_valor, direc_logica* direcLogica, tabla_segmentos tabla_de_segmentos) {
 
-		if (verificar_num_segmento(direcLogica.numero_segmento,tabla_de_segmentos))
+		if (verificar_num_segmento(direcLogica->numero_segmento,tabla_de_segmentos))
 			{
-			 t_segmento*segmento = list_get(tabla_de_segmentos,direcLogica.numero_segmento);
-			 if (no_produce_seg_fault(pid, direcLogica.desplazamiento,tamanio_valor, segmento) == 1)
+			 t_segmento*segmento = list_get(tabla_de_segmentos,direcLogica->numero_segmento);
+			 if (no_produce_seg_fault(pid, direcLogica->desplazamiento,tamanio_valor, segmento) == 1)
 				 return CONTINUAR;
 			}
 		return ERROR;
 }
 
 
-direc_logica crear_direc_logica(char* direc) {
+direc_logica* crear_direc_logica(char* direc) {
 
-	direc_logica direcLogica;
+	direc_logica* direcLogica = malloc(sizeof(direc_logica));
 	int direc_numero = atoi(direc);
 	int tam_max_segmento = config_get_int_value(config,"TAM_MAX_SEGMENTO");
-	direcLogica.numero_segmento = floor(direc_numero/tam_max_segmento);
-	direcLogica.desplazamiento = direc_numero % tam_max_segmento;
+	direcLogica->numero_segmento = floor(direc_numero/tam_max_segmento);
+	direcLogica->desplazamiento = direc_numero % tam_max_segmento;
 
 	return direcLogica;
 }
@@ -350,10 +350,10 @@ int tamanio_registro(char*registro) {
 }
 
 
-u_int32_t obtener_direc_fisica(direc_logica direcLogica,tabla_segmentos tabla_de_segmentos){
+u_int32_t obtener_direc_fisica(direc_logica* direcLogica,tabla_segmentos tabla_de_segmentos){
 
-	t_segmento*segmento = list_get(tabla_de_segmentos,direcLogica.numero_segmento);
-	int direc_fisica = segmento->base + direcLogica.desplazamiento;
+	t_segmento*segmento = list_get(tabla_de_segmentos,direcLogica->numero_segmento);
+	int direc_fisica = segmento->base + direcLogica->desplazamiento;
 
 	return direc_fisica;
 }

@@ -11,7 +11,6 @@ t_pcb* recibir_proceso(int socket_cliente) {
 		t_list* valores = list_create();
 		int tamanio;
 		int tamanio_tabla;
-		t_segmento* segmento = malloc(sizeof(t_segmento));
         t_pcb* pcb = inicializar_pcb();
 		t_list* instrucciones = list_create();
 
@@ -35,6 +34,7 @@ t_pcb* recibir_proceso(int socket_cliente) {
 			desplazamiento+=sizeof(int);
 
 			for(int i=0; i<tamanio_tabla;i++){
+				t_segmento* segmento = malloc(sizeof(t_segmento));
 				memcpy(&(segmento->id), buffer + desplazamiento, sizeof(int));
 				desplazamiento+=sizeof(int);
 				memcpy(&(segmento->base), buffer + desplazamiento, sizeof(u_int32_t));
@@ -47,9 +47,9 @@ t_pcb* recibir_proceso(int socket_cliente) {
 			}
 			//Rarisimoo, afuera solo muestra el ultimo segmento creado
 			for(int i=0; i<list_size(pcb->tablaSegmentos);i++){
-							t_segmento* seg = list_get(pcb->tablaSegmentos, i);
-							printf("Segmento %d\n", seg->id);
-					}
+					t_segmento* seg = list_get(pcb->tablaSegmentos, i);
+					printf("Segmento %d\n", seg->id);
+			}
 
 		/* alternativa con vectores por tamaño
 		recibir_registros(buffer,&desplazamiento, 4,registros_>tamanio_4);
