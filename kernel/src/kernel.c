@@ -11,7 +11,6 @@ t_socket conexionCPU;
 t_socket conexionMemoria;
 char** recursos;
 char** instanciasRecursos;
-int cantidad_recursos;
 int* instancias;
 
 //todo: mallocs y free para todos los punteros

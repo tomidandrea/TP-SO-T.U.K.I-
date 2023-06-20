@@ -41,6 +41,7 @@ void escucharKernel(){
 				free(pid);
 				break;
 			case CREATE_SEGMENT_OP:
+				log_debug(logger, "Recibo Create segment");
 				pedido = recibirPedidoSegmento(socket_kernel);
 				pid = string_itoa(pedido->pid);
 				tablaSegmentos = dictionary_get(diccionarioTablas, pid);
@@ -51,7 +52,8 @@ void escucharKernel(){
 					switch (estadoCreacion) {
 					case CREACION_EXITOSA:
 						log_info(logger, "Enviando segmentos a kernel...");
-						enviarSegmentosKernel(socket_kernel, tablaSegmentos);
+						enviarSegmentoCreado(socket_kernel, tablaSegmentos);
+						//enviarSegmentosKernel(socket_kernel, tablaSegmentos);
 						break;
 					case OUT_OF_MEMORY:
 						log_error(logger,"Límite de segmentos máximos alcanzado - Limite: %d", cantidadMaxSegmentos);
@@ -112,9 +114,9 @@ void escucharCPU(){
 				send(socket_cpu, valor_leido, tamanio, 0);
 				log_debug(logger,"Lei el valor %s. Enviando a CPU...", valor_leido);
 				free(valor_leido);
+				free(buffer);
 				break;
 			case ESCRIBIR:
-				char* valor;
 				//recibo los datos para escritura
 				buffer = recibir_buffer(&size, socket_cpu);
 				memcpy(&pid, buffer + desplazamiento, sizeof(int));
@@ -123,6 +125,7 @@ void escucharCPU(){
 				desplazamiento += sizeof(u_int32_t);
 				memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
 				desplazamiento += sizeof(int);
+				char* valor = malloc(tamanio);
 	     		memcpy(valor, buffer + desplazamiento, tamanio);
 
 	     		log_debug(logger,"Me llego una escritura del valor %s en la direccion %d ", valor, direc_fisica);
@@ -130,6 +133,8 @@ void escucharCPU(){
 				usleep(retardo_memoria * 1000);
 				//le mando OK a cpu para que siga ejecutando
 				send(socket_cpu, &RESULT_OK, tamanio, 0);
+				free(valor);
+				free(buffer);
 			}
 			// cosas q pide cpu xd
 		}

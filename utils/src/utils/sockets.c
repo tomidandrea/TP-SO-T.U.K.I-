@@ -43,26 +43,6 @@ t_socket crear_conexion(char* ip, char* puerto, t_log* logger)
 	return socket_cliente;
 }
 
-void enviar_mensaje(char* mensaje, int socket_cliente)
-{
-	t_paquete* paquete = malloc(sizeof(t_paquete));
-
-	paquete->codigo_operacion = MENSAJE;
-	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = strlen(mensaje) + 1;
-	paquete->buffer->stream = malloc(paquete->buffer->size);
-	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
-
-	int bytes = paquete->buffer->size + 2*sizeof(int);
-
-	void* a_enviar = serializar_paquete(paquete, bytes);
-
-	send(socket_cliente, a_enviar, bytes, 0);
-
-	free(a_enviar);
-	eliminar_paquete(paquete);
-}
-
 void enviar_paquete(t_paquete* paquete, int socket_cliente)
 {
 	int bytes = paquete->buffer->size + 2*sizeof(int);
@@ -83,11 +63,8 @@ void liberar_conexion(int socket_cliente)
  * Aca empieza utils de servidor
  */
 
-t_socket iniciar_servidor(char* puerto, t_log* logger) //agrego que mande logger como parametro
+t_socket iniciar_servidor(char* puerto, t_log* logger)
 {
-	// Quitar esta línea cuando hayamos terminado de implementar la funcion
-	//assert(!"no implementado!");
-
 	int socket_servidor;
 
 	struct addrinfo hints, *servinfo;//, *p;
@@ -119,11 +96,8 @@ t_socket iniciar_servidor(char* puerto, t_log* logger) //agrego que mande logger
 	return socket_servidor;
 }
 
-t_socket esperar_cliente(int socket_servidor, t_log* logger) //agrego que mande logger como parametro
+t_socket esperar_cliente(int socket_servidor, t_log* logger)
 {
-	// Quitar esta línea cuando hayamos terminado de implementar la funcion
-	//assert(!"no implementado!");
-
 	// Aceptamos un nuevo cliente
 	int socket_cliente = accept(socket_servidor, NULL, NULL);
 	log_info(logger, "Se conecto un cliente!");
@@ -152,14 +126,6 @@ void* recibir_buffer(int* size, int socket_cliente)
 		recv(socket_cliente, buffer, *size, MSG_WAITALL);
 
 	return buffer;
-}
-
-void recibir_mensaje(int socket_cliente, t_log* logger) //agrego que mande logger como parametro
-{
-	int size;
-	char* buffer = recibir_buffer(&size, socket_cliente);
-	log_info(logger, "Me llego el mensaje %s", buffer);
-	free(buffer);
 }
 
 t_list* recibir_paquete(int socket_cliente)
@@ -297,6 +263,24 @@ t_list* recibirTablaSegmentos(t_socket socket_memoria){
 	}
 	return tabla;
 
+}
+
+t_segmento* recibirSegmento(t_socket socket_memoria){
+	void * buffer;
+	int size;
+	int desplazamiento = 0;
+	t_segmento* segmento = malloc(sizeof(t_segmento));
+
+	buffer = recibir_buffer(&size, socket_memoria);
+
+	memcpy(&(segmento->id), buffer + desplazamiento, sizeof(int));
+	desplazamiento+=sizeof(int);
+	memcpy(&(segmento->base), buffer + desplazamiento, sizeof(u_int32_t));
+	desplazamiento+=sizeof(int);
+	memcpy(&(segmento->limite), buffer + desplazamiento, sizeof(u_int32_t));
+	desplazamiento+=sizeof(int);
+
+	return segmento;
 }
 
 t_pedido_segmento* recibirPedidoSegmento(t_socket socket_kernel){
