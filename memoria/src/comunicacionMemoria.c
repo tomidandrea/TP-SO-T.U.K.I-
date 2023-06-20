@@ -19,6 +19,7 @@ void escucharKernel(){
 	//log_debug(logger, "socket kernel: %d", socket_kernel);
 	char* pid;
 	tabla_segmentos tablaSegmentos;
+	t_pedido_segmento* pedido;
 	while(1){
 		if(socket_kernel != -1){
 			int cod_op = recibir_operacion(socket_kernel);
@@ -36,7 +37,7 @@ void escucharKernel(){
 				free(pid);
 				break;
 			case CREATE_SEGMENT_OP:
-				t_pedido_segmento* pedido = recibirPedidoSegmento(socket_kernel);
+				pedido = recibirPedidoSegmento(socket_kernel);
 				pid = string_itoa(pedido->pid);
 				tablaSegmentos = dictionary_get(diccionarioTablas, pid);
 				int cantidadSegmentos = list_size(tablaSegmentos);
@@ -63,7 +64,7 @@ void escucharKernel(){
 
 				break;
 			case DELETE_SEGMENT_OP:
-				t_pedido_segmento* pedido1 = recibirPedidoSegmento(socket_kernel);
+				pedido = recibirPedidoSegmento(socket_kernel);
 				eliminarSegmento(pedido);
 				enviarSegmentosKernel(socket_kernel, tablaSegmentos);
 				break;

@@ -10,14 +10,6 @@
 #include <utils/sockets.h>
 #include <planificacion.h>
 
-#define RECURSO_EXISTENTE 1
-#define RECURSO_INEXISTENTE 0
-
-typedef struct{
-	t_pcb* proceso;
-	int tiempo_sleep;
-}io_contexto;
-
 /*
 typedef struct {
     char AX [4], BX [4], CX [4], DX [4];
@@ -33,27 +25,9 @@ t_socket crearConexionMemoria();
 t_temporal* iniciarTiempo();
 t_temporal* pararTiempo(t_temporal* temporal);
 
-void inicializarRecursos();
-
-
-void ejecutarIO(io_contexto* contexto);
-void bloquearYPasarAReady(io_contexto* contexto);
-int verificarRecursos(char* recurso);
-void wait(t_pcb* proceso, char* recurso);
-void ejecutarSignal(t_pcb* proceso, char* recurso);
-int indice(char* recurso);
-int cantInstancias(char* recurso);
-void crearColasDeBloqueados();
-void aumentarInstancias(char* recurso);
-void disminuirInstancias(char* recurso);
-void desbloquearPrimerProceso(char* recurso);
-void bloquear(t_pcb* proceso, char* recurso);
-
 
 t_contexto* actualizar_pcb(t_pcb*);
 
-void pasarAInstanciasEnteras();
-io_contexto* inicializarIoContexto(t_pcb* proceso, int tiempo);
 void solicitarCrearSegmento(int id, int tamanio, t_pcb* proceso);
 void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso);
 void eliminarSegmento(int id, t_pcb* proceso);

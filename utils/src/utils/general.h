@@ -1,146 +1,38 @@
-/*
- * general.h
- *
- *  Created on: Apr 18, 2023
- *      Author: utnso
- */
-
 #ifndef SRC_UTILS_GENERAL_H_
 #define SRC_UTILS_GENERAL_H_
 
-#include<signal.h>
-#include<unistd.h>
+#include<utils/estructuras.h>
 #include<sys/socket.h>
-#include<netdb.h>
 #include<commons/log.h>
 #include<commons/config.h>
 #include<commons/string.h>
-#include<commons/collections/list.h>
 #include<commons/collections/queue.h>
 #include<commons/string.h>
-#include<commons/temporal.h>
 #include<utils/serializacion.h>
 
 #define TAMANIO_OPERACION 15 //Tamaño maximo de operacion, así usamos malloc de este tamaño (14 + 1 por el \0)
-
-typedef int t_socket;
-
-typedef struct {
-	char *operacion;
-	int cantParametros;
-	int id;
-} t_identificador;
-
-typedef struct {
-	char *operacion;
-	int id;
-} t_algoritmo;
-
-typedef struct {
-	char* instruccion;
-	char **parametros;
-
-} t_instruccion;
-
-typedef struct {
-	char AX[4], BX[4], CX[4], DX[4];
-	char EAX[8], EBX[8], ECX[8], EDX[8];
-	char RAX[16], RBX[16], RCX[16], RDX[16];
-} t_registros;
-
-// TODO: esto si no se usa volarlo, Aclaracion: Estaba en utils del kernel, lo movi a utils
-typedef enum {
-    NEW,
-    READY,
-    EXEC,
-    BLOCKED,
-    EXIT
-} Estado;
-
-typedef enum {
-	NUEVO,
-    CONTINUAR,
-	ERROR,
-    FIN,
-} estado_ejec;
-
-typedef enum {
-    SET,
-    MOV_OUT,
-    WAIT,
-    IO,
-	SIGNAL,
-	MOV_IN,
-	F_OPEN,
-	YIELD,
-	F_TRUNCATE,
-	F_SEEK,
-	CREATE_SEGMENT,
-	F_WRITE,
-	F_READ,
-	DELETE_SEGMENT,
-	F_CLOSE,
-	EXT
-} operacion;
-
-typedef struct {
-	int pid;
-	int id_segmento;
-	u_int32_t tamanio;
-} t_pedido_segmento;
-
-typedef enum {
-	FIRST_FIT,
-	BEST_FIT,
-	WORST_FIT
-} t_algoritmo_memoria;
-
-
-typedef struct {
-	int id;
-	u_int32_t base;
-	u_int32_t limite;
-} t_segmento;
-
-typedef t_list* tabla_segmentos;
-
-typedef struct {
-    int pid;
-    t_list* instrucciones;
-    int pc;
-    t_registros* registros;
-    tabla_segmentos tablaSegmentos;
-    operacion motivo;
-    t_temporal* tiempoEnReady;
-	t_temporal* tiempoCPU;
-	double estimadoAnterior;
-	double ratio;
-	t_socket socket_consola;
-} t_pcb;
-
-typedef struct {
-    int pid;
-    int pc;
-    t_registros* registros;
-    operacion motivo;
-    char** parametros;
-    int cantidadParametros;
-    tabla_segmentos tablaSegmentos;
-} t_contexto;
-
 #define CANT_IDENTIFICADORES (sizeof(tablaIdentificadores)/sizeof(t_identificador))
-
-
 
 t_pcb* inicializar_pcb();
 void liberar_pcb(t_pcb* pcb);
 t_contexto* inicializar_contexto();
-void logearInstrucciones(t_list* instrucciones, t_log* logger);
 
 t_registros* inicializarRegistros();
 
+/*
+ * Funcion id: la usamos para obtener el Enum de la instruccion a partir de string instruccion
+ * Usado en: CPU
+ */
 int id(char * instruccion);
+/*
+ * Funcion cantParametros: la usamos para obtener la cantidad de parametros de una instruccion
+ * 		a partir de string instruccion
+ */
 int cantParametros(char *instruccion);
+/*
+ * Funcion listaAInstrucciones: a partir de una lista de strings de operaciones y parametros convertirmos
+ * 		dichos strings en t_instruccion y luego devolvemos una lista de este tipo
+ */
 t_list* listaAInstrucciones(t_list*);
 
 t_log* iniciar_logger(char* file, char *process_name, bool is_active_console, t_log_level level);
@@ -151,9 +43,17 @@ void liberar_instrucciones(t_list* instrucciones);
 void liberar_instruccion(t_instruccion* instruccion);
 char** inicializar_parametros(int cantidadParametros);
 void liberar_parametros(char** parametros, int cantidadParametros);
-char* copiar(char* palabra); //hacemos malloc aca dentro
+/*
+ * Funcion copiar: a partir de un string, lo copia a un nuevo char* haciendo el malloc
+ * 		del tamaño exacto del string + 1 agregando un \0
+ */
+char* copiar(char* palabra);
+void copiarRegistros(t_registros* registrosDestino, t_registros* registrosOrigen);
+/*
+ * Funcion contar: es generica, cuenta la cantidad de veces del caracter en la cadena
+ */
 int contar(char* cadena, char caracter);
 
 void liberar_contexto(t_contexto* contexto);
 
-#endif /* SRC_UTILS_GENERAL_H_ */
+#endif
