@@ -30,4 +30,5 @@ t_contexto* recibir_contexto(int);
 t_list* recibirTablaSegmentos(t_socket socket_memoria);
 t_pedido_segmento* recibirPedidoSegmento(t_socket);
 char* recibirPID(t_socket socket);
+t_segmento* recibirSegmento(t_socket socket_memoria);
 #endif

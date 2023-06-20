@@ -185,6 +185,7 @@ t_segmento* obtenerHuecoMayorTamanio(t_segmento* huecoAsignable, t_segmento* hue
 
 void crearSegmento(t_pedido_segmento* pedido) {
 	int estadoEspacio = hayEspacio(pedido);
+	t_segmento* nuevoSegmento;
 	switch(estadoEspacio){
 	case HAY_HUECO_ASIGNABLE:
 		t_segmento* hueco = list_get(tabla_huecos, huecoDisponible);
@@ -192,7 +193,7 @@ void crearSegmento(t_pedido_segmento* pedido) {
 				tabla_segmentos tabla_del_proceso = dictionary_get(diccionarioTablas, pid);
 
 				u_int32_t limiteSegmento = hueco->base + pedido->tamanio;
-				t_segmento* nuevoSegmento = crear_t_segmento(pedido->id_segmento, hueco->base, limiteSegmento);
+				nuevoSegmento = crear_t_segmento(pedido->id_segmento, hueco->base, limiteSegmento);
 				list_add(tabla_del_proceso, nuevoSegmento);
 				log_info(logger, "Nuevo segmento: id %d, base %d, limite %d", nuevoSegmento->id, nuevoSegmento->base, nuevoSegmento->limite);
 
@@ -226,4 +227,17 @@ void eliminarSegmento (t_pedido_segmento* pedido) {
 
 	list_remove(tabla_del_proceso, pedido->id_segmento);
 
+}
+
+void enviarSegmentoCreado(t_socket socket_kernel, tabla_segmentos tabla_segmentos){
+	t_paquete* paquete = crear_paquete(CREACION_EXITOSA);
+	int ultimoElemento = list_size(tabla_segmentos) - 1;
+	log_debug(logger, "Indice: %d", ultimoElemento);
+	t_segmento* nuevoSegmento = list_get(tabla_segmentos, ultimoElemento);
+	agregar_valor_estatico(paquete,&(nuevoSegmento->id));
+	agregar_valor_uint(paquete,&(nuevoSegmento->base));
+	agregar_valor_uint(paquete,&(nuevoSegmento->limite));
+
+	enviar_paquete(paquete, socket_kernel);
+	eliminar_paquete(paquete);
 }

@@ -11,9 +11,6 @@ extern t_socket conexionCPU;
 extern t_socket conexionMemoria;
 
 extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir, sem_execute;
-extern pthread_mutex_t mutex_procesos_new;
-extern pthread_mutex_t mutex_procesos_ready;
-extern pthread_mutex_t mutex_procesos_execute;
 
 t_socket crearConexionCPU(){
 	char* ip = config_get_string_value(config,"IP_CPU");
@@ -28,7 +25,6 @@ t_socket crearConexionMemoria(){
 	t_socket conexion = crear_conexion(ip, puerto, logger);
 	return conexion;
 }
-
 
 t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola){
 
@@ -141,12 +137,14 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 	int cod = recibir_operacion(conexionMemoria);
 	switch(cod) {
 	case CREACION_EXITOSA:
-		t_segmento* segmento = malloc(sizeof(t_segmento));
-		segmento->id = id;
+		t_segmento* segmento;
+		/*segmento->id = id;
 		//recv(conexionMemoria, &segmento->base, sizeof(int) , MSG_WAITALL);
 		segmento->limite = segmento->base + tamanio;
 		//crearSegmento(proceso->tablaSegmentos, segmento) agrega el segmento en la tabla
-		free(segmento);
+		free(segmento);*/
+		segmento = recibirSegmento(conexionMemoria);
+		list_add(proceso->tablaSegmentos, segmento);
 		mandar_pcb_a_CPU(proceso);
 		sem_post(&sem_recibir);
 		break;

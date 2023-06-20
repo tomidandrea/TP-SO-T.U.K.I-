@@ -58,7 +58,7 @@ t_pcb* recibir_proceso(int socket_cliente) {
 			memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
 			desplazamiento+=sizeof(int);
 			char* valor = malloc(tamanio);
-			memcpy(valor, buffer+desplazamiento, tamanio); //rompe aca
+			memcpy(valor, buffer+desplazamiento, tamanio);
 			desplazamiento+=tamanio;
 			list_add(valores, valor);
         }

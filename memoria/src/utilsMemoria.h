@@ -30,5 +30,6 @@ t_segmento* obtenerHuecoMenorTamanio(t_segmento*, t_segmento*);
 t_segmento* obtenerHuecoMayorTamanio(t_segmento*, t_segmento*);
 u_int32_t obtenerTamanioSegmento(t_segmento* segmento);
 void eliminarSegmento (t_pedido_segmento*);
+void enviarSegmentoCreado(t_socket socket_kernel, tabla_segmentos tabla_segmentos);
 
 #endif /* SRC_UTILSMEMORIA_H_ */

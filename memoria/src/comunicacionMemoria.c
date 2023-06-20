@@ -37,6 +37,7 @@ void escucharKernel(){
 				free(pid);
 				break;
 			case CREATE_SEGMENT_OP:
+				log_debug(logger, "Recibo Create segment");
 				pedido = recibirPedidoSegmento(socket_kernel);
 				pid = string_itoa(pedido->pid);
 				tablaSegmentos = dictionary_get(diccionarioTablas, pid);
@@ -47,7 +48,8 @@ void escucharKernel(){
 					switch (estadoCreacion) {
 					case CREACION_EXITOSA:
 						log_info(logger, "Enviando segmentos a kernel...");
-						enviarSegmentosKernel(socket_kernel, tablaSegmentos);
+						enviarSegmentoCreado(socket_kernel, tablaSegmentos);
+						//enviarSegmentosKernel(socket_kernel, tablaSegmentos);
 						break;
 					case OUT_OF_MEMORY:
 						log_error(logger,"Límite de segmentos máximos alcanzado - Limite: %d", cantidadMaxSegmentos);

@@ -258,6 +258,24 @@ t_list* recibirTablaSegmentos(t_socket socket_memoria){
 	return tabla;
 }
 
+t_segmento* recibirSegmento(t_socket socket_memoria){
+	void * buffer;
+	int size;
+	int desplazamiento = 0;
+	t_segmento* segmento = malloc(sizeof(t_segmento));
+
+	buffer = recibir_buffer(&size, socket_memoria);
+
+	memcpy(&(segmento->id), buffer + desplazamiento, sizeof(int));
+	desplazamiento+=sizeof(int);
+	memcpy(&(segmento->base), buffer + desplazamiento, sizeof(u_int32_t));
+	desplazamiento+=sizeof(int);
+	memcpy(&(segmento->limite), buffer + desplazamiento, sizeof(u_int32_t));
+	desplazamiento+=sizeof(int);
+
+	return segmento;
+}
+
 t_pedido_segmento* recibirPedidoSegmento(t_socket socket_kernel){
 	void * buffer;
 	int size;
