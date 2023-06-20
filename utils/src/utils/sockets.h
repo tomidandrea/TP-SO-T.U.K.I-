@@ -27,8 +27,10 @@ void* recibir_buffer(int*, int);
 t_list* recibir_paquete(int);
 t_pcb* inicializar_pcb();
 t_contexto* recibir_contexto(int);
-t_list* recibirTablaSegmentos(t_socket socket_memoria);
+t_list* recibirTablaSegmentos(t_socket);
+char* recibirPID(t_socket);
+t_segmento* recibirSegmento(t_socket);
 t_pedido_segmento* recibirPedidoSegmento(t_socket);
-char* recibirPID(t_socket socket);
-t_segmento* recibirSegmento(t_socket socket_memoria);
+t_pedido_segmento* recibirPedidoDeleteSegment(t_socket);
+
 #endif

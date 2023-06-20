@@ -11,7 +11,7 @@ t_dictionary* diccionarioTablas;
 t_segmento* segmento0;
 int huecoDisponible;
 op_code estadoCreacion;
-extern char* algoritmoConfig;
+char* algoritmoConfig;
 
 //TODO alejiti: ver si necesitamos mutex para el diccionario y tabla de huecos
 
@@ -24,6 +24,8 @@ t_segmento* crear_t_segmento(int id, u_int32_t base, u_int32_t limite){
 }
 
 void inicializarEstructuras(){
+	//algoritmoConfig = config_get_string_value(config,"ALGORITMO_ASIGNACION");
+	algoritmoConfig = "WORST";
 
 	diccionarioTablas = dictionary_create();
 
@@ -108,7 +110,7 @@ int hayEspacio(t_pedido_segmento* pedido){
 							huecoAsignable = list_get(tabla_huecos,i);
 							condicion = ENCONTRO_HUECO;
 						}else if(pedido->tamanio <= tamanio && condicion == ENCONTRO_HUECO){ //si ya entro en algun hueco ahi los empieza a comparar
-							huecoAsignable = obtenerHuecoMenorTamanio(huecoAsignable, hueco);
+							huecoAsignable = obtenerHuecoSegunTamanio(huecoAsignable, hueco, BEST_FIT);
 						}
 						else{
 							tamanioTotal += tamanio;
@@ -139,7 +141,7 @@ int hayEspacio(t_pedido_segmento* pedido){
 							huecoAsignable = list_get(tabla_huecos,i);
 							condicion = ENCONTRO_HUECO;
 						}else if(pedido->tamanio <= tamanio && condicion == ENCONTRO_HUECO){ //si ya entro en algun hueco ahi los empieza a comparar
-							huecoAsignable = obtenerHuecoMayorTamanio(huecoAsignable, hueco);
+							huecoAsignable = obtenerHuecoSegunTamanio(huecoAsignable, hueco, WORST_FIT);
 						}
 						else{
 							tamanioTotal += tamanio;
@@ -161,26 +163,27 @@ int hayEspacio(t_pedido_segmento* pedido){
 
 }
 
-t_segmento* obtenerHuecoMenorTamanio(t_segmento* huecoAsignable, t_segmento* hueco){
+t_segmento* obtenerHuecoSegunTamanio(t_segmento* huecoAsignable, t_segmento* hueco, t_algoritmo_memoria algoritmo){
 	int tamanioHuecoAsignable, tamanioHueco;
 	tamanioHuecoAsignable = obtenerTamanioSegmento(huecoAsignable);
 	tamanioHueco = obtenerTamanioSegmento(hueco);
-	if(tamanioHuecoAsignable < tamanioHueco){ //si el tamanio a asignar es menor que el tamanio que tenia asignado, lo guarda
-		return huecoAsignable;
-	}else{
-		return hueco;
+	switch (algoritmo){
+	case BEST_FIT:
+		if(tamanioHuecoAsignable < tamanioHueco){ //si el tamanio a asignar es menor que el tamanio que tenia asignado, lo guarda
+			return huecoAsignable;
+		}else{
+			return hueco;
+		}
+		break;
+	case WORST_FIT:
+		if(tamanioHuecoAsignable > tamanioHueco){ //si el tamanio a asignar es mayor que el tamanio que tenia asignado, lo guarda
+			return huecoAsignable;
+		}else{
+			return hueco;
+		}
 	}
-}
 
-t_segmento* obtenerHuecoMayorTamanio(t_segmento* huecoAsignable, t_segmento* hueco){
-	int tamanioHuecoAsignable, tamanioHueco;
-	tamanioHuecoAsignable = obtenerTamanioSegmento(huecoAsignable);
-	tamanioHueco = obtenerTamanioSegmento(hueco);
-	if(tamanioHuecoAsignable > tamanioHueco){ //si el tamanio a asignar es mayor que el tamanio que tenia asignado, lo guarda
-		return huecoAsignable;
-	}else{
-		return hueco;
-	}
+
 }
 
 void crearSegmento(t_pedido_segmento* pedido) {
@@ -226,6 +229,7 @@ void eliminarSegmento (t_pedido_segmento* pedido) {
 	tabla_segmentos tabla_del_proceso = dictionary_get(diccionarioTablas, pid);
 
 	list_remove(tabla_del_proceso, pedido->id_segmento);
+	log_info(logger, "Se removio completamente el segmento %d", pedido->id_segmento);
 
 }
 

@@ -30,7 +30,7 @@ t_contexto* actualizar_pcb(t_pcb*);
 
 void solicitarCrearSegmento(int id, int tamanio, t_pcb* proceso);
 void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso);
-void eliminarSegmento(int id, t_pcb* proceso);
+void solicitarEliminarSegmento(int id, t_pcb* proceso);
 void recibirTablaActualizada(t_pcb* proceso);
 
 #endif

@@ -296,6 +296,23 @@ t_pedido_segmento* recibirPedidoSegmento(t_socket socket_kernel){
 	return pedido;
 }
 
+t_pedido_segmento* recibirPedidoDeleteSegment(t_socket socket_kernel){
+	void * buffer;
+	int size;
+	int desplazamiento = 0;
+	t_pedido_segmento* pedido = malloc(sizeof(t_pedido_segmento));
+	buffer = recibir_buffer(&size, socket_kernel);
+	memcpy(&(pedido->pid), buffer + desplazamiento, sizeof(int));
+	desplazamiento+=sizeof(int);
+
+	memcpy(&(pedido->id_segmento), buffer + desplazamiento, sizeof(int));
+	desplazamiento+=sizeof(int);
+
+	free(buffer);
+
+	return pedido;
+}
+
 char* recibirPID(t_socket socket){
 	void * buffer;
 	int size;

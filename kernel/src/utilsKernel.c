@@ -171,19 +171,13 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 	}
 }
 
-void eliminarSegmento(int id, t_pcb* proceso) {
-	t_paquete *paquete = crear_paquete(DELETE_SEGMENT);
+void solicitarEliminarSegmento(int id, t_pcb* proceso) {
+	t_paquete *paquete = crear_paquete(DELETE_SEGMENT_OP);
 
 	agregar_valor_estatico(paquete, &(proceso->pid));
 	agregar_valor_estatico(paquete, &(id));
 
-	//enviar_paquete(paquete,conexionMemoria);
+	enviar_paquete(paquete,conexionMemoria);
 	eliminar_paquete(paquete);
-}
-
-void recibirTablaActualizada(t_pcb* proceso) {
-	proceso->tablaSegmentos = recibirTablaSegmentos(conexionMemoria);
-	log_info(logger, "Recibimos la tabla actualizada dsp de eliminar el segmentoide");
-
 }
 

@@ -60,13 +60,14 @@ void escucharKernel(){
 						break;
 					}
 				}
-				else
+				else{
 					estadoCreacion = LIMITE_SEGMENTOS_SUPERADO;
 					send(socket_kernel, &estadoCreacion, sizeof(op_code), 0);
-
+				}
 				break;
 			case DELETE_SEGMENT_OP:
-				pedido = recibirPedidoSegmento(socket_kernel);
+				pedido = recibirPedidoDeleteSegment(socket_kernel);
+				log_info(logger, "DELETE SEGMENT DEL PID %d, del id %d", pedido->pid, pedido->id_segmento);
 				eliminarSegmento(pedido);
 				enviarSegmentosKernel(socket_kernel, tablaSegmentos);
 				break;

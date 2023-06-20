@@ -6,7 +6,6 @@ t_socket server_fd;
 void* espacioMemoria;
 tabla_segmentos tabla_huecos;
 sem_t sem_cpu, sem_kernel;
-char* algoritmoConfig;
 
 
 int main(int argc, char* argv[]) {
@@ -33,6 +32,5 @@ void iniciarConexionMemoria(char* path){
 	log_debug(logger, "Conexion iniciada");
 	server_fd = iniciarServidor(config, logger,"PUERTO_ESCUCHA");
 
-	algoritmoConfig = config_get_string_value(config,"ALGORITMO_ASIGNACION");
 }
 

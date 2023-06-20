@@ -6,6 +6,7 @@ extern t_log* logger;
 extern t_list* procesosExecute;
 extern t_list* procesosReady;
 extern t_list* procesosNew;
+extern t_socket conexionMemoria;
 
 uint32_t INICIO = 1;
 
@@ -133,12 +134,16 @@ void recibirDeCPU() {
 			case DELETE_SEGMENT:
 				log_info(logger, "Llego un DELETE_SEGMENT pibe\n");
 				id = atoi(contexto->parametros[0]);
-				//TODO verificar que exista el segmento y no sea el 0
-				eliminarSegmento(id, proceso);
-				log_info(logger, "PID: %d - Eliminar Segmento - Id: %d", proceso->pid, id);
+				solicitarEliminarSegmento(id, proceso);
+				int cod = recibir_operacion(conexionMemoria);
+				if (cod == TABLA_SEGMENTOS){
+					recibirTablaSegmentos(conexionMemoria);
+				}else{
+					log_error(logger, "no recibi el cod que esperaba xd");
+				}
 
-				recibirTablaActualizada(proceso);
-				avisar_fin_a_consola(proceso->socket_consola);
+
+				log_info(logger, "PID: %d - Eliminar Segmento - Id: %d", proceso->pid, id);
 
 				break;
 			default:
