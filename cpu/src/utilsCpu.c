@@ -187,9 +187,10 @@ void enviar_contexto(t_pcb* proceso, t_instruccion* inst, int conexion){
 
 }
 //solo para mov_out
-void escribir_memoria(u_int32_t direc_fisica,char* valor, int tamanio_valor) {
+void escribir_memoria(int pid, u_int32_t direc_fisica,char* valor, int tamanio_valor) {
 	t_paquete *paquete = crear_paquete(ESCRIBIR);
 
+	agregar_valor_estatico(paquete, &pid);
 	agregar_valor_uint(paquete, &(direc_fisica));
 	agregar_a_paquete(paquete, valor, tamanio_valor);
 
@@ -200,10 +201,11 @@ void escribir_memoria(u_int32_t direc_fisica,char* valor, int tamanio_valor) {
 
 //solo para mov_in
 
-char* leer_memoria(u_int32_t direc_fisica, int tamanio_a_leer) {
+char* leer_memoria(int pid, u_int32_t direc_fisica, int tamanio_a_leer) {
 	t_paquete *paquete = crear_paquete(LEER);
-	char* valor_leido = malloc(sizeof(tamanio_a_leer));
+	char* valor_leido = malloc(sizeof(tamanio_a_leer) + 1);
 
+	agregar_valor_estatico(paquete, &pid);
 	agregar_valor_uint(paquete, &(direc_fisica));
 	agregar_valor_estatico(paquete, &(tamanio_a_leer));
 
@@ -213,8 +215,8 @@ char* leer_memoria(u_int32_t direc_fisica, int tamanio_a_leer) {
 	//hago el recv y devuelvo el valor leido
 
 	if(conexionMemoria != -1){
-		recv(conexionMemoria, valor_leido, sizeof(tamanio_a_leer) , MSG_WAITALL);
-		log_debug(logger,"Me llego el valor leido de memoria");
+		recv(conexionMemoria, valor_leido, sizeof(tamanio_a_leer) + 1 , MSG_WAITALL);
+		log_debug(logger,"Me llego de memoria el valor: %s de tamaño %d",valor_leido, tamanio_a_leer);
 	} else {
 		log_error(logger,"No me llego el valor leido de memoria");
 	}

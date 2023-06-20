@@ -107,12 +107,14 @@ void escucharCPU(){
 				memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
 
 				//devuelvo el valor leido en la direccion pedida
-				char* valor_leido = leer(direc_fisica, tamanio, pid);
+				char* valor_leido = leer(direc_fisica, tamanio + 1, pid);
 				//hago el retardo que pide el enuncuado por acceder al espacio de memoria
 				usleep(retardo_memoria * 1000);
 				//envio el valor leido a cpu
-				send(socket_cpu, valor_leido, tamanio, 0);
-				log_debug(logger,"Lei el valor %s. Enviando a CPU...", valor_leido);
+
+				//TODO: este send no funciona
+				send(socket_cpu, valor_leido, tamanio + 1, 0);
+				log_debug(logger,"Lei el valor %s de tamaño %d. Enviando a CPU...", valor_leido, tamanio + 1);
 				free(valor_leido);
 				free(buffer);
 				break;

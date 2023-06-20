@@ -149,11 +149,13 @@ estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb* pcb){
 estado_ejec set_registro(char* registro, char* valor) {
 
 	int tamanio = strlen(valor);
+	log_debug(logger, "Valor a setear: %s de tamaño %d", valor, tamanio);
 
 	if(tamanio == 4) {
 
 		switch (registro[0]) {
 		      case 'A':  strcpy(registros->AX, valor);
+		      	  log_debug(logger, "Valor seteado en AX: %s", registros->AX);
 		                 break;
 		      case 'B':  strcpy(registros->BX, valor);
 		                 break;
@@ -210,47 +212,48 @@ char* get_registro(char*registro) {
 
 		if (registro[1]== 'E') {
 
-			valor = malloc(8*sizeof(char));
+			//valor = malloc(8*sizeof(char));
 
 			switch (registro[1]) {
-				 case 'A':  strcpy(valor, registros->EAX);
+				 case 'A':  valor = copiar(registros->EAX);
 				            break;
-				 case 'B':  strcpy(valor, registros->EBX);
+				 case 'B':  valor = copiar(registros->EBX);
 				            break;
-				 case 'C':  strcpy(valor, registros->ECX);
+				 case 'C':  valor = copiar(registros->ECX);
 				            break;
-				 case 'D':  strcpy(valor, registros->EDX);
+				 case 'D':  valor = copiar(registros->EDX);
 				            break;
 			}
 		}
 		else if (registro[1] == 'R') {
 
-			valor = malloc(16*sizeof(char));
+			//valor = malloc(16*sizeof(char));
 			switch (registro[1]) {
-			        case 'A':  strcpy(valor, registros->RAX);
+			        case 'A':  valor = copiar(registros->RAX);
 					           break;
-		            case 'B':  strcpy(valor, registros->RBX);
+		            case 'B':  valor = copiar(registros->RBX);
 						       break;
-			        case 'C':  strcpy(valor, registros->RCX);
+			        case 'C':  valor = copiar(registros->RCX);
 							   break;
-				    case 'D':  strcpy(valor, registros->RDX);
+				    case 'D':  valor = copiar(registros->RDX);
 							   break;
 			}
 		}
 		else {
-			valor = malloc(4*sizeof(char));
+			//valor = malloc(4*sizeof(char));
 			switch (registro[0]) {
-			     case 'A':  strcpy(valor, registros->AX);
+			     case 'A':  valor = copiar(registros->AX);
 			                break;
-			     case 'B':  strcpy(valor, registros->BX);
+			     case 'B':  valor = copiar(registros->BX);
 						    break;
-                 case 'C':  strcpy(valor, registros->CX);
+                 case 'C':  valor = copiar(registros->CX);
 						    break;
-			     case 'D':  strcpy(valor, registros->DX);
+			     case 'D':  valor = copiar(registros->DX);
 						    break;
 				}
 		}
-
+		printf("Contenido AX: %s\n", registros->AX);
+		log_debug(logger, "Valor del registro: %s", valor);
 	return valor;
 
 }
@@ -265,7 +268,7 @@ estado_ejec resultado = ejecutar_mov(pid, tamanio_a_leer,direcLogica,tabla_de_se
 if(resultado == CONTINUAR) {
 
 	int direc_fisica = obtener_direc_fisica(direcLogica,tabla_de_segmentos);
-	char* valor = leer_memoria(direc_fisica,tamanio_a_leer);
+	char* valor = leer_memoria(pid, direc_fisica,tamanio_a_leer);
 	set_registro(registro,valor);
 	log_info(logger, "PID: %d - Acción: LEER - Segmento: %d - Dirección Física: %d - Valor: %s", pid, direcLogica->numero_segmento, direc_fisica, valor);
 	free(valor);
@@ -277,14 +280,14 @@ return resultado;
 estado_ejec ejecutar_mov_out(int pid, char* direc,char* registro, tabla_segmentos tabla_de_segmentos) {
 
 direc_logica* direcLogica = crear_direc_logica(direc);
-int tamanio_a_escribir = tamanio_registro(registro);
+int tamanio_a_escribir = tamanio_registro(registro) + 1;
 estado_ejec resultado = ejecutar_mov(pid,tamanio_a_escribir, direcLogica, tabla_de_segmentos);
 
 
 if(resultado == CONTINUAR) {
 	 int direc_fisica = obtener_direc_fisica(direcLogica,tabla_de_segmentos);
 	 char* valor = get_registro(registro);
-	 escribir_memoria(direc_fisica,valor, tamanio_a_escribir);
+	 escribir_memoria(pid, direc_fisica,valor, tamanio_a_escribir);
 	 log_info(logger, "PID: %d - Acción: ESCRIBIR - Segmento: %d - Dirección Física: %d - Valor: %s", pid, direcLogica->numero_segmento, direc_fisica, valor);
 	 free(valor);
 }
