@@ -111,11 +111,11 @@ void escucharCPU(){
 				//hago el retardo que pide el enuncuado por acceder al espacio de memoria
 				usleep(retardo_memoria * 1000);
 				//envio el valor leido a cpu
-
 				//TODO: este send no funciona
-				send(socket_cpu, valor_leido, tamanio + 1, 0);
+				send(socket_cpu, valor_leido, tamanio+1, 0);
+				//enviar_mensaje(valor_leido, socket_cpu);
 				log_debug(logger,"Lei el valor %s de tamaño %d. Enviando a CPU...", valor_leido, tamanio + 1);
-				free(valor_leido);
+				//free(valor_leido);
 				free(buffer);
 				break;
 			case ESCRIBIR:

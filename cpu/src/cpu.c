@@ -268,7 +268,15 @@ estado_ejec resultado = ejecutar_mov(pid, tamanio_a_leer,direcLogica,tabla_de_se
 if(resultado == CONTINUAR) {
 
 	int direc_fisica = obtener_direc_fisica(direcLogica,tabla_de_segmentos);
-	char* valor = leer_memoria(pid, direc_fisica,tamanio_a_leer);
+	leer_memoria(pid, direc_fisica,tamanio_a_leer);
+	char* valor = malloc(tamanio_a_leer + 1);
+	if(conexionMemoria!=-1){
+				recv(conexionMemoria, valor, tamanio_a_leer + 1, MSG_WAITALL);
+
+				log_debug(logger,"Me llego de memoria el valor: %s de tamaño %d",valor, tamanio_a_leer);
+		} else {
+			log_error(logger,"No me llego el valor leido de memoria");
+		}
 	set_registro(registro,valor);
 	log_info(logger, "PID: %d - Acción: LEER - Segmento: %d - Dirección Física: %d - Valor: %s", pid, direcLogica->numero_segmento, direc_fisica, valor);
 	free(valor);
