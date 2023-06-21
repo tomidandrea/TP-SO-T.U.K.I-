@@ -181,3 +181,13 @@ void solicitarEliminarSegmento(int id, t_pcb* proceso) {
 	eliminar_paquete(paquete);
 }
 
+void recibirEliminarsegmento(t_pcb* proceso){
+	int cod = recibir_operacion(conexionMemoria);
+	if (cod == TABLA_SEGMENTOS){
+		proceso->tablaSegmentos = recibirTablaSegmentos(conexionMemoria);
+	}
+	log_debug(logger, "Tabla de segmentos actualizada - Se eliminó el segmento");
+	mandar_pcb_a_CPU(proceso);
+	sem_post(&sem_recibir);
+
+}

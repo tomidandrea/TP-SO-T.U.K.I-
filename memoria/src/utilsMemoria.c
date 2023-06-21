@@ -25,7 +25,7 @@ t_segmento* crear_t_segmento(int id, u_int32_t base, u_int32_t limite){
 
 void inicializarEstructuras(){
 	//algoritmoConfig = config_get_string_value(config,"ALGORITMO_ASIGNACION");
-	algoritmoConfig = "WORST";
+	algoritmoConfig = "BEST";
 
 	diccionarioTablas = dictionary_create();
 
@@ -104,7 +104,7 @@ int hayEspacio(t_pedido_segmento* pedido){
 					hueco = list_get(tabla_huecos, i);
 					tamanio=obtenerTamanioSegmento(hueco);
 
-						//log_debug(logger, "Hueco %d tiene tamaño: %d", i, tamanio);
+						log_debug(logger, "Hueco %d tiene tamaño: %d", i, tamanio);
 
 						if(pedido->tamanio <= tamanio && condicion == NO_ENCONTRO_HUECO){ //si no encontro hueco guarda el primero en el que entra
 							huecoAsignable = list_get(tabla_huecos,i);
@@ -135,7 +135,7 @@ int hayEspacio(t_pedido_segmento* pedido){
 					hueco = list_get(tabla_huecos, i);
 					tamanio=obtenerTamanioSegmento(hueco);
 
-						//log_debug(logger, "Hueco %d tiene tamaño: %d", i, tamanio);
+						log_debug(logger, "Hueco %d tiene tamaño: %d", i, tamanio);
 
 						if(pedido->tamanio <= tamanio && condicion == NO_ENCONTRO_HUECO){ //si no encontro hueco guarda el primero en el que entra
 							huecoAsignable = list_get(tabla_huecos,i);
@@ -228,7 +228,12 @@ void eliminarSegmento (t_pedido_segmento* pedido) {
 	char* pid = string_itoa(pedido->pid);
 	tabla_segmentos tabla_del_proceso = dictionary_get(diccionarioTablas, pid);
 
-	list_remove(tabla_del_proceso, pedido->id_segmento);
+	t_segmento* segmento = list_remove(tabla_del_proceso, pedido->id_segmento);
+
+	int cantidadHuecos = list_size(tabla_huecos);
+
+	t_segmento* hueco = crear_t_segmento(cantidadHuecos++, segmento->base, segmento->limite);
+	list_add(tabla_huecos, hueco);
 	log_info(logger, "Se removio completamente el segmento %d", pedido->id_segmento);
 
 }

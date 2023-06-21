@@ -135,16 +135,8 @@ void recibirDeCPU() {
 				log_info(logger, "Llego un DELETE_SEGMENT pibe\n");
 				id = atoi(contexto->parametros[0]);
 				solicitarEliminarSegmento(id, proceso);
-				int cod = recibir_operacion(conexionMemoria);
-				if (cod == TABLA_SEGMENTOS){
-					recibirTablaSegmentos(conexionMemoria);
-				}else{
-					log_error(logger, "no recibi el cod que esperaba xd");
-				}
-
-
 				log_info(logger, "PID: %d - Eliminar Segmento - Id: %d", proceso->pid, id);
-
+				recibirEliminarsegmento(proceso);
 				break;
 			default:
 				log_debug(logger, "No se implemento la instruccion");
