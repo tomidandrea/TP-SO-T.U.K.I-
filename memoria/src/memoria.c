@@ -5,7 +5,7 @@ t_config* config;
 t_socket server_fd;
 void* espacioMemoria;
 tabla_segmentos tabla_huecos;
-sem_t sem_cpu, sem_kernel;
+sem_t sem_cpu, sem_kernel, ejecutando;
 int retardo_memoria;
 char* algoritmoConfig;
 
@@ -18,6 +18,7 @@ int main(int argc, char* argv[]) {
 
 	sem_init(&sem_cpu, 0, 0);
 	sem_init(&sem_kernel, 0, 0);
+	sem_init(&ejecutando, 0, 1);
 
 	retardo_memoria = config_get_int_value(config, "RETARDO_MEMORIA");
 

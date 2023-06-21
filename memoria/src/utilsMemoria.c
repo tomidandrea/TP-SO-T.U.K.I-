@@ -67,7 +67,8 @@ void enviarSegmentosKernel(t_socket socket_kernel, tabla_segmentos tablaSegmento
 }
 
 void* leer(u_int32_t direc, int tamanio, int pid) {
-	void* valor = malloc(tamanio);
+	//valor no tiene \0, tamaño es igual que el registro (4,8,16)
+	void* valor = malloc(tamanio+1);
 	memcpy(valor, espacioMemoria + direc, tamanio);
 	log_info(logger,  "PID: %d- Acción: LEER - Dirección física: %d - Tamaño: %d- Origen: CPU", pid, direc, tamanio);
 
@@ -75,7 +76,7 @@ void* leer(u_int32_t direc, int tamanio, int pid) {
 }
 
 void escribir(u_int32_t direc, int tamanio, char* valor, int pid) {
-
+	//valor tiene \0, tamaño es igual que el registro (4,8,16)
 	memcpy(espacioMemoria + direc, valor, tamanio);
 	log_info(logger,  "PID: %d- Acción: ESCRIBIR - Dirección física: %d - Tamaño: %d- Origen: CPU", pid, direc, tamanio);
 }
@@ -251,7 +252,7 @@ void eliminarSegmento (t_pedido_segmento* pedido) {
 void enviarSegmentoCreado(t_socket socket_kernel, tabla_segmentos tabla_segmentos){
 	t_paquete* paquete = crear_paquete(CREACION_EXITOSA);
 	int ultimoElemento = list_size(tabla_segmentos) - 1;
-	log_debug(logger, "Indice: %d", ultimoElemento);
+	//log_debug(logger, "Indice: %d", ultimoElemento);
 	t_segmento* nuevoSegmento = list_get(tabla_segmentos, ultimoElemento);
 	agregar_valor_estatico(paquete,&(nuevoSegmento->id));
 	agregar_valor_uint(paquete,&(nuevoSegmento->base));
