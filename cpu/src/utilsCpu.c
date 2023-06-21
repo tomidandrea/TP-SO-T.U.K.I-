@@ -218,9 +218,44 @@ char* leer_memoria(int pid, u_int32_t direc_fisica, int tamanio_a_leer) {
 	eliminar_paquete(paquete);
 
 	//hago el recv y devuelvo el valor leido
-	//char* valor_leido;
+	char* valor_leido;
+	int cod_op;
+	if(recv(conexionMemoria, &cod_op, sizeof(int) , MSG_WAITALL) > 0){
+			log_debug(logger,"codOP: %d",cod_op);
+			valor_leido = recibir_mensaje(conexionMemoria, logger);
+		} else {
+			log_error(logger,"No me llego el resultado de memoria");
+		}
 
-	return "hola";
+	//char* valor = malloc(tamanio_a_leer);
+
+	/*	if(conexionMemoria!=-1){
+			//recv(conexionMemoria, valor, tamanio_a_leer, MSG_WAITALL);
+			char* valor2 = recibir_mensaje(conexionMemoria, logger);
+			char* contenido;
+			int size;
+				recv(conexionMemoria, &size, sizeof(int), MSG_WAITALL);
+				printf("tamanio contenido: %d\n",size);
+				contenido = malloc(size);
+				recv(conexionMemoria, contenido, size, MSG_WAITALL);*/
+				/*int cod_op = recibir_operacion(conexionMemoria);
+				log_debug(logger,"Me llego codop %d",cod_op);
+				int tamanio, size;
+				void* buffer;
+				int desplazamiento = 0;
+
+				buffer = recibir_buffer(&size, conexionMemoria);
+				memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
+				desplazamiento+=(sizeof(int));
+				log_debug(logger,"tamanio recebido %d",tamanio);
+				memcpy(valor, buffer + desplazamiento, tamanio);
+					log_debug(logger,"Me llego de memoria el valor: %s de tamaño %d",valor2, tamanio_a_leer);
+					return valor2;
+			} else {
+				log_error(logger,"No me llego el valor leido de memoria");
+			}*/
+
+	return valor_leido;
 }
 
 

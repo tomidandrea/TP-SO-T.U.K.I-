@@ -50,7 +50,6 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 	paquete->codigo_operacion = MENSAJE;
 	paquete->buffer = malloc(sizeof(t_buffer));
 	paquete->buffer->size = strlen(mensaje) + 1;
-	printf("size: %d\n", paquete->buffer->size);
 	paquete->buffer->stream = malloc(paquete->buffer->size);
 	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
 
@@ -64,12 +63,104 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 	eliminar_paquete(paquete);
 }
 
+void enviar_mensaje2(char* mensaje, int socket_cliente)
+{
+	//t_paquete* paquete = malloc(sizeof(t_paquete));
+	printf("mensaje: %s\n", mensaje);
+	/*char a_enviar[5];
+	strcpy(a_enviar, mensaje);
+	for (int i = 0; i < 5; ++i) {
+		printf("%c",a_enviar[i]);
+	}
+	printf("\n");*/
+	//paquete->codigo_operacion = MENSAJE;
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+	buffer->size = strlen(mensaje) + 1;
+	printf("size: %d\n", buffer->size);
+	buffer->stream = malloc(buffer->size);
+	memcpy(buffer->stream, mensaje, buffer->size);
+	printf("mensaje stream: %s\n", buffer->stream);
+	//int bytes = buffer->size + 2*sizeof(int);
+	int bytes = buffer->size + sizeof(int);
+
+	//void* a_enviar = serializar_paquete(paquete, bytes);
+
+	void * magic = malloc(bytes);
+	printf("1. %p\n", magic);
+		int desplazamiento = 0;
+		//int num = 4;
+		//memcpy(magic + desplazamiento, &(paquete->codigo_operacion), sizeof(int));
+		//desplazamiento+= sizeof(int);
+		memcpy(magic + desplazamiento, &(buffer->size), sizeof(int));
+		desplazamiento+= sizeof(int);
+		memcpy(magic + desplazamiento, buffer->stream, buffer->size);
+		//desplazamiento+= buffer->size;
+		//memcpy(magic + desplazamiento, &(num), sizeof(int));
+		//agregar_a_paquete(paquete, valor, tamanio)
+		//memcpy(buffer->stream, &(buffer->size), sizeof(int));
+		//memcpy(buffer->stream + sizeof(int), mensaje, buffer->size);
+
+		printf("2. %p\n", magic);
+		//buffer->size += tamanio + sizeof(int);
+
+		//return magic;
+		int size;
+		char* valor;
+
+		memcpy(&size, magic, sizeof(int));
+		printf("size obtenido: %d\n", size);
+		valor = malloc(size);
+		memcpy(valor, magic+sizeof(int),size);
+		printf("mensaje: %s\n", valor);
+		printf("sizeof magic %lu\n", sizeof(magic));
+		printf("bytes %d\n", bytes);
+
+	send(socket_cliente, magic, bytes, 0);
+
+	//free(magic);
+	//eliminar_paquete(paquete);
+	//free(buffer->stream);
+	//free(buffer);
+}
+
 char* recibir_mensaje(int socket_cliente, t_log* logger) //agrego que mande logger como parametro
 {
 	int size;
 	char* buffer = recibir_buffer(&size, socket_cliente);
-	log_info(logger, "Me llego el mensaje %s de tamaño %d", buffer, size);
+	log_info(logger, "Me llego el mensaje %s", buffer);
 	return buffer;
+}
+
+char* recibir_mensaje2(int socket_cliente, t_log* logger) //agrego que mande logger como parametro
+{
+	//char* buffer = recibir_buffer(&size, socket_cliente);
+	void* magic = malloc(5*sizeof(char) + sizeof(int));
+	printf("3. %p\n", magic);
+	printf("sizeof magic %lu\n", sizeof(magic));
+	int size;
+	char* buffer;
+	int desplazamiento= 0;
+	int num;
+			recv(socket_cliente, magic, 5*sizeof(char) + sizeof(int), MSG_WAITALL);
+			printf("4. %p\n", magic);
+			memcpy(&size, magic, sizeof(int));
+			desplazamiento += sizeof(int);
+			buffer = malloc(size);
+			/*for(int i =0; i<size; i++){
+				memcpy(buffer[i], magic + desplazamiento, sizeof(char));
+				desplazamiento+=i;
+				printf("c%d: %c\n",i,buffer[i]);
+			}*/
+			memcpy(buffer, magic + desplazamiento, 5*sizeof(char));
+			//memcpy(&num, magic + desplazamiento, sizeof(int));
+	log_info(logger, "Me llego el mensaje %s de tamaño %d", buffer, size);
+	//log_info(logger, "Me llego el num %d", num);
+	return buffer;
+
+	/*int size;
+		char* buffer = recibir_buffer(&size, socket_cliente);
+		log_info(logger, "Me llego el mensaje %s", buffer);
+		return buffer;*/
 }
 
 void enviar_paquete(t_paquete* paquete, int socket_cliente)

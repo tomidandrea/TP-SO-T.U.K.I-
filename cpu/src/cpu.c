@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
 				log_info(logger, "Enviando pcb a kernel");
 				actualizar_registros_pcb(pcb);
 				enviar_contexto(pcb,inst_privilegiada,socket_cliente);
-
+				//liberar_pcb(pcb);
 			} else {
 				send(socket_cliente, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);
 				log_error(logger,"Se cerró la conexión");
@@ -154,8 +154,10 @@ estado_ejec set_registro(char* registro, char* valor) {
 	if(tamanio == 4) {
 
 		switch (registro[0]) {
-		      case 'A':  strcpy(registros->AX, valor);
-		      	  log_debug(logger, "Valor seteado en AX: %s", registros->AX);
+		      case 'A':  memcpy(registros->AX, valor, 4);
+		      for (int i = 0; i < 4; ++i) {
+		      	  log_debug(logger, "Valor%d  en AX: %c", i, registros->AX[i]);
+			  }
 		                 break;
 		      case 'B':  strcpy(registros->BX, valor);
 		                 break;
@@ -209,7 +211,9 @@ estado_ejec set_registro(char* registro, char* valor) {
 char* get_registro(char*registro) {
 
 	char* valor;
-
+	for (int i = 0; i < 4; ++i) {
+			  log_debug(logger, "Valor%d  en AX: %c", i, registros->AX[i]);
+		  }
 		if (registro[1]== 'E') {
 
 			//valor = malloc(8*sizeof(char));
@@ -240,9 +244,10 @@ char* get_registro(char*registro) {
 			}
 		}
 		else {
-			//valor = malloc(4*sizeof(char));
+			valor = malloc(5*sizeof(char));
 			switch (registro[0]) {
-			     case 'A':  valor = copiar(registros->AX);
+			     case 'A':  memcpy(valor, registros->AX, 4);
+			     	 valor[4] = '\0';
 			                break;
 			     case 'B':  valor = copiar(registros->BX);
 						    break;
@@ -252,7 +257,7 @@ char* get_registro(char*registro) {
 						    break;
 				}
 		}
-		printf("Contenido AX: %s\n", registros->AX);
+
 		log_debug(logger, "Valor del registro: %s", valor);
 	return valor;
 
@@ -266,21 +271,16 @@ int tamanio_a_leer = tamanio_registro(registro);
 estado_ejec resultado = ejecutar_mov(pid, tamanio_a_leer,direcLogica,tabla_de_segmentos);
 
 if(resultado == CONTINUAR) {
-
+	char* valor;
+	//char valor2[4];
 	int direc_fisica = obtener_direc_fisica(direcLogica,tabla_de_segmentos);
-	leer_memoria(pid, direc_fisica,tamanio_a_leer);
-	char* valor = malloc(tamanio_a_leer + 1);
-	if(conexionMemoria!=-1){
-				recv(conexionMemoria, valor, tamanio_a_leer + 1, MSG_WAITALL);
-
-				log_debug(logger,"Me llego de memoria el valor: %s de tamaño %d",valor, tamanio_a_leer);
-		} else {
-			log_error(logger,"No me llego el valor leido de memoria");
-		}
+	valor = leer_memoria(pid, direc_fisica,tamanio_a_leer);
+	//memcpy(valor2, valor, tamanio_a_leer);
 	set_registro(registro,valor);
 	log_info(logger, "PID: %d - Acción: LEER - Segmento: %d - Dirección Física: %d - Valor: %s", pid, direcLogica->numero_segmento, direc_fisica, valor);
-	free(valor);
+	//free(valor);
 }
+free(direcLogica);
 
 return resultado;
 }
@@ -288,16 +288,18 @@ return resultado;
 estado_ejec ejecutar_mov_out(int pid, char* direc,char* registro, tabla_segmentos tabla_de_segmentos) {
 
 direc_logica* direcLogica = crear_direc_logica(direc);
-int tamanio_a_escribir = tamanio_registro(registro) + 1;
+int tamanio_a_escribir = tamanio_registro(registro);
 estado_ejec resultado = ejecutar_mov(pid,tamanio_a_escribir, direcLogica, tabla_de_segmentos);
 
 
 if(resultado == CONTINUAR) {
 	 int direc_fisica = obtener_direc_fisica(direcLogica,tabla_de_segmentos);
 	 char* valor = get_registro(registro);
-	 escribir_memoria(pid, direc_fisica,valor, tamanio_a_escribir);
+	 char valor2[4];
+	 memcpy(valor2, valor, 4);
+	 escribir_memoria(pid, direc_fisica,valor2, tamanio_a_escribir);
 	 log_info(logger, "PID: %d - Acción: ESCRIBIR - Segmento: %d - Dirección Física: %d - Valor: %s", pid, direcLogica->numero_segmento, direc_fisica, valor);
-	 free(valor);
+	 //free(valor);
 }
 return resultado;
 
