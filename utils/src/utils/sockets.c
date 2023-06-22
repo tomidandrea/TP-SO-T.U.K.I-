@@ -59,10 +59,31 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 
 	void* a_enviar = serializar_paquete(paquete, bytes);
 
+	//imprimirContenido(a_enviar);
+
 	send(socket_cliente, a_enviar, bytes, 0);
 
 	free(a_enviar);
 	eliminar_paquete(paquete);
+}
+
+char* imprimirContenido(int socket_cliente, int tamanio_a_leer){
+	int cod, size, desplazamiento = 0;
+	char* valor;
+	void* a_enviar;
+	if(recv(socket_cliente, a_enviar, tamanio_a_leer + 2*sizeof(int), MSG_WAITALL)>0){
+		memcpy(&cod, a_enviar, sizeof(int));
+		desplazamiento+=sizeof(int);
+		printf("cod enviado: %d\n", cod);
+		memcpy(&size, a_enviar+desplazamiento, sizeof(int));
+		desplazamiento+=sizeof(int);
+		printf("size enviado: %d\n", size);
+		valor=malloc(size);
+		memcpy(valor, a_enviar+desplazamiento, size);
+		printf("valor %s\n", valor);
+		return valor;
+	}
+	return "f";
 }
 
 char* recibir_mensaje(int socket_cliente, t_log* logger) //agrego que mande logger como parametro

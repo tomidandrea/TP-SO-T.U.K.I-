@@ -68,7 +68,7 @@ void enviarSegmentosKernel(t_socket socket_kernel, tabla_segmentos tablaSegmento
 
 void* leer(u_int32_t direc, int tamanio, int pid) {
 	//valor no tiene \0, tamaño es igual que el registro (4,8,16)
-	void* valor = malloc(tamanio+1);
+	void* valor = malloc(tamanio);
 	memcpy(valor, espacioMemoria + direc, tamanio);
 	log_info(logger,  "PID: %d- Acción: LEER - Dirección física: %d - Tamaño: %d- Origen: CPU", pid, direc, tamanio);
 

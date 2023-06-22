@@ -18,6 +18,7 @@ t_socket crear_conexion(char*, char*, t_log*);
 
 void enviar_mensaje(char* mensaje, int socket_cliente);
 char* recibir_mensaje(int socket_cliente, t_log* logger);
+char* imprimirContenido(int socket_cliente, int tamanio_a_leer);
 
 void enviar_paquete(t_paquete*, int);
 void liberar_conexion(int);

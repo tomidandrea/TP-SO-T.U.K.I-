@@ -192,12 +192,20 @@ void escribir_memoria(int pid, u_int32_t direc_fisica,char* valor, int tamanio_v
 	enviar_paquete(paquete,conexionMemoria);
 	eliminar_paquete(paquete);
 
-	uint32_t resultado;
+	/*uint32_t resultado;
 	if(recv(conexionMemoria, &resultado, sizeof(uint32_t), MSG_WAITALL) > 0){
 		log_debug(logger,"Me llego de memoria el resultado: %d",resultado);
 	} else {
 		log_error(logger,"No me llego el resultado de memoria");
-	}
+	}*/
+	int cod_op;
+	char* mensaje = malloc(3);
+	if(recv(conexionMemoria, &cod_op, sizeof(int), MSG_WAITALL) > 0){
+		 mensaje=recibir_mensaje(conexionMemoria, logger);
+			log_debug(logger,"Me llego de memoria el resultado: %s",mensaje);
+		} else {
+			log_error(logger,"No me llego el resultado de memoria");
+		}
 }
 
 //solo para mov_in
@@ -211,15 +219,18 @@ char* leer_memoria(int pid, u_int32_t direc_fisica, int tamanio_a_leer) {
 
 	enviar_paquete(paquete,conexionMemoria);
 	eliminar_paquete(paquete);
-
 	//hago el recv y devuelvo el valor leido
 	char* valor_leido;
 	int cod_op;
-	if(recv(conexionMemoria, &cod_op, sizeof(int) , MSG_WAITALL) > 0 && conexionMemoria!=-1){
+	//if(recv(conexionMemoria, &cod_op, sizeof(int), MSG_WAITALL) > 0){
+	if(conexionMemoria!=-1){
+		cod_op = recibir_operacion(conexionMemoria);
 		if(cod_op==0)
 			log_debug(logger,"codOP: MENSAJE");
 
 		valor_leido = recibir_mensaje(conexionMemoria, logger); //tiene el \0
+
+		//valor_leido = imprimirContenido(conexionMemoria, tamanio_a_leer);
 
 	} else {
 		log_error(logger,"No me llego el resultado de memoria");

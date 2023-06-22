@@ -263,7 +263,6 @@ char* get_registro(char*registro) {
 
 		log_debug(logger, "Valor del registro: %s", valor);
 	return valor;
-
 }
 
 

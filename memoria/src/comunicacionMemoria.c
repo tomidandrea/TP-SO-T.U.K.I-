@@ -112,8 +112,11 @@ void escucharCPU(){
 				log_debug(logger,"Case LEER, recibi pid %d, dir fisica %d, tamaño %d", pid, direc_fisica, tamanio);
 				//devuelvo el valor leido en la direccion pedida
 				char* valor_leido = leer(direc_fisica, tamanio, pid);
-				valor_leido[tamanio] = '\0';
-				char* valor_a_enviar = copiar(valor_leido);
+				//valor_leido[tamanio] = '\0';
+				char* valor_a_enviar=malloc(tamanio+1);
+				memcpy(valor_a_enviar, valor_leido, tamanio);
+				valor_a_enviar[tamanio] = '\0';
+
 				log_debug(logger,"Lei el valor %s de tamaño %d. Enviando a CPU...", valor_a_enviar, tamanio);
 				//hago el retardo que pide el enuncuado por acceder al espacio de memoria
 				usleep(retardo_memoria * 1000);
@@ -121,7 +124,6 @@ void escucharCPU(){
 				enviar_mensaje(valor_a_enviar, socket_cpu);
 
 				free(valor_leido);
-				free(valor_a_enviar);
 				//free(buffer);
 				break;
 			case ESCRIBIR:
@@ -135,15 +137,17 @@ void escucharCPU(){
 				desplazamiento += sizeof(int);
 				log_debug(logger,"Case ESCRIBIR, recibi pid %d, dir fisica %d, tamaño %d", pid, direc_fisica, tamanio);
 
-				char* valor = malloc(tamanio + 1);
+				char* valor = malloc(tamanio);
 	     		memcpy(valor, buffer + desplazamiento, tamanio);
-	     		valor[tamanio] = '\0';
+	     		//valor[tamanio] = '\0';
 
-	     		log_debug(logger,"Me llego una escritura del valor %s en la direccion %d ", valor, direc_fisica);
-				escribir(direc_fisica, tamanio+1, valor, pid);
+	     		//log_debug(logger,"Me llego una escritura del valor %s en la direccion %d ", valor, direc_fisica);
+				escribir(direc_fisica, tamanio, valor, pid);
 				usleep(retardo_memoria * 1000);
 				//le mando OK a cpu para que siga ejecutando
-				send(socket_cpu, &RESULT_OK, tamanio, 0);
+				//send(socket_cpu, &RESULT_OK, tamanio, 0);
+				char* mensaje="OK";
+				enviar_mensaje(mensaje, socket_cpu);
 				free(valor);
 				free(buffer);
 			}
