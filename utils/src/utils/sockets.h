@@ -15,6 +15,10 @@
 // Utils cliente
 t_socket iniciarConexion(t_config*, t_log*, char*, char*);
 t_socket crear_conexion(char*, char*, t_log*);
+
+void enviar_mensaje(char* mensaje, int socket_cliente);
+char* recibir_mensaje(int socket_cliente, t_log* logger);
+
 void enviar_paquete(t_paquete*, int);
 void liberar_conexion(int);
 

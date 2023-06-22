@@ -43,12 +43,7 @@ t_pcb* recibir_proceso(int socket_cliente) {
 				desplazamiento+=sizeof(u_int32_t);
 				list_add(pcb->tablaSegmentos, segmento);
 				t_segmento* seg = list_get(pcb->tablaSegmentos, i);
-				printf("Segmento %d\n", seg->id); //Aca los muestra bien los segmentos
-			}
-			//Rarisimoo, afuera solo muestra el ultimo segmento creado
-			for(int i=0; i<list_size(pcb->tablaSegmentos);i++){
-					t_segmento* seg = list_get(pcb->tablaSegmentos, i);
-					printf("Segmento %d\n", seg->id);
+				//printf("Segmento %d\n", seg->id); //Aca los muestra bien los segmentos
 			}
 
 		/* alternativa con vectores por tamaño
@@ -195,15 +190,22 @@ void escribir_memoria(int pid, u_int32_t direc_fisica,char* valor, int tamanio_v
 	agregar_a_paquete(paquete, valor, tamanio_valor);
 
 	enviar_paquete(paquete,conexionMemoria);
-		eliminar_paquete(paquete);
+	eliminar_paquete(paquete);
 
+	int cod_op;
+	char* mensaje = malloc(3);
+	if(recv(conexionMemoria, &cod_op, sizeof(int), MSG_WAITALL) > 0){
+		 mensaje=recibir_mensaje(conexionMemoria, logger);
+			log_debug(logger,"Me llego de memoria el resultado: %s",mensaje);
+		} else {
+			log_error(logger,"No me llego el resultado de memoria");
+		}
 }
 
 //solo para mov_in
 
 char* leer_memoria(int pid, u_int32_t direc_fisica, int tamanio_a_leer) {
 	t_paquete *paquete = crear_paquete(LEER);
-	char* valor_leido = malloc(sizeof(tamanio_a_leer) + 1);
 
 	agregar_valor_estatico(paquete, &pid);
 	agregar_valor_uint(paquete, &(direc_fisica));
@@ -211,14 +213,18 @@ char* leer_memoria(int pid, u_int32_t direc_fisica, int tamanio_a_leer) {
 
 	enviar_paquete(paquete,conexionMemoria);
 	eliminar_paquete(paquete);
-
 	//hago el recv y devuelvo el valor leido
+	char* valor_leido;
+	int cod_op;
+	if(conexionMemoria!=-1){
+		cod_op = recibir_operacion(conexionMemoria);
+		if(cod_op==0)
+			log_debug(logger,"codOP: MENSAJE");
 
-	if(conexionMemoria != -1){
-		recv(conexionMemoria, valor_leido, sizeof(tamanio_a_leer) + 1 , MSG_WAITALL);
-		log_debug(logger,"Me llego de memoria el valor: %s de tamaño %d",valor_leido, tamanio_a_leer);
+		valor_leido = recibir_mensaje(conexionMemoria, logger); //tiene el \0
+
 	} else {
-		log_error(logger,"No me llego el valor leido de memoria");
+		log_error(logger,"No me llego el resultado de memoria");
 	}
 	return valor_leido;
 }
