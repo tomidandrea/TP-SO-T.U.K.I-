@@ -164,8 +164,7 @@ void escucharCPU(){
 
 void escucharFS(){
 	log_debug(logger, "Entro hilo para escuchar FS");
-	t_socket socket_file_system;
-	//t_socket socket_file_system = esperar_cliente(server_fd, logger);
+	t_socket socket_file_system = esperar_cliente(server_fd, logger);
 	while(1){
 		if(socket_file_system != -1){
 			int cod_op = recibir_operacion(socket_file_system);
@@ -173,3 +172,4 @@ void escucharFS(){
 		}
 	}
 }
+

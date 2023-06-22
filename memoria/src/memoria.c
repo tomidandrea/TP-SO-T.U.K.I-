@@ -23,9 +23,10 @@ int main(int argc, char* argv[]) {
 	retardo_memoria = config_get_int_value(config, "RETARDO_MEMORIA");
 
 	log_debug(logger, "Iniciando hilos memoria");
+
 	crearEscucharCPU();
 	crearEscucharKernel();
-	//crearEscucharFS();
+	crearEscucharFS();
 
 	while(1);
 
