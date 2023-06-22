@@ -23,7 +23,6 @@ int main(int argc, char* argv[]) {
 	//levanto archivo superbloque (lo trato como config ya que es compatible)
 
 	char* path_superbloque = config_get_string_value(config,"PATH_SUPERBLOQUE");
-
 	t_config* superbloque = iniciar_config(path_superbloque);
 
 	free(path_superbloque);

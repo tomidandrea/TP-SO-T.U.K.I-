@@ -12,7 +12,7 @@ void inicializar_bitarray(t_bitarray*bitarray,size_t cant_bits){
 
 
 void set_archivo_bitmap(char*path,size_t cant_bits) {
-
+	//TODO 22/6: ver crear primera vez y levantar las siguientes
 	FILE* archivo_bitmap = fopen(path,"w+");
 	for(int i = 0;i<cant_bits;i++){
 		fputs("0",archivo_bitmap);
@@ -37,7 +37,7 @@ t_bitarray* mapear_bitmap(size_t cant_bits,size_t cant_bytes, char*path){
 	printf("testeo bits del bitarray\n");
 	for(int i=0;i<cant_bits;i++)
 	printf("%d",bitarray_test_bit(bitmap,i));
-
+	printf("\n");
 	bitmap->bitarray = mapearArchivo(path,&fd);
 
 	close(fd);
