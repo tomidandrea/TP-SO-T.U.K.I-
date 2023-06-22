@@ -24,8 +24,8 @@ t_segmento* crear_t_segmento(int id, u_int32_t base, u_int32_t limite){
 }
 
 void inicializarEstructuras(){
-	//algoritmoConfig = config_get_string_value(config,"ALGORITMO_ASIGNACION");
-	algoritmoConfig = "BEST";
+	algoritmoConfig = config_get_string_value(config,"ALGORITMO_ASIGNACION");
+	//algoritmoConfig = "BEST";
 
 	diccionarioTablas = dictionary_create();
 
@@ -109,8 +109,10 @@ int hayEspacio(t_pedido_segmento* pedido){
 						if(pedido->tamanio <= tamanio && condicion == NO_ENCONTRO_HUECO){ //si no encontro hueco guarda el primero en el que entra
 							huecoAsignable = list_get(tabla_huecos,i);
 							condicion = ENCONTRO_HUECO;
+							log_debug(logger,"Entre en 1");
 						}else if(pedido->tamanio <= tamanio && condicion == ENCONTRO_HUECO){ //si ya entro en algun hueco ahi los empieza a comparar
 							huecoAsignable = obtenerHuecoSegunTamanio(huecoAsignable, hueco, BEST_FIT);
+							log_debug(logger,"Entre en 2");
 						}
 						else{
 							tamanioTotal += tamanio;
@@ -118,7 +120,8 @@ int hayEspacio(t_pedido_segmento* pedido){
 				}
 				 // guardo el hueco en una variable global
 				if(condicion == ENCONTRO_HUECO){
-					huecoDisponible = hueco->id;
+					huecoDisponible = huecoAsignable->id;
+					log_debug(logger,"Hueco asignable:%d", huecoDisponible);
 					return HAY_HUECO_ASIGNABLE;
 
 				}else if(tamanioTotal > pedido->tamanio){
@@ -149,7 +152,7 @@ int hayEspacio(t_pedido_segmento* pedido){
 				}
 				 // guardo el hueco en una variable global
 				if(condicion == ENCONTRO_HUECO){
-					huecoDisponible = hueco->id;
+					huecoDisponible = huecoAsignable->id;
 					return HAY_HUECO_ASIGNABLE;
 
 				}else if(tamanioTotal > pedido->tamanio){
