@@ -124,7 +124,7 @@ void escucharCPU(){
 				enviar_mensaje(valor_a_enviar, socket_cpu);
 
 				free(valor_leido);
-				//free(buffer);
+				free(buffer);
 				break;
 			case ESCRIBIR:
 				//recibo los datos para escritura
@@ -140,9 +140,13 @@ void escucharCPU(){
 				char* valor = malloc(tamanio);
 	     		memcpy(valor, buffer + desplazamiento, tamanio);
 	     		//valor[tamanio] = '\0';
+	     		char* para_mostrar = malloc(tamanio+1);
+	     		memcpy(para_mostrar, buffer + desplazamiento, tamanio);
+	     		para_mostrar[tamanio] = '\0';
+	     		log_debug(logger,"Me llego una escritura del valor %s en la direccion %d ", para_mostrar, direc_fisica);
+				free(para_mostrar);
 
-	     		//log_debug(logger,"Me llego una escritura del valor %s en la direccion %d ", valor, direc_fisica);
-				escribir(direc_fisica, tamanio, valor, pid);
+	     		escribir(direc_fisica, tamanio, valor, pid);
 				usleep(retardo_memoria * 1000);
 				//le mando OK a cpu para que siga ejecutando
 				//send(socket_cpu, &RESULT_OK, tamanio, 0);
