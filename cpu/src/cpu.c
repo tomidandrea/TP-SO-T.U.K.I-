@@ -138,7 +138,30 @@ estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb* pcb){
 		    if(estado_mov_out == ERROR)
 		    	pcb->motivo = EXT;
 			return estado_mov_out;
-
+		case F_OPEN:
+				log_info(logger,"PID: %d - Ejecutando: %s - %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar->parametros[0]);
+				pcb->motivo = F_OPEN;
+				return FIN;
+		case F_TRUNCATE:
+					log_info(logger,"PID: %d - Ejecutando: %s - %s %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar->parametros[0], instruccion_ejecutar-> parametros[1]);
+					pcb->motivo = F_TRUNCATE;
+					return FIN;
+		case F_CLOSE:
+					log_info(logger,"PID: %d - Ejecutando: %s - %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar->parametros[0]);
+					pcb->motivo = F_CLOSE;
+					return FIN;
+		case F_SEEK:
+					log_info(logger,"PID: %d - Ejecutando: %s - %s %s", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar->parametros[0], instruccion_ejecutar-> parametros[1]);
+					pcb->motivo = F_SEEK;
+				    return FIN;
+		case F_READ:
+					log_info(logger,"PID: %d - Ejecutando: %s - %s %s %s", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar->parametros[0], instruccion_ejecutar-> parametros[1], instruccion_ejecutar-> parametros[2]);
+					pcb->motivo = F_READ;
+				    return FIN;
+		case F_WRITE:
+					log_info(logger,"PID: %d - Ejecutando: %s - %s %s %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar->parametros[0], instruccion_ejecutar-> parametros[1], instruccion_ejecutar-> parametros[2]);
+					pcb->motivo = F_WRITE;
+				    return FIN;
 		default:
 			log_error(logger,"Error en execute. La CPU no conoce todavia la operacion: %s ",instruccion_ejecutar-> instruccion);
 			return FIN;

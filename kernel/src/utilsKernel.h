@@ -18,8 +18,6 @@ typedef struct {
 } t_registros;*/
 
 t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola);
-t_socket crearConexionCPU();
-t_socket crearConexionMemoria();
 
 
 t_temporal* iniciarTiempo();

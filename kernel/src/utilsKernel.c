@@ -12,19 +12,6 @@ extern t_socket conexionMemoria;
 
 extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir, sem_execute;
 
-t_socket crearConexionCPU(){
-	char* ip = config_get_string_value(config,"IP_CPU");
-	char* puerto = config_get_string_value(config,"PUERTO_CPU");
-	t_socket conexion = crear_conexion(ip, puerto, logger);
-	return conexion;
-}
-
-t_socket crearConexionMemoria(){
-	char* ip = config_get_string_value(config,"IP_MEMORIA");
-	char* puerto = config_get_string_value(config,"PUERTO_MEMORIA");
-	t_socket conexion = crear_conexion(ip, puerto, logger);
-	return conexion;
-}
 
 t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola){
 
