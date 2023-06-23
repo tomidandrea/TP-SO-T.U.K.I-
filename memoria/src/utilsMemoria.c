@@ -15,6 +15,8 @@ char* algoritmoConfig;
 
 //TODO alejiti: ver si necesitamos mutex para el diccionario y tabla de huecos
 
+// ---- INICIO DE MEMORIA ----
+
 t_segmento* crear_t_segmento(int id, u_int32_t base, u_int32_t limite){
 	t_segmento* segmento = malloc(sizeof(t_segmento));
 	segmento->id = id;
@@ -48,6 +50,8 @@ tabla_segmentos inicializarTablaHuecosLibres(int tamanioMemoria,int tamanioSegme
 	return tabla_segmentos;
 }
 
+// ----- SEGMENTACIÓN -----
+
 void enviarSegmentosKernel(t_socket socket_kernel, tabla_segmentos tablaSegmentos){
 	t_paquete* paquete = crear_paquete(TABLA_SEGMENTOS);
 	t_segmento* segmento;
@@ -63,10 +67,28 @@ void enviarSegmentosKernel(t_socket socket_kernel, tabla_segmentos tablaSegmento
 	eliminar_paquete(paquete);
 }
 
+void enviarSegmentoCreado(t_socket socket_kernel, tabla_segmentos tabla_segmentos){
+	t_paquete* paquete = crear_paquete(CREACION_EXITOSA);
+	int ultimoElemento = list_size(tabla_segmentos) - 1;
+	t_segmento* nuevoSegmento = list_get(tabla_segmentos, ultimoElemento);
+	agregar_valor_estatico(paquete,&(nuevoSegmento->id));
+	agregar_valor_uint(paquete,&(nuevoSegmento->base));
+	agregar_valor_uint(paquete,&(nuevoSegmento->limite));
+
+	enviar_paquete(paquete, socket_kernel);
+	eliminar_paquete(paquete);
+
+	log_info(logger, "--- Segmento enviado a kernel ---");
+}
+
 u_int32_t obtenerTamanioSegmento(t_segmento* segmento){
 	return segmento->limite - segmento->base;
 }
 
+// Dado un pedido de creación de segmento y el algoritmo de asignación,
+// retorna si hay hueco asignable y guarda el mismo en una variable global.
+// Si no entra el pedido en ningún hueco, pero si en la suma de los mismos,
+// retorna que debe compactarse.
 int hayEspacio(t_pedido_segmento* pedido){
 	t_segmento* hueco;
 	t_segmento* huecoAsignable;
@@ -75,18 +97,16 @@ int hayEspacio(t_pedido_segmento* pedido){
 	int cantidadHuecos = list_size(tabla_huecos);
 	int condicion = NO_ENCONTRO_HUECO;
 
-	log_debug(logger, "Llegó un pedido de segmento: Id: %d - Tamaño: %d", pedido->id_segmento, pedido->tamanio);
-
-	//TODO alejiti: switch segun el algoritmo de asignacion en config
 	switch (idAlgoritmo(algoritmoConfig)) {
 		case FIRST_FIT:
-			for(int i=0;i<cantidadHuecos;i++){ //por ahora esto solo funciona con FIRST FIT
+			for(int i=0;i<cantidadHuecos;i++){
 				hueco = list_get(tabla_huecos, i);
 				tamanio=obtenerTamanioSegmento(hueco);
-				log_debug(logger, "Hueco %d tiene tamaño: %d", i, tamanio);
+				log_debug(logger, "Hueco %d - Tamaño: %d", i, tamanio);
 				if(pedido->tamanio <= tamanio){
 					log_info(logger, "Hueco libre disponible");
 					huecoDisponible = hueco->id; // guardo el hueco en una variable global
+					log_debug(logger,"Hueco asignable: %d - Tamaño: %d", huecoDisponible, tamanio);
 					return HAY_HUECO_ASIGNABLE;
 				}else{
 					tamanioTotal += tamanio;
@@ -104,24 +124,22 @@ int hayEspacio(t_pedido_segmento* pedido){
 					hueco = list_get(tabla_huecos, i);
 					tamanio=obtenerTamanioSegmento(hueco);
 
-						log_debug(logger, "Hueco %d tiene tamaño: %d", i, tamanio);
+					log_debug(logger, "Hueco %d - Tamaño: %d", i, tamanio);
 
-						if(pedido->tamanio <= tamanio && condicion == NO_ENCONTRO_HUECO){ //si no encontro hueco guarda el primero en el que entra
-							huecoAsignable = list_get(tabla_huecos,i);
-							condicion = ENCONTRO_HUECO;
-							log_debug(logger,"Entre en 1");
-						}else if(pedido->tamanio <= tamanio && condicion == ENCONTRO_HUECO){ //si ya entro en algun hueco ahi los empieza a comparar
-							huecoAsignable = obtenerHuecoSegunTamanio(huecoAsignable, hueco, BEST_FIT);
-							log_debug(logger,"Entre en 2");
-						}
-						else{
-							tamanioTotal += tamanio;
-						}
+					if(pedido->tamanio <= tamanio && condicion == NO_ENCONTRO_HUECO){ //si no encontro hueco guarda el primero en el que entra
+						huecoAsignable = hueco;
+						condicion = ENCONTRO_HUECO;
+					}else if(pedido->tamanio <= tamanio && condicion == ENCONTRO_HUECO){ //si ya entro en algun hueco ahi los empieza a comparar
+						huecoAsignable = obtenerHuecoSegunAlgoritmo(huecoAsignable, hueco, BEST_FIT);
+					}
+					else{
+						tamanioTotal += tamanio;
+					}
 				}
 				 // guardo el hueco en una variable global
 				if(condicion == ENCONTRO_HUECO){
 					huecoDisponible = huecoAsignable->id;
-					log_debug(logger,"Hueco asignable:%d", huecoDisponible);
+					log_debug(logger,"Hueco asignable: %d - Tamaño: %d", huecoDisponible, obtenerTamanioSegmento(huecoAsignable));
 					return HAY_HUECO_ASIGNABLE;
 
 				}else if(tamanioTotal > pedido->tamanio){
@@ -138,13 +156,13 @@ int hayEspacio(t_pedido_segmento* pedido){
 					hueco = list_get(tabla_huecos, i);
 					tamanio=obtenerTamanioSegmento(hueco);
 
-						log_debug(logger, "Hueco %d tiene tamaño: %d", i, tamanio);
+						log_debug(logger, "Hueco %d - Tamaño: %d", i, tamanio);
 
 						if(pedido->tamanio <= tamanio && condicion == NO_ENCONTRO_HUECO){ //si no encontro hueco guarda el primero en el que entra
 							huecoAsignable = list_get(tabla_huecos,i);
 							condicion = ENCONTRO_HUECO;
 						}else if(pedido->tamanio <= tamanio && condicion == ENCONTRO_HUECO){ //si ya entro en algun hueco ahi los empieza a comparar
-							huecoAsignable = obtenerHuecoSegunTamanio(huecoAsignable, hueco, WORST_FIT);
+							huecoAsignable = obtenerHuecoSegunAlgoritmo(huecoAsignable, hueco, WORST_FIT);
 						}
 						else{
 							tamanioTotal += tamanio;
@@ -153,20 +171,25 @@ int hayEspacio(t_pedido_segmento* pedido){
 				 // guardo el hueco en una variable global
 				if(condicion == ENCONTRO_HUECO){
 					huecoDisponible = huecoAsignable->id;
+					log_debug(logger,"Hueco asignable: %d - Tamaño: %d", huecoDisponible, obtenerTamanioSegmento(huecoAsignable));
 					return HAY_HUECO_ASIGNABLE;
 
 				}else if(tamanioTotal > pedido->tamanio){
 					log_debug(logger, "Hay espacio si compactamos");
 					return HAY_ESPACIO_AL_COMPACTAR;
+
 				}else{
 					return NO_HAY_HUECO_ASIGNABLE;
 				}
 			break;
+		default:
+			log_error(logger, "Error al reconocer algoritmo de asignación");
+			return -1;
 	}
 
 }
 
-t_segmento* obtenerHuecoSegunTamanio(t_segmento* huecoAsignable, t_segmento* hueco, t_algoritmo_memoria algoritmo){
+t_segmento* obtenerHuecoSegunAlgoritmo(t_segmento* huecoAsignable, t_segmento* hueco, t_algoritmo_memoria algoritmo){
 	int tamanioHuecoAsignable, tamanioHueco;
 	tamanioHuecoAsignable = obtenerTamanioSegmento(huecoAsignable);
 	tamanioHueco = obtenerTamanioSegmento(hueco);
@@ -184,9 +207,10 @@ t_segmento* obtenerHuecoSegunTamanio(t_segmento* huecoAsignable, t_segmento* hue
 		}else{
 			return hueco;
 		}
+	default:
+			log_error(logger, "Error al obtener algoritmo de asignación");
+			exit(EXIT_FAILURE);
 	}
-
-
 }
 
 void crearSegmento(t_pedido_segmento* pedido) {
@@ -212,6 +236,7 @@ void crearSegmento(t_pedido_segmento* pedido) {
 					hueco->base = nuevoSegmento->limite;
 
 				estadoCreacion = CREACION_EXITOSA;
+				free(pid);
 		break;
 	case NO_HAY_HUECO_ASIGNABLE:
 		log_error(logger, "No hay hueco libre disponible");
@@ -227,29 +252,62 @@ void crearSegmento(t_pedido_segmento* pedido) {
 	}
 }
 
+int obtenerIndiceSegmento(tabla_segmentos tabla, int id_segmento) {
+	t_segmento* seg;
+	int indice = -1;
+	for(int k=0; k<list_size(tabla);k++){
+		seg = list_get(tabla, k);
+		if(seg->id == id_segmento){
+			indice = k;
+		}
+	}
+	return indice;
+}
+
 void eliminarSegmento (t_pedido_segmento* pedido) {
 	char* pid = string_itoa(pedido->pid);
 	tabla_segmentos tabla_del_proceso = dictionary_get(diccionarioTablas, pid);
+	t_segmento* segmento = malloc(sizeof(t_segmento));
 
-	t_segmento* segmento = list_remove(tabla_del_proceso, pedido->id_segmento);
+	int indice = obtenerIndiceSegmento(tabla_del_proceso, pedido->id_segmento);
+	segmento = list_remove(tabla_del_proceso, indice);
 
 	int cantidadHuecos = list_size(tabla_huecos);
 
 	t_segmento* hueco = crear_t_segmento(cantidadHuecos++, segmento->base, segmento->limite);
 	list_add(tabla_huecos, hueco);
 	log_info(logger, "Se removio completamente el segmento %d", pedido->id_segmento);
+	free(pid);
+	free(segmento);
 
 }
 
-void enviarSegmentoCreado(t_socket socket_kernel, tabla_segmentos tabla_segmentos){
-	t_paquete* paquete = crear_paquete(CREACION_EXITOSA);
-	int ultimoElemento = list_size(tabla_segmentos) - 1;
-	log_debug(logger, "Indice: %d", ultimoElemento);
-	t_segmento* nuevoSegmento = list_get(tabla_segmentos, ultimoElemento);
-	agregar_valor_estatico(paquete,&(nuevoSegmento->id));
-	agregar_valor_uint(paquete,&(nuevoSegmento->base));
-	agregar_valor_uint(paquete,&(nuevoSegmento->limite));
+// ----- FIN DE PROCESO -----
 
-	enviar_paquete(paquete, socket_kernel);
-	eliminar_paquete(paquete);
+void actualizarHuecos(tabla_segmentos tablaProceso){
+	int cantidadHuecos = list_size(tabla_huecos);
+	t_segmento* segmento;
+	int cantidadSegmentos = list_size(tablaProceso);
+
+	for(int t = 1; t<cantidadSegmentos;t++){
+			segmento = list_get(tablaProceso, t);
+
+			segmento->id = cantidadHuecos++;
+			list_add(tabla_huecos, segmento);
+			log_debug(logger, "Nuevo hueco: %d - Base: %d Limite: %d", segmento->id, segmento->base, segmento->limite);
+	}
+	printf("\n ----- Lista de huecos -----\n");
+	for(int t = 0; t<cantidadHuecos;t++){
+			segmento = list_get(tabla_huecos, t);
+			log_debug(logger, "* Hueco: %d - Base: %d Limite: %d", segmento->id, segmento->base, segmento->limite);
+	}
+}
+
+void liberarEstructurasProceso(char* pid){
+	tabla_segmentos tablaProceso;
+	tablaProceso = dictionary_remove(diccionarioTablas, pid);
+
+	actualizarHuecos(tablaProceso);
+
+	list_destroy(tablaProceso);
 }

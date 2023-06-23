@@ -2,7 +2,6 @@
 
 extern t_socket server_fd;
 extern t_log* logger;
-extern t_config* config;
 extern sem_t sem_cpu, sem_kernel;
 extern t_dictionary* diccionarioTablas;
 extern t_segmento* segmento0;
@@ -11,15 +10,16 @@ extern op_code estadoCreacion;
 
 uint32_t RESULT_ERROR = 1;
 
+// Hilo que atiende peticiones de kernel
+
 void escucharKernel(){
 	log_debug(logger, "Entro hilo para escuchar kernel");
-	//log_debug(logger, "socket memoria: %d", server_fd);
 	sem_wait(&sem_cpu); //esperar que se conecte primero cpu
 	t_socket socket_kernel = esperar_cliente(server_fd, logger);
-	//log_debug(logger, "socket kernel: %d", socket_kernel);
 	char* pid;
 	tabla_segmentos tablaSegmentos;
-	t_pedido_segmento* pedido;
+	t_pedido_segmento* pedido = malloc(sizeof(t_pedido_segmento));
+
 	while(1){
 		if(socket_kernel != -1){
 			int cod_op = recibir_operacion(socket_kernel);
@@ -31,14 +31,14 @@ void escucharKernel(){
 				pid = recibirPID(socket_kernel);
 				dictionary_put(diccionarioTablas, pid, tablaSegmentos);
 
-				log_info(logger, "Enviando tabla de segmentos de proceso %s", pid);
+				log_info(logger, "Creación de Proceso PID: %s", pid);
 				enviarSegmentosKernel(socket_kernel, tablaSegmentos);
 
-				free(pid);
 				break;
 			case CREATE_SEGMENT_OP:
-				log_debug(logger, "Recibo Create segment");
 				pedido = recibirPedidoSegmento(socket_kernel);
+				log_debug(logger, "Create Segment: Id: %d - Tamaño: %d", pedido->id_segmento, pedido->tamanio);
+
 				pid = string_itoa(pedido->pid);
 				tablaSegmentos = dictionary_get(diccionarioTablas, pid);
 				int cantidadSegmentos = list_size(tablaSegmentos);
@@ -47,7 +47,6 @@ void escucharKernel(){
 
 					switch (estadoCreacion) {
 					case CREACION_EXITOSA:
-						log_info(logger, "Enviando segmentos a kernel...");
 						enviarSegmentoCreado(socket_kernel, tablaSegmentos);
 						//enviarSegmentosKernel(socket_kernel, tablaSegmentos);
 						break;
@@ -67,9 +66,16 @@ void escucharKernel(){
 				break;
 			case DELETE_SEGMENT_OP:
 				pedido = recibirPedidoDeleteSegment(socket_kernel);
-				log_info(logger, "DELETE SEGMENT DEL PID %d, del id %d", pedido->pid, pedido->id_segmento);
+
+				log_debug(logger, "Delete segment: PID: %d - Id segmento: %d", pedido->pid, pedido->id_segmento);
+
 				eliminarSegmento(pedido);
 				enviarSegmentosKernel(socket_kernel, tablaSegmentos);
+				break;
+			case FIN_PROCESO:
+				pid = recibirPID(socket_kernel);
+				liberarEstructurasProceso(pid);
+				log_info(logger, "Eliminación de Proceso PID: %s", pid);
 				break;
 			default:
 				send(socket_kernel, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);
@@ -77,9 +83,11 @@ void escucharKernel(){
 				exit(1);
 			}
 		}else{
-			log_error(logger,"Socket kernel == -1, la conexión se cerró");
+			log_error(logger,"Se cerró la conexión");
 		}
 	}
+	free(pid);
+	free(pedido);
 }
 
 void escucharCPU(){

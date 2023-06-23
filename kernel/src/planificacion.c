@@ -6,7 +6,6 @@ extern t_log* logger;
 extern t_list* procesosExecute;
 extern t_list* procesosReady;
 extern t_list* procesosNew;
-extern t_socket conexionMemoria;
 
 uint32_t INICIO = 1;
 
@@ -71,7 +70,7 @@ void recibirDeCPU() {
 				proceso = removerDeExecute();
 				log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
 				// liberar_recursos();
-				// avisar_fin_a_memoria();
+				avisar_fin_a_memoria(proceso->pid);
 				avisar_fin_a_consola(proceso->socket_consola);
 				liberar_pcb(proceso);
 				log_debug(logger, "Lista procesosReady:%d", list_size(procesosReady));

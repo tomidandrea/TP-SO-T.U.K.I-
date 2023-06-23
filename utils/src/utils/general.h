@@ -54,6 +54,8 @@ void copiarRegistros(t_registros* registrosDestino, t_registros* registrosOrigen
  */
 int contar(char* cadena, char caracter);
 
+int idAlgoritmo(char * algoritmo);
+
 void liberar_contexto(t_contexto* contexto);
 
 #endif

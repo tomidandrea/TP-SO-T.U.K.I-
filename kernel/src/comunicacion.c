@@ -13,7 +13,7 @@ extern sem_t sem_new_a_ready;
 
 uint32_t RESULT_OK = 0;
 uint32_t RESULT_ERROR = 1;
-uint32_t PIDE_TABLA = 1; //TODO: eliminar
+
 
 int escucharConsolas(){
 	t_list* lista;
@@ -140,6 +140,13 @@ void enviarAMemoria(int id_segmento, int tamanio_segmento){
 
 }
 
+void avisar_fin_a_memoria(int pid){
+	t_paquete* paquete = crear_paquete(FIN_PROCESO);
+	agregar_valor_estatico(paquete,&pid);
+	enviar_paquete(paquete, conexionMemoria);
+	eliminar_paquete(paquete);
+}
+
 void avisar_fin_a_consola(t_socket socket_consola){
 	log_debug(logger, "El socket de la consola es:%d", socket_consola);
 	send(socket_consola, &RESULT_OK, sizeof(int), 0);
@@ -151,4 +158,3 @@ void pedirTablaSegmentos(int pid){
 	enviar_paquete(paquete, conexionMemoria);
 	eliminar_paquete(paquete);
 }
-
