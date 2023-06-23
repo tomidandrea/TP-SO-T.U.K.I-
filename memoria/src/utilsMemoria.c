@@ -296,11 +296,6 @@ void actualizarHuecos(tabla_segmentos tablaProceso){
 			list_add(tabla_huecos, segmento);
 			log_debug(logger, "Nuevo hueco: %d - Base: %d Limite: %d", segmento->id, segmento->base, segmento->limite);
 	}
-	printf("\n ----- Lista de huecos -----\n");
-	for(int t = 0; t<cantidadHuecos;t++){
-			segmento = list_get(tabla_huecos, t);
-			log_debug(logger, "* Hueco: %d - Base: %d Limite: %d", segmento->id, segmento->base, segmento->limite);
-	}
 }
 
 void liberarEstructurasProceso(char* pid){
