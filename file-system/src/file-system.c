@@ -21,51 +21,40 @@ int main(int argc, char* argv[]) {
 	conexionMemoria = iniciarConexion(config, logger, "IP_MEMORIA","PUERTO_MEMORIA");
 
 	//levanto archivo superbloque (lo trato como config ya que es compatible)
-
 	char* path_superbloque = config_get_string_value(config,"PATH_SUPERBLOQUE");
-
 	t_config* superbloque = iniciar_config(path_superbloque);
-
 	free(path_superbloque);
 
-
+	//obtengo la cantidad de bloques/bits del archivo de superbloque y calculo la cantidad de bytes que equivale
 	cantidad_bloques = config_get_int_value(superbloque,"BLOCK_COUNT");
+	cantidad_bytes = ceil(cantidad_bloques/8);                        //si da con coma redondea al proximo entero
 
-	cantidad_bytes = ceil(cantidad_bloques/8);                 //si da con coma redondea al proximo entero / cantidad bloques = cantidad bits
-
-	//seteo con ceros el archivo bitmap
+	//levanto el archivo bitmap (si no esta creado, lo creo
 	char* path_bitmap = config_get_string_value(config,"PATH_BITMAP");
-	set_archivo_bitmap(path_bitmap,cantidad_bloques);
+	FILE* archivo_bitmap = levantarArchivo(path_bitmap,cantidad_bloques);
+	free(path_bitmap);
 
-	//mapeo bitmap en memoria
-	t_bitarray* bitmap = mapear_bitmap(cantidad_bloques, cantidad_bytes,path_bitmap);  // devuelve bitarray creado despues de mapear
+	//mapeo el archivo bitmap en un bitarray
+	t_bitarray* bitmap = mapear_bitmap(cantidad_bloques,cantidad_bytes,archivo_bitmap);  // devuelve bitarray creado despues de mapear
 
+     //levanto archivo de bloques (si no existe lo creo)
 
-	//mapeo archvivo de bitmap al bitmap creado en memoria
-
-     free(path_bitmap);
-
-     //creo array de bloques en memoria
-
+	 char* path_bloques = config_get_string_value(config,"PATH_BLOQUES");
      int tamanio_bloque = config_get_int_value(superbloque,"BLOCK_SIZE");
-
      int tamanio_total = cantidad_bloques*tamanio_bloque;
 
-     void*bloques = malloc(tamanio_total);
-
-
-     //mapeo archivo de bloques con el array de bloques
-     char* path_bloques = config_get_string_value(config,"PATH_BLOQUES");
-
-     //mapear_bloques(bloques,path_bloques);
-
+     FILE*archivo_bloques = levantarArchivo(path_bloques,tamanio_total);
      free(path_bloques);
+     //TODO ver si es mejor directamente usar fseek,fread y frwite (no mapearlo en memoria)
+     /*
+     //mapeo archivo de bloques en un espacio de memoria
+     void*bloques = mapearArchivo(archivo_bloques,tamanio_total);
+     */
 
-    //obtengo path del directorio de fcbs
+    //creo un fcb de prueba
      char* path_fcbs = config_get_string_value(config,"PATH_FCB");
 
      crear_fcb("/pruebafcb",fcbs,path_fcbs);
-
 
 
     //inicio servidor para kernel
@@ -117,7 +106,6 @@ int main(int argc, char* argv[]) {
 }
 
 
-
 void crear_fcb(char* archivo, t_list*fcbs, char*path) {
 
 	printf("creando fcb del archivo %s\n", archivo);
@@ -125,8 +113,8 @@ void crear_fcb(char* archivo, t_list*fcbs, char*path) {
 	t_fcb* fcb = malloc(sizeof(t_fcb));
 	fcb->nombre = string_duplicate(archivo);
 	fcb->tamanio = 0;
-	fcb->puntero_directo = NULL;
-	fcb->puntero_indirecto = NULL;
+	fcb->puntero_directo = 0 ;
+	fcb->puntero_indirecto = 0;
 
 	printf("persisto fcb del archivo %s\n", archivo);
 
@@ -177,8 +165,6 @@ int existe_fcb(char*archivo, t_list*fcbs) {
 
 void liberar_fcb(t_fcb*fcb) {
 	free(fcb->nombre);
-	free(fcb->puntero_directo);
-	free(fcb->puntero_indirecto);
 	free(fcb);
 }
 

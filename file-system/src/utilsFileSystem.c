@@ -3,6 +3,37 @@
 extern t_log* logger;
 
 
+FILE* levantarArchivo(char*path,size_t cantidad_bytes) {
+
+	FILE*fp;
+
+	fp = fopen(path,"r+");
+
+	if (fp == NULL) {
+		fp = fopen(path,"w+");
+	}
+	printf("archivo %s abierto\n", path);
+
+	ftruncate(fileno(fp),cantidad_bytes);
+
+	//truncate(path,cantidad_bytes);
+
+	return fp;
+}
+
+/*
+FILE* set_archivo_bitmap(char*path,size_t cant_bits) {
+
+	FILE* bitmap = fopen(path,"w+");
+	for(int i = 0;i<cant_bits;i++){
+		fputs("0",bitmap);
+	}
+
+	return bitmap;
+
+}
+*/
+
 void inicializar_bitarray(t_bitarray*bitarray,size_t cant_bits){
 	int i = 0;
 	for(i=0;i<cant_bits;i++){
@@ -11,43 +42,24 @@ void inicializar_bitarray(t_bitarray*bitarray,size_t cant_bits){
 }
 
 
-void set_archivo_bitmap(char*path,size_t cant_bits) {
+t_bitarray* mapear_bitmap(size_t cant_bits,size_t cant_bytes, FILE*archivo_bitmap){
 
-	FILE* archivo_bitmap = fopen(path,"w+");
-	for(int i = 0;i<cant_bits;i++){
-		fputs("0",archivo_bitmap);
-	}
-	fclose(archivo_bitmap);
 
-}
-
-t_bitarray* mapear_bitmap(size_t cant_bits,size_t cant_bytes, char*path){
-
-	int fd;
-
-	printf("empiezo a mapear bitmap\n");
+	void* buffer = mapearArchivo(archivo_bitmap,cant_bytes);
 
 	//creo bitarray
-	void*buffer = malloc(cant_bytes);
 
 	t_bitarray* bitmap = bitarray_create_with_mode(buffer,cant_bytes, LSB_FIRST);
 
-	inicializar_bitarray(bitmap,cant_bits);
+	//inicializar_bitarray(bitmap,cant_bits);
 
 	printf("testeo bits del bitarray\n");
+
 	for(int i=0;i<cant_bits;i++)
 	printf("%d",bitarray_test_bit(bitmap,i));
+	printf("\n");
 
-	bitmap->bitarray = mapearArchivo(path,&fd);
-
-	close(fd);
-
-	/*
-	printf("seteo bits del archivo bitmap mapeado\n");
-	for(int i=0;i<cant_bits;i++){
-		    	bitmap->bitarray[i]='1';
-    }
-    */
+	fclose(archivo_bitmap);
 
     printf("archivo bitmap cerrado\n");
 
@@ -55,44 +67,15 @@ t_bitarray* mapear_bitmap(size_t cant_bits,size_t cant_bytes, char*path){
 
 }
 
-/*
-void mapear_bloques(void*bloques,char*path){
 
-	int fd;
-	printf("empiezo a mapear bloques\n");
-	bloques  = mapearArchivo(path,&fd);
 
-	close(fd);
-	printf("archivo bloques cerrado\n");
-}
+void* mapearArchivo(FILE*archivo,size_t tamanio){
 
-*/
-
-void* mapearArchivo(void*path,int*fd){
-
-     struct stat statbuf;
-
-	 *fd = open(path, O_RDWR);
-	    if(*fd < 0){
-	        printf("\n\"%p \" no se pudo abrir \n",path);
-	        exit(1);
-	    }
-
-	    printf("archivo abierto, empezando a mapear\n");
-
-	    printf("path archivo =  %s\n", path);
-
-	    //write(*fd,"hola",4);
-
-	    fstat(*fd,&statbuf);
-
-	    char* buffer = mmap(NULL,statbuf.st_size, PROT_WRITE, MAP_SHARED,*fd,0);
+	    void* buffer = mmap(NULL,tamanio, PROT_WRITE, MAP_SHARED,fileno(archivo),0);
 	    if(buffer == MAP_FAILED){
 	        printf("Mapping Failed\n");
-	        exit(2);
+	        exit(1);
 	    }
-
-
 
 	    return buffer;
 

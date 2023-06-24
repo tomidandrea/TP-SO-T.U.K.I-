@@ -12,6 +12,7 @@
 #include <commons/bitarray.h>
 #include <string.h>
 #include <math.h>
+#include <unistd.h>
 #include <sys/mman.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -19,10 +20,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-t_bitarray* mapear_bitmap(size_t cant_bits, size_t cant_bytes, char*path);
-void mapear_bloques(void*bloques,char*path);
-void* mapearArchivo(void*path,int*fd);
-void set_archivo_bitmap(char*path,size_t cant_bits);
+FILE* levantarArchivo(char*path,size_t cantidad_bloques);
+t_bitarray* mapear_bitmap(size_t cant_bits, size_t cant_bytes, FILE*archivo_bitmap);
+//void mapear_bloques(void*bloques,char*path);
+void* mapearArchivo(FILE*archivo,size_t tamanio);
 void inicializar_bitarray(t_bitarray*bitarray,size_t cant_bits);
 void recibo_parametros(t_socket socket_cliente,char** parametros);
 

@@ -14,8 +14,8 @@
 typedef struct {
 	char* nombre;
 	int tamanio;
-	uint32_t* puntero_directo;
-	uint32_t* puntero_indirecto;
+	uint32_t puntero_directo;
+	uint32_t puntero_indirecto;
 	t_config*config;
 
 } t_fcb;
