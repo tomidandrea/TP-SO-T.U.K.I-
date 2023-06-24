@@ -2,13 +2,42 @@
 
 t_log* logger;
 t_config* config;
+t_socket server_fd;
+void* espacioMemoria;
+tabla_segmentos tabla_huecos;
+sem_t sem_cpu, sem_kernel, ejecutando;
+int retardo_memoria;
+char* algoritmoConfig;
+
 
 int main(int argc, char* argv[]) {
-	logger = iniciar_logger("memoria.log", "MEMORIA", true, LOG_LEVEL_DEBUG);
-	config = iniciar_config(argv[1]);
+	iniciarConexionMemoria(argv[1]);
 
-	t_socket server_fd = iniciarServidor(config, logger,"PUERTO_ESCUCHA");
-	while(1){
-		t_socket socket_cliente = esperar_cliente(server_fd, logger);
-	}
+	log_info(logger, "Inicializando estructuras...");
+	inicializarEstructuras();
+
+	sem_init(&sem_cpu, 0, 0);
+	sem_init(&sem_kernel, 0, 0);
+	sem_init(&ejecutando, 0, 1);
+
+	retardo_memoria = config_get_int_value(config, "RETARDO_MEMORIA");
+
+	log_debug(logger, "Iniciando hilos memoria");
+
+	crearEscucharCPU();
+	crearEscucharKernel();
+	crearEscucharFS();
+
+	while(1);
+
 }
+
+void iniciarConexionMemoria(char* path){
+	logger = iniciar_logger("memoria.log", "MEMORIA", true, LOG_LEVEL_DEBUG);
+	config = iniciar_config(path);
+	log_debug(logger, "Conexion iniciada");
+	server_fd = iniciarServidor(config, logger,"PUERTO_ESCUCHA");
+
+	algoritmoConfig = config_get_string_value(config,"ALGORITMO_ASIGNACION");
+}
+

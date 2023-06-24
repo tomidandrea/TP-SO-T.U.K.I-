@@ -40,4 +40,20 @@ char* lista_procesos_string(t_list* lista){
 	return mensaje;
 }
 
+void logearInstrucciones(t_list* instrucciones, t_log* logger){
+	int cant = list_size(instrucciones);
+		for(int i = 0;i<cant;i++) {
+	    	t_instruccion* inst = list_get(instrucciones,i);
+
+	        log_info(logger, "Instruccion: %s", inst->instruccion);
+
+	        int cant_parametros = cantParametros(inst->instruccion);
+
+	    	for(int i=0; i<cant_parametros; i++) {
+	    		log_info(logger, "Parametro %d: %s", i, inst->parametros[i]);
+	    	}
+	        printf("------------\n");
+	    }
+}
+
 

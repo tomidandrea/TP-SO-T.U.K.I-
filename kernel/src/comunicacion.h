@@ -9,4 +9,7 @@ int escucharConsolas();
 void mandar_pcb_a_CPU(t_pcb* proceso);
 void avisar_fin_a_consola(t_socket socket_consola);
 
+void enviarAMemoria(int id_segmento, int tamanio_segmento);
+void pedirTablaSegmentos();
+
 #endif

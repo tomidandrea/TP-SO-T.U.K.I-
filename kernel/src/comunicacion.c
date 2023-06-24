@@ -4,6 +4,7 @@
 extern t_config* config;
 extern t_log* logger;
 extern t_socket conexionCPU;
+extern t_socket conexionMemoria;
 
 extern pthread_mutex_t mutex_procesos_new;
 extern t_list* procesosNew;
@@ -12,6 +13,7 @@ extern sem_t sem_new_a_ready;
 
 uint32_t RESULT_OK = 0;
 uint32_t RESULT_ERROR = 1;
+uint32_t PIDE_TABLA = 1; //TODO: eliminar
 
 int escucharConsolas(){
 	t_list* lista;
@@ -36,7 +38,10 @@ int escucharConsolas(){
 
 							log_info(logger, "Me llego un paquete\n");
 
-							t_pcb* pcb = crearPCB(lista, socket_cliente); //agregar para pasar el socket de consola
+							t_pcb* pcb = crearPCB(lista, socket_cliente);
+
+							t_segmento* segmento_0 = list_get(pcb->tablaSegmentos,0);
+							log_debug(logger, "El segmento 0: Id: %d | Base: %d| Limite: %d",segmento_0->id, segmento_0->base, segmento_0->limite);
 							list_destroy(lista);
 							pthread_mutex_lock(&mutex_procesos_new);
 							list_add(procesosNew, pcb);
@@ -66,12 +71,23 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 	char* operacion;
 	t_paquete *paquete = crear_paquete(PROCESO);
 	int op_tamanio = 0;
+	t_segmento* segmento;
 
 	int cant = list_size(proceso->instrucciones);
 	int cant_parametros = 0;
 	//log_info(logger, "PID:%d\n",proceso->pid);
 	agregar_valor_estatico(paquete, &(proceso -> pid));
 	agregar_valor_estatico(paquete, &(proceso -> pc));
+
+	int cantidad = list_size(proceso->tablaSegmentos);
+		agregar_valor_estatico(paquete,&cantidad);
+		for (int i = 0; i<cantidad; i++){
+			segmento = list_get(proceso->tablaSegmentos, i);
+			agregar_valor_estatico(paquete,&(segmento->id));
+			agregar_valor_uint(paquete,&(segmento->base));
+			agregar_valor_uint(paquete,&(segmento->limite));
+		}
+
 	agregar_a_paquete(paquete, proceso -> registros->AX, 4);
 	agregar_a_paquete(paquete, proceso -> registros->BX, 4);
 	agregar_a_paquete(paquete, proceso -> registros->CX, 4);
@@ -85,7 +101,6 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 	agregar_a_paquete(paquete, proceso -> registros->RCX, 16);
 	agregar_a_paquete(paquete, proceso -> registros->RDX, 16);
 
-	//TODO: tabla de segmentos
 
 	t_instruccion* inst;
 	for(int i = 0;i<cant;i++) {
@@ -115,7 +130,25 @@ void mandar_pcb_a_CPU(t_pcb* proceso){
 
 }
 
+void enviarAMemoria(int id_segmento, int tamanio_segmento){
+	t_paquete* paquete = crear_paquete(CREATE_SEGMENT_OP);
+	agregar_valor_estatico(paquete,&tamanio_segmento);
+	agregar_valor_estatico(paquete,&id_segmento);
+
+	enviar_paquete(paquete, conexionMemoria);
+	eliminar_paquete(paquete);
+
+}
+
 void avisar_fin_a_consola(t_socket socket_consola){
 	log_debug(logger, "El socket de la consola es:%d", socket_consola);
 	send(socket_consola, &RESULT_OK, sizeof(int), 0);
 }
+
+void pedirTablaSegmentos(int pid){
+	t_paquete* paquete = crear_paquete(TABLA_SEGMENTOS);
+	agregar_valor_estatico(paquete,&pid);
+	enviar_paquete(paquete, conexionMemoria);
+	eliminar_paquete(paquete);
+}
+

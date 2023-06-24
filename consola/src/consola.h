@@ -5,6 +5,7 @@
 #include<assert.h>
 #include <utils/sockets.h>
 #include <utils/general.h>
+#include <utils/visualizarEstructuras.h>
 #include <parser.h>
 
 void enviar_programa(t_list* instrucciones, int conexion);

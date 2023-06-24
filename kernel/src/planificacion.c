@@ -61,6 +61,8 @@ void recibirDeCPU() {
 	sem_wait(&sem_recibir);
 	t_pcb* proceso = list_get(procesosExecute, 0);
 	t_contexto* contexto = actualizar_pcb(proceso);
+	char* recurso;
+	int id;
 
 		switch(contexto->motivo){
 			case EXT:
@@ -78,14 +80,10 @@ void recibirDeCPU() {
 			case YIELD:
 				log_info(logger, "Hubo un YIELD del proceso %d\n", proceso->pid);
 
-				//proceso->tiempoEnReady = iniciarTiempo();
-				//temporal_resume(proceso->tiempoEnReady);
-				// Lo agrego al final de la lista de ready
 				proceso = removerDeExecute();
 				pasarAReady(proceso);
 				log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: READY", proceso->pid);
 
-				// Si algoritmo == HRRN -> calcular_estimado();
 				break;
 			case IO:
 				log_info(logger, "Hubo un IO de PID:%d\n", contexto->pid);
@@ -97,14 +95,13 @@ void recibirDeCPU() {
 			case WAIT:
 				//proceso = removerDeExecute();
 				log_info(logger, "Llego un WAIT pibe\n");
-				char* recursoW = contexto->parametros[0];
-				if(verificarRecursos(recursoW)){
-					wait(proceso, recursoW);
+				recurso = contexto->parametros[0];
+				if(verificarRecursos(recurso)){
+					wait(proceso, recurso);
 				} else{
 					avisar_fin_a_consola(proceso->socket_consola);
-					liberar_pcb(proceso);
 					sem_post(&sem_grado_multiprogramacion);
-					log_error(logger, "No existe el recurso: %s", recursoW);
+					log_error(logger, "No existe el recurso: %s", recurso);
 					log_error(logger, "Finalizo proceso PID: %d", proceso->pid);
 					log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
 				}
@@ -113,17 +110,42 @@ void recibirDeCPU() {
 				//INICIO = 1; //para que no haga el calculo HRRN y agarre el primero de ready
 				//proceso = removerDeExecute();
 				log_info(logger, "Llego un SIGNAL pibe\n");
-				char* recursoS = contexto->parametros[0];
-				if(verificarRecursos(recursoS)){
-					ejecutarSignal(proceso, recursoS);
+				recurso = contexto->parametros[0];
+				if(verificarRecursos(recurso)){
+					ejecutarSignal(proceso, recurso);
 				} else{
 					avisar_fin_a_consola(proceso->socket_consola);
 					sem_post(&sem_grado_multiprogramacion);
-					log_error(logger, "No existe el recurso: %s", recursoS);
+					log_error(logger, "No existe el recurso: %s", recurso);
 					log_error(logger, "Finalizo proceso PID: %d", proceso->pid);
 					log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
 					//FINALIZAR PROCESO
 				}
+				break;
+			case CREATE_SEGMENT:
+				log_info(logger, "Llego un CREATE_SEGMENT pibe\n");
+				id = atoi(contexto->parametros[0]);
+				int tamanio = atoi(contexto->parametros[1]);
+				solicitarCrearSegmento(id,tamanio, proceso); //mandamos a memoria
+				log_info(logger, "PID: %d - Crear Segmento - Id: %d - Tamaño: %d", proceso->pid, id, tamanio);
+				recibirCrearSegmento(id, tamanio, proceso);
+				break;
+			case DELETE_SEGMENT:
+				log_info(logger, "Llego un DELETE_SEGMENT pibe\n");
+				id = atoi(contexto->parametros[0]);
+				//TODO verificar que exista el segmento y no sea el 0
+				eliminarSegmento(id, proceso);
+				log_info(logger, "PID: %d - Eliminar Segmento - Id: %d", proceso->pid, id);
+
+				recibirTablaActualizada(proceso);
+				avisar_fin_a_consola(proceso->socket_consola);
+
+				break;
+			case F_OPEN: //TODO
+				log_info(logger, "Hubo un F_OPEN de PID:%d\n", contexto->pid);
+				break;
+			case F_TRUNCATE: //TODO
+				log_info(logger, "Hubo un F_TRUNCATE de PID:%d\n", contexto->pid);
 				break;
 			default:
 				log_debug(logger, "No se implemento la instruccion");

@@ -21,18 +21,6 @@ FILE* levantarArchivo(char*path,size_t cantidad_bytes) {
 	return fp;
 }
 
-/*
-FILE* set_archivo_bitmap(char*path,size_t cant_bits) {
-
-	FILE* bitmap = fopen(path,"w+");
-	for(int i = 0;i<cant_bits;i++){
-		fputs("0",bitmap);
-	}
-
-	return bitmap;
-
-}
-*/
 
 void inicializar_bitarray(t_bitarray*bitarray,size_t cant_bits){
 	int i = 0;
@@ -44,14 +32,15 @@ void inicializar_bitarray(t_bitarray*bitarray,size_t cant_bits){
 
 t_bitarray* mapear_bitmap(size_t cant_bits,size_t cant_bytes, FILE*archivo_bitmap){
 
-
 	void* buffer = mapearArchivo(archivo_bitmap,cant_bytes);
 
 	//creo bitarray
 
 	t_bitarray* bitmap = bitarray_create_with_mode(buffer,cant_bytes, LSB_FIRST);
 
-	//inicializar_bitarray(bitmap,cant_bits);
+	inicializar_bitarray(bitmap,cant_bits);
+
+	//bitarray_set_bit(bitmap,5);
 
 	printf("testeo bits del bitarray\n");
 

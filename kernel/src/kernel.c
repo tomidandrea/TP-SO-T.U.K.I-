@@ -8,9 +8,10 @@ t_list* procesosReady;
 t_list* procesosNew;
 t_list* colasDeBloqueados;
 t_socket conexionCPU;
+t_socket conexionMemoria;
+t_socket conexionFileSystem;
 char** recursos;
 char** instanciasRecursos;
-int cantidad_recursos;
 int* instancias;
 
 //todo: mallocs y free para todos los punteros
@@ -31,8 +32,9 @@ int main(int argc, char* argv[]) {
     procesosReady = list_create();
     procesosExecute = list_create();
 
-    conexionCPU = crearConexionCPU();
-	// Hilo que atiende consolas
+    conexionCPU = iniciarConexion(config, logger, "IP_CPU", "PUERTO_CPU");
+    conexionMemoria = iniciarConexion(config, logger, "IP_MEMORIA", "PUERTO_MEMORIA");
+    conexionFileSystem = iniciarConexion(config, logger, "IP_FILESYSTEM", "PUERTO_FILESYSTEM");
 
 		crearEscucharConsolas();
 		crearAgregarReady();
