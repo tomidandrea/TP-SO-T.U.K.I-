@@ -58,4 +58,8 @@ void eliminarSegmento (t_pedido_segmento*);
 void actualizarHuecos(tabla_segmentos tablaProceso);
 void liberarEstructurasProceso(char* pid);
 
+tabla_segmentos unificarTablas();
+bool esMenorBase(t_segmento*, t_segmento*);
+void compactar();
+
 #endif /* SRC_UTILSMEMORIA_H_ */

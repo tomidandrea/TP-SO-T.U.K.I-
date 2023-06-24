@@ -225,7 +225,8 @@ void crearSegmento(t_pedido_segmento* pedido) {
 				u_int32_t limiteSegmento = hueco->base + pedido->tamanio;
 				nuevoSegmento = crear_t_segmento(pedido->id_segmento, hueco->base, limiteSegmento);
 				list_add(tabla_del_proceso, nuevoSegmento);
-				log_info(logger, "Nuevo segmento: id %d, base %d, limite %d", nuevoSegmento->id, nuevoSegmento->base, nuevoSegmento->limite);
+
+				log_info(logger, "PID: %s - Crear Segmento: %d - Base: %d - TAMAÑO: %d", pid, nuevoSegmento->id, nuevoSegmento->base, nuevoSegmento->limite);
 
 				if(hueco->limite == nuevoSegmento->limite){
 					t_segmento* huecoOcupado = list_remove(tabla_huecos, huecoDisponible);
@@ -243,12 +244,60 @@ void crearSegmento(t_pedido_segmento* pedido) {
 		estadoCreacion = OUT_OF_MEMORY;
 		break;
 	case HAY_ESPACIO_AL_COMPACTAR:
-		//TODO: compactacion
-		//compactarTabla();
-		estadoCreacion = CREACION_EXITOSA;
+		estadoCreacion = PEDIDO_COMPACTAR;
 		break;
 	default:
 		log_error(logger, "Espacio invalido");
+	}
+}
+
+tabla_segmentos unificarTablas(){
+	tabla_segmentos segmentosGlobales = list_create();
+	int cantidadDeTablas = dictionary_size(diccionarioTablas);
+
+
+	for(int i = 1;i<=cantidadDeTablas;i++){
+		char* valor = string_itoa(i);
+		tabla_segmentos tabla_del_proceso = dictionary_get(diccionarioTablas, valor);
+		list_add_all(segmentosGlobales, tabla_del_proceso);
+		//todo ver como limpiar esto
+		//list_clean(tabla_del_proceso);
+	}
+	return segmentosGlobales;
+}
+
+bool esMenorBase(t_segmento* seg1, t_segmento* seg2){
+	if(seg1->base < seg2->base){
+		return true;
+	}
+	else
+		return false;
+}
+
+//void reubicarEspacioDeMemoria(t_segmento* segmento, u_int32_t limite){
+
+//}
+
+void compactar(){
+	log_info(logger,"entre en compactar() XD DOU");
+	tabla_segmentos tablaSegmentosGlobales = unificarTablas();
+	int tamanioLista = list_size(tablaSegmentosGlobales);
+	list_sort(tablaSegmentosGlobales, esMenorBase);
+
+	t_segmento* segmentoActual = list_get(tablaSegmentosGlobales,0);
+	for(int i = 1; i<tamanioLista-1;i++){
+		t_segmento* segmentoSiguiente = list_get(tablaSegmentosGlobales,i);
+		if(segmentoActual->limite != segmentoSiguiente->base){
+			//reubicarEspacioDeMemoria(segmentoSiguiente, segmentoActual->limite);
+			printf("Diferente base alejo se la come");
+
+		}
+	}
+
+	for(int i = 0; i<tamanioLista;i++){
+		t_segmento* seg = list_get(tablaSegmentosGlobales,i);
+		printf("seg->base %d \n", seg->base);
+		printf("seg->limite %d \n", seg->limite);
 	}
 }
 
@@ -276,7 +325,8 @@ void eliminarSegmento (t_pedido_segmento* pedido) {
 
 	t_segmento* hueco = crear_t_segmento(cantidadHuecos++, segmento->base, segmento->limite);
 	list_add(tabla_huecos, hueco);
-	log_info(logger, "Se removio completamente el segmento %d", pedido->id_segmento);
+	log_info(logger, "PID: %s - Eliminar Segmento: %d - Base: %d - TAMAÑO: %d", pid, segmento->id, segmento->base, segmento->limite);
+
 	free(pid);
 	free(segmento);
 
@@ -304,5 +354,6 @@ void liberarEstructurasProceso(char* pid){
 
 	actualizarHuecos(tablaProceso);
 
-	list_destroy(tablaProceso);
+	list_destroy_and_destroy_elements(tablaProceso, free);
+	//list_destroy(tablaProceso);
 }

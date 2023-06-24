@@ -37,7 +37,6 @@ void escucharKernel(){
 				break;
 			case CREATE_SEGMENT_OP:
 				pedido = recibirPedidoSegmento(socket_kernel);
-				log_debug(logger, "Create Segment: Id: %d - Tamaño: %d", pedido->id_segmento, pedido->tamanio);
 
 				pid = string_itoa(pedido->pid);
 				tablaSegmentos = dictionary_get(diccionarioTablas, pid);
@@ -48,11 +47,19 @@ void escucharKernel(){
 					switch (estadoCreacion) {
 					case CREACION_EXITOSA:
 						enviarSegmentoCreado(socket_kernel, tablaSegmentos);
-						//enviarSegmentosKernel(socket_kernel, tablaSegmentos);
 						break;
 					case OUT_OF_MEMORY:
 						log_error(logger,"Límite de segmentos máximos alcanzado - Limite: %d", cantidadMaxSegmentos);
 						send(socket_kernel, &estadoCreacion, sizeof(op_code), 0);
+						break;
+					case PEDIDO_COMPACTAR:
+						compactar();
+						/*send(socket_kernel, &estadoCreacion, sizeof(op_code), 0);
+						int cod_op = recibir_operacion(socket_kernel);
+						if (cod_op == COMPACTAR){
+							compactar();
+						}
+						*/
 						break;
 					default:
 						log_error(logger,"Error en obtener estado memoria");

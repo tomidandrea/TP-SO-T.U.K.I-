@@ -137,6 +137,7 @@ void recibirDeCPU() {
 				log_info(logger, "PID: %d - Eliminar Segmento - Id: %d", proceso->pid, id);
 				recibirEliminarsegmento(proceso);
 				break;
+			//case COMPACTAR:
 			default:
 				log_debug(logger, "No se implemento la instruccion");
 				break;
