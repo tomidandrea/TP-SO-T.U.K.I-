@@ -11,7 +11,6 @@ t_pcb* recibir_proceso(int socket_cliente) {
 		t_list* valores = list_create();
 		int tamanio;
 		int tamanio_tabla;
-		t_segmento* segmento = malloc(sizeof(t_segmento));
         t_pcb* pcb = inicializar_pcb();
 		t_list* instrucciones = list_create();
 
@@ -35,6 +34,7 @@ t_pcb* recibir_proceso(int socket_cliente) {
 			desplazamiento+=sizeof(int);
 
 			for(int i=0; i<tamanio_tabla;i++){
+				t_segmento* segmento = malloc(sizeof(t_segmento));
 				memcpy(&(segmento->id), buffer + desplazamiento, sizeof(int));
 				desplazamiento+=sizeof(int);
 				memcpy(&(segmento->base), buffer + desplazamiento, sizeof(u_int32_t));
@@ -42,6 +42,8 @@ t_pcb* recibir_proceso(int socket_cliente) {
 				memcpy(&(segmento->limite), buffer + desplazamiento, sizeof(u_int32_t));
 				desplazamiento+=sizeof(u_int32_t);
 				list_add(pcb->tablaSegmentos, segmento);
+				t_segmento* seg = list_get(pcb->tablaSegmentos, i);
+				//printf("Segmento %d\n", seg->id); //Aca los muestra bien los segmentos
 			}
 
 		/* alternativa con vectores por tamaño
@@ -68,6 +70,10 @@ t_pcb* recibir_proceso(int socket_cliente) {
 		actualizar_registros_cpu(pcb,lista_registros);                          // actualizo los registros de la cpu
 		instrucciones = listaAInstrucciones(valores);              // paso de lista de strings a lista de instrucciones
 	    pcb->instrucciones = instrucciones;                             // actualizo lista de instrucciones en el pcb
+	    list_destroy(lista_registros);
+	    list_destroy(valores);
+	    //liberar_instrucciones(instrucciones);
+	    free(buffer);
 
 	    return pcb;
 }
@@ -171,40 +177,54 @@ void enviar_contexto(t_pcb* proceso, t_instruccion* inst, int conexion){
 
 	enviar_paquete(paquete,conexion);                // serializa el paquete y lo envia
 
+	//free(segmento);
 	eliminar_paquete(paquete);                //elimina el paquete y lo que contiene
 
 }
 //solo para mov_out
-void escribir_memoria(u_int32_t direc_fisica,char* valor, int tamanio_valor) {
+void escribir_memoria(int pid, u_int32_t direc_fisica,char* valor, int tamanio_valor) {
 	t_paquete *paquete = crear_paquete(ESCRIBIR);
 
+	agregar_valor_estatico(paquete, &pid);
 	agregar_valor_uint(paquete, &(direc_fisica));
 	agregar_a_paquete(paquete, valor, tamanio_valor);
 
 	enviar_paquete(paquete,conexionMemoria);
-		eliminar_paquete(paquete);
+	eliminar_paquete(paquete);
 
+	int cod_op;
+	char* mensaje = malloc(3);
+	if(recv(conexionMemoria, &cod_op, sizeof(int), MSG_WAITALL) > 0){
+		 mensaje=recibir_mensaje(conexionMemoria, logger);
+			log_debug(logger,"Me llego de memoria el resultado: %s",mensaje);
+		} else {
+			log_error(logger,"No me llego el resultado de memoria");
+		}
 }
 
 //solo para mov_in
 
-char* leer_memoria(u_int32_t direc_fisica, int tamanio_a_leer) {
+char* leer_memoria(int pid, u_int32_t direc_fisica, int tamanio_a_leer) {
 	t_paquete *paquete = crear_paquete(LEER);
-	char* valor_leido = malloc(sizeof(tamanio_a_leer));
 
+	agregar_valor_estatico(paquete, &pid);
 	agregar_valor_uint(paquete, &(direc_fisica));
 	agregar_valor_estatico(paquete, &(tamanio_a_leer));
 
 	enviar_paquete(paquete,conexionMemoria);
 	eliminar_paquete(paquete);
-
 	//hago el recv y devuelvo el valor leido
+	char* valor_leido;
+	int cod_op;
+	if(conexionMemoria!=-1){
+		cod_op = recibir_operacion(conexionMemoria);
+		if(cod_op==0)
+			log_debug(logger,"codOP: MENSAJE");
 
-	if(conexionMemoria != -1){
-		recv(conexionMemoria, valor_leido, sizeof(tamanio_a_leer) , MSG_WAITALL);
-		log_debug(logger,"Me llego el valor leido de memoria");
+		valor_leido = recibir_mensaje(conexionMemoria, logger); //tiene el \0
+
 	} else {
-		log_error(logger,"No me llego el valor leido de memoria");
+		log_error(logger,"No me llego el resultado de memoria");
 	}
 	return valor_leido;
 }

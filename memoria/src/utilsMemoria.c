@@ -3,6 +3,7 @@
 #define NO_ENCONTRO_HUECO 0
 
 extern void* espacioMemoria;
+extern t_log* logger;
 extern tabla_segmentos tabla_huecos;
 extern t_log* logger;
 extern t_config* config;
@@ -18,7 +19,6 @@ char* algoritmoConfig;
 //TODO alejiti: ver si necesitamos mutex para el diccionario y tabla de huecos
 
 // ---- INICIO DE MEMORIA ----
-
 t_segmento* crear_t_segmento(int id, u_int32_t base, u_int32_t limite){
 	t_segmento* segmento = malloc(sizeof(t_segmento));
 	segmento->id = id;
@@ -70,18 +70,19 @@ void enviarSegmentosKernel(t_socket socket_kernel, tabla_segmentos tablaSegmento
 	eliminar_paquete(paquete);
 }
 
-void enviarSegmentoCreado(t_socket socket_kernel, tabla_segmentos tabla_segmentos){
-	t_paquete* paquete = crear_paquete(CREACION_EXITOSA);
-	int ultimoElemento = list_size(tabla_segmentos) - 1;
-	t_segmento* nuevoSegmento = list_get(tabla_segmentos, ultimoElemento);
-	agregar_valor_estatico(paquete,&(nuevoSegmento->id));
-	agregar_valor_uint(paquete,&(nuevoSegmento->base));
-	agregar_valor_uint(paquete,&(nuevoSegmento->limite));
+void* leer(u_int32_t direc, int tamanio, int pid) {
+	//valor no tiene \0, tamaño es igual que el registro (4,8,16)
+	void* valor = malloc(tamanio);
+	memcpy(valor, espacioMemoria + direc, tamanio);
+	log_info(logger,  "PID: %d- Acción: LEER - Dirección física: %d - Tamaño: %d- Origen: CPU", pid, direc, tamanio);
 
-	enviar_paquete(paquete, socket_kernel);
-	eliminar_paquete(paquete);
+	return valor;
+}
 
-	log_info(logger, "--- Segmento enviado a kernel ---");
+void escribir(u_int32_t direc, int tamanio, char* valor, int pid) {
+	//valor tiene \0, tamaño es igual que el registro (4,8,16)
+	memcpy(espacioMemoria + direc, valor, tamanio);
+	log_info(logger,  "PID: %d- Acción: ESCRIBIR - Dirección física: %d - Tamaño: %d- Origen: CPU", pid, direc, tamanio);
 }
 
 u_int32_t obtenerTamanioSegmento(t_segmento* segmento){
@@ -377,7 +378,19 @@ void eliminarSegmento (t_pedido_segmento* pedido) {
 
 }
 
-// ----- FIN DE PROCESO -----
+void enviarSegmentoCreado(t_socket socket_kernel, tabla_segmentos tabla_segmentos){
+	t_paquete* paquete = crear_paquete(CREACION_EXITOSA);
+	int ultimoElemento = list_size(tabla_segmentos) - 1;
+	t_segmento* nuevoSegmento = list_get(tabla_segmentos, ultimoElemento);
+	agregar_valor_estatico(paquete,&(nuevoSegmento->id));
+	agregar_valor_uint(paquete,&(nuevoSegmento->base));
+	agregar_valor_uint(paquete,&(nuevoSegmento->limite));
+
+	enviar_paquete(paquete, socket_kernel);
+	eliminar_paquete(paquete);
+
+	log_info(logger, "--- Segmento enviado a kernel ---");
+}
 
 void actualizarHuecos(tabla_segmentos tablaProceso){
 	//int cantidadHuecos = list_size(tabla_huecos);

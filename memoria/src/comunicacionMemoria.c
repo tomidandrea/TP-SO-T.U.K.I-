@@ -2,13 +2,18 @@
 
 extern t_socket server_fd;
 extern t_log* logger;
-extern sem_t sem_cpu, sem_kernel;
+extern t_config* config;
+extern sem_t sem_cpu, sem_kernel, ejecutando;
 extern t_dictionary* diccionarioTablas;
 extern t_segmento* segmento0;
+extern void* espacioMemoria;
+extern int retardo_memoria;
+
+
 extern int cantidadMaxSegmentos;
 extern op_code estadoCreacion;
-
 uint32_t RESULT_ERROR = 1;
+uint32_t RESULT_OK = 0;
 
 // Hilo que atiende peticiones de kernel
 
@@ -23,6 +28,7 @@ void escucharKernel(){
 	while(1){
 		if(socket_kernel != -1){
 			int cod_op = recibir_operacion(socket_kernel);
+			sem_wait(&ejecutando);
 			switch (cod_op) {
 			case TABLA_SEGMENTOS:
 				tablaSegmentos = list_create();
@@ -91,6 +97,8 @@ void escucharKernel(){
 		}else{
 			log_error(logger,"Se cerró la conexión");
 		}
+
+		sem_post(&ejecutando);
 	}
 	free(pid);
 	free(pedido);
@@ -103,15 +111,77 @@ void escucharCPU(){
 	while(1){
 		if(socket_cpu != -1){
 			int cod_op = recibir_operacion(socket_cpu);
+			sem_wait(&ejecutando);
+			u_int32_t direc_fisica;
+			int pid, tamanio, size;
+			void* buffer;
+			int desplazamiento = 0;
+
+			switch (cod_op) {
+			case LEER:
+				//recibo los datos necesarios para realizar la lectura
+				buffer = recibir_buffer(&size, socket_cpu);
+				memcpy(&pid, buffer + desplazamiento, sizeof(int));
+			    desplazamiento += sizeof(int);
+				memcpy(&direc_fisica, buffer + desplazamiento, sizeof(u_int32_t));
+				desplazamiento += sizeof(u_int32_t);
+				memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
+				log_debug(logger,"Case LEER, recibi pid %d, dir fisica %d, tamaño %d", pid, direc_fisica, tamanio);
+				//devuelvo el valor leido en la direccion pedida
+				char* valor_leido = leer(direc_fisica, tamanio, pid);
+				//valor_leido[tamanio] = '\0';
+				char* valor_a_enviar=malloc(tamanio+1);
+				memcpy(valor_a_enviar, valor_leido, tamanio);
+				valor_a_enviar[tamanio] = '\0';
+
+				log_debug(logger,"Lei el valor %s de tamaño %d. Enviando a CPU...", valor_a_enviar, tamanio);
+				//hago el retardo que pide el enuncuado por acceder al espacio de memoria
+				usleep(retardo_memoria * 1000);
+
+				enviar_mensaje(valor_a_enviar, socket_cpu);
+
+				free(valor_leido);
+				free(buffer);
+				break;
+			case ESCRIBIR:
+				//recibo los datos para escritura
+				buffer = recibir_buffer(&size, socket_cpu);
+				memcpy(&pid, buffer + desplazamiento, sizeof(int));
+				desplazamiento += sizeof(int);
+				memcpy(&direc_fisica, buffer + desplazamiento, sizeof(u_int32_t));
+				desplazamiento += sizeof(u_int32_t);
+				memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
+				desplazamiento += sizeof(int);
+				log_debug(logger,"Case ESCRIBIR, recibi pid %d, dir fisica %d, tamaño %d", pid, direc_fisica, tamanio);
+
+				char* valor = malloc(tamanio);
+	     		memcpy(valor, buffer + desplazamiento, tamanio);
+	     		//valor[tamanio] = '\0';
+	     		char* para_mostrar = malloc(tamanio+1);
+	     		memcpy(para_mostrar, buffer + desplazamiento, tamanio);
+	     		para_mostrar[tamanio] = '\0';
+	     		log_debug(logger,"Me llego una escritura del valor %s en la direccion %d ", para_mostrar, direc_fisica);
+				free(para_mostrar);
+
+	     		escribir(direc_fisica, tamanio, valor, pid);
+				usleep(retardo_memoria * 1000);
+				//le mando OK a cpu para que siga ejecutando
+				//send(socket_cpu, &RESULT_OK, tamanio, 0);
+				char* mensaje="OK";
+				enviar_mensaje(mensaje, socket_cpu);
+				free(valor);
+				free(buffer);
+			}
 			// cosas q pide cpu xd
 		}
+		sem_post(&ejecutando);
 	}
 }
 
+
 void escucharFS(){
 	log_debug(logger, "Entro hilo para escuchar FS");
-	t_socket socket_file_system;
-	//t_socket socket_file_system = esperar_cliente(server_fd, logger);
+	t_socket socket_file_system = esperar_cliente(server_fd, logger);
 	while(1){
 		if(socket_file_system != -1){
 			int cod_op = recibir_operacion(socket_file_system);
@@ -119,8 +189,6 @@ void escucharFS(){
 		}
 	}
 }
-
-
 
 void enviarDiccionarioTablas(t_socket socket_kernel){
 	t_paquete* paquete = crear_paquete(COMPACTAR);

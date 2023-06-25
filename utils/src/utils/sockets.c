@@ -43,6 +43,39 @@ t_socket crear_conexion(char* ip, char* puerto, t_log* logger)
 	return socket_cliente;
 }
 
+void enviar_mensaje(char* mensaje, int socket_cliente)
+{
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+
+	paquete->codigo_operacion = MENSAJE;
+	paquete->buffer = malloc(sizeof(t_buffer));
+	paquete->buffer->size = strlen(mensaje) + 1;
+	printf("size de mensaje a enviar: %d\n", paquete->buffer->size);
+	paquete->buffer->stream = malloc(paquete->buffer->size);
+	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
+	printf("mensaje a enviar: %s\n", paquete->buffer->stream);
+
+	int bytes = paquete->buffer->size + 2*sizeof(int);
+
+	void* a_enviar = serializar_paquete(paquete, bytes);
+
+	//imprimirContenido(a_enviar);
+
+	send(socket_cliente, a_enviar, bytes, 0);
+
+	free(a_enviar);
+	eliminar_paquete(paquete);
+}
+
+char* recibir_mensaje(int socket_cliente, t_log* logger) //agrego que mande logger como parametro
+{
+	int size;
+	char* buffer = recibir_buffer(&size, socket_cliente);
+	printf("size del mensaje:%d\n", size);
+	log_debug(logger, "Me llego el mensaje %s", buffer);
+	return buffer;
+}
+
 void enviar_paquete(t_paquete* paquete, int socket_cliente)
 {
 	int bytes = paquete->buffer->size + 2*sizeof(int);
@@ -239,7 +272,6 @@ t_list* recibirTablaSegmentos(t_socket socket_memoria){
 	int size;
 	int tamanio_tabla;
 	int desplazamiento = 0;
-	t_segmento* segmento = malloc(sizeof(t_segmento));
 	t_list* tabla = list_create();
 
 	buffer = recibir_buffer(&size, socket_memoria);
@@ -247,6 +279,7 @@ t_list* recibirTablaSegmentos(t_socket socket_memoria){
 	desplazamiento+=sizeof(int);
 
 	for(int i=0; i<tamanio_tabla;i++){
+		t_segmento* segmento = malloc(sizeof(t_segmento));
 		memcpy(&(segmento->id), buffer + desplazamiento, sizeof(int));
 		desplazamiento+=sizeof(int);
 		memcpy(&(segmento->base), buffer + desplazamiento, sizeof(u_int32_t));
@@ -255,7 +288,12 @@ t_list* recibirTablaSegmentos(t_socket socket_memoria){
 		desplazamiento+=sizeof(int);
 		list_add(tabla, segmento);
 	}
+	/*for(int i=0; i<list_size(tabla);i++){
+		t_segmento* seg = list_get(tabla, i);
+		printf("Segmento %d\n", seg->id);
+	}*/
 	return tabla;
+
 }
 
 t_segmento* recibirSegmento(t_socket socket_memoria){

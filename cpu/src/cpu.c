@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
 				log_info(logger, "Enviando pcb a kernel");
 				actualizar_registros_pcb(pcb);
 				enviar_contexto(pcb,inst_privilegiada,socket_cliente);
-
+				//liberar_pcb(pcb);
 			} else {
 				send(socket_cliente, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);
 				log_error(logger,"Se cerró la conexión");
@@ -48,6 +48,7 @@ t_instruccion* realizar_ciclo_instruccion(t_pcb * pcb){
 	//t_segmento* direc_fisica;
 
 	while (estado == CONTINUAR){ // Solo continua el ciclo con SET, MOV_IN y MOV_OUT (si no hay un error)
+		printf("------------------------------ PC: %d ------------------------------\n", pcb->pc);
 		instruccion_ejecutar = fetch(pcb->instrucciones, pcb->pc); // busco la instruccion que apunta el pc
 		decode(instruccion_ejecutar->instruccion);
 		estado = execute(instruccion_ejecutar,pcb); //execute devuelve el estado de ejecucion de la instruccion
@@ -57,12 +58,12 @@ t_instruccion* realizar_ciclo_instruccion(t_pcb * pcb){
 }
 
 t_instruccion* fetch(t_list* instrucciones, int pc){
-	log_info(logger, "Entro en fetch");
+	//log_info(logger, "Entro en fetch");
 	return list_get(instrucciones,pc);
 }
 
 void decode(char* instruccion) {
-	log_info(logger, "Entro en decode");
+	//log_info(logger, "Entro en decode");
 	if(strcmp(instruccion, "SET") == 0) {
 		int espera = config_get_int_value(config,"RETARDO_INSTRUCCION");
 		usleep(espera * 1000); // Recibe microsegundo, * 1000 -> pasamos a milisegundos
@@ -137,7 +138,30 @@ estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb* pcb){
 		    if(estado_mov_out == ERROR)
 		    	pcb->motivo = EXT;
 			return estado_mov_out;
-
+		case F_OPEN:
+				log_info(logger,"PID: %d - Ejecutando: %s - %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar->parametros[0]);
+				pcb->motivo = F_OPEN;
+				return FIN;
+		case F_TRUNCATE:
+					log_info(logger,"PID: %d - Ejecutando: %s - %s %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar->parametros[0], instruccion_ejecutar-> parametros[1]);
+					pcb->motivo = F_TRUNCATE;
+					return FIN;
+		case F_CLOSE:
+					log_info(logger,"PID: %d - Ejecutando: %s - %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar->parametros[0]);
+					pcb->motivo = F_CLOSE;
+					return FIN;
+		case F_SEEK:
+					log_info(logger,"PID: %d - Ejecutando: %s - %s %s", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar->parametros[0], instruccion_ejecutar-> parametros[1]);
+					pcb->motivo = F_SEEK;
+				    return FIN;
+		case F_READ:
+					log_info(logger,"PID: %d - Ejecutando: %s - %s %s %s", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar->parametros[0], instruccion_ejecutar-> parametros[1], instruccion_ejecutar-> parametros[2]);
+					pcb->motivo = F_READ;
+				    return FIN;
+		case F_WRITE:
+					log_info(logger,"PID: %d - Ejecutando: %s - %s %s %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar->parametros[0], instruccion_ejecutar-> parametros[1], instruccion_ejecutar-> parametros[2]);
+					pcb->motivo = F_WRITE;
+				    return FIN;
 		default:
 			log_error(logger,"Error en execute. La CPU no conoce todavia la operacion: %s ",instruccion_ejecutar-> instruccion);
 			return FIN;
@@ -153,16 +177,19 @@ estado_ejec set_registro(char* registro, char* valor) {
 	if(tamanio == 4) {
 
 		switch (registro[0]) {
-		      case 'A':  strcpy(registros->AX, valor);
+		      case 'A':  memcpy(registros->AX, valor, 4);
+		      /*for (int i = 0; i < 4; ++i) {
+		      	  log_debug(logger, "Valor%d  en AX: %c", i, registros->AX[i]);
+			  }*/
 		                 break;
-		      case 'B':  strcpy(registros->BX, valor);
-		      	  	  	  for (int i = 0; i < 4; ++i) {
+		      case 'B':  memcpy(registros->BX, valor, 4);
+			   				for (int i = 0; i < 4; ++i) {
 		                          log_debug(logger, "Valor%d  en BX: %c", i, registros->BX[i]);
 		                    }
 		                 break;
-		      case 'C':  strcpy(registros->CX, valor);
+		      case 'C':  memcpy(registros->CX, valor, 4);
 		                 break;
-		      case 'D':  strcpy(registros->DX, valor);
+		      case 'D':  memcpy(registros->DX, valor, 4);
 		                 break;
 		      default :  log_error(logger,"Error al setear registro: el tamanio del valor a asignar es de 4 bytes pero el registro no es de dicho tamanio");
                          return ERROR;
@@ -171,13 +198,13 @@ estado_ejec set_registro(char* registro, char* valor) {
 	else if (tamanio == 8) {
 
 		switch (registro[1]) {
-			 case 'A':  strcpy(registros->EAX, valor);
+			 case 'A':  memcpy(registros->EAX, valor, 8);
 			            break;
-			 case 'B':  strcpy(registros->EBX, valor);
+			 case 'B':  memcpy(registros->EBX, valor, 8);
 			            break;
-			 case 'C':  strcpy(registros->ECX, valor);
+			 case 'C':  memcpy(registros->ECX, valor, 8);
 			            break;
-			 case 'D':  strcpy(registros->EDX, valor);
+			 case 'D':  memcpy(registros->EDX, valor, 8);
 			            break;
 			 default :  log_error(logger,"Error al setear registro: el tamanio del valor a asignar es de 8 bytes pero el registro no es de dicho tamanio");
 			            return ERROR;
@@ -186,16 +213,16 @@ estado_ejec set_registro(char* registro, char* valor) {
 	else if (tamanio == 16) {
 
 		switch (registro[1]) {
-			 case 'A':  strcpy(registros->RAX, valor);
- 	  	  	  for (int i = 0; i < 16; ++i) {
-                     log_debug(logger, "Valor%d  en RAX: %c", i, registros->RAX[i]);
-               }
+			 case 'A':  memcpy(registros->RAX, valor, 16);
+						for (int i = 0; i < 16; ++i) {
+								log_debug(logger, "Valor%d  en RAX: %c", i, registros->RAX[i]);
+						}
 			            break;
-			 case 'B':  strcpy(registros->RBX, valor);
+			 case 'B':  memcpy(registros->RBX, valor, 16);
 			            break;
-		     case 'C':  strcpy(registros->RCX, valor);
+		     case 'C':  memcpy(registros->RCX, valor, 16);
 		                break;
-		     case 'D':  strcpy(registros->RDX, valor);
+		     case 'D':  memcpy(registros->RDX, valor, 16);
 		                break;
 		     default :  log_error(logger,"Error al setear registro: el tamanio del valor a asignar es de 16 bytes pero el registro no es de dicho tamanio");
 		                return ERROR;
@@ -213,111 +240,119 @@ estado_ejec set_registro(char* registro, char* valor) {
 char* get_registro(char*registro) {
 
 	char* valor;
+	/*for (int i = 0; i < 4; ++i) {
+			  log_debug(logger, "Valor%d  en AX: %c", i, registros->AX[i]);
+		  }*/
+		if (registro[0]== 'E') {
 
-		if (registro[1]== 'E') {
-
-			valor = malloc(8*sizeof(char));
+			valor = malloc(9*sizeof(char));
 
 			switch (registro[1]) {
-				 case 'A':  strcpy(valor, registros->EAX);
+				 case 'A':  memcpy(valor, registros->EAX, 8);
 				            break;
-				 case 'B':  strcpy(valor, registros->EBX);
+				 case 'B':  memcpy(valor, registros->EBX, 8);
 				            break;
-				 case 'C':  strcpy(valor, registros->ECX);
+				 case 'C':  memcpy(valor, registros->ECX, 8);
 				            break;
-				 case 'D':  strcpy(valor, registros->EDX);
+				 case 'D':  memcpy(valor, registros->EDX, 8);
 				            break;
 			}
+			valor[8] = '\0';
 		}
-		else if (registro[1] == 'R') {
+		else if (registro[0] == 'R') {
 
-			valor = malloc(16*sizeof(char));
+			valor = malloc(17*sizeof(char));
 			switch (registro[1]) {
-			        case 'A':  strcpy(valor, registros->RAX);
+			        case 'A':  memcpy(valor, registros->RAX, 16);
 					           break;
-		            case 'B':  strcpy(valor, registros->RBX);
+		            case 'B':  memcpy(valor, registros->RBX, 16);
 						       break;
-			        case 'C':  strcpy(valor, registros->RCX);
+			        case 'C':  memcpy(valor, registros->RCX, 16);
 							   break;
-				    case 'D':  strcpy(valor, registros->RDX);
+				    case 'D':  memcpy(valor, registros->RDX, 16);
 							   break;
 			}
+			valor[16] = '\0';
 		}
 		else {
-			valor = malloc(4*sizeof(char));
+			valor = malloc(5*sizeof(char));
 			switch (registro[0]) {
-			     case 'A':  strcpy(valor, registros->AX);
+			     case 'A':  memcpy(valor, registros->AX, 4);
 			                break;
-			     case 'B':  strcpy(valor, registros->BX);
+			     case 'B':  memcpy(valor, registros->BX, 4);
 						    break;
-                 case 'C':  strcpy(valor, registros->CX);
+                 case 'C':  memcpy(valor, registros->CX, 4);
 						    break;
-			     case 'D':  strcpy(valor, registros->DX);
+			     case 'D':  memcpy(valor, registros->DX, 4);
 						    break;
 				}
+			valor[4] = '\0';
 		}
 
+		log_debug(logger, "Valor del registro: %s", valor);
 	return valor;
-
 }
 
 
 estado_ejec ejecutar_mov_in(int pid, char* registro, char* direc, tabla_segmentos tabla_de_segmentos) {
 
-direc_logica direcLogica = crear_direc_logica(direc);
+direc_logica* direcLogica = crear_direc_logica(direc);
 int tamanio_a_leer = tamanio_registro(registro);
 estado_ejec resultado = ejecutar_mov(pid, tamanio_a_leer,direcLogica,tabla_de_segmentos);
 
 if(resultado == CONTINUAR) {
-
+	char* valor;
 	int direc_fisica = obtener_direc_fisica(direcLogica,tabla_de_segmentos);
-	char* valor = leer_memoria(direc_fisica,tamanio_a_leer);
+	valor = leer_memoria(pid, direc_fisica,tamanio_a_leer); //tiene el \0
 	set_registro(registro,valor);
-	log_info(logger, "PID: %d - Acción: LEER - Segmento: %d - Dirección Física: %d - Valor: %s", pid, direcLogica.numero_segmento, direc_fisica, valor);
-	free(valor);
+	log_info(logger, "PID: %d - Acción: LEER - Segmento: %d - Dirección Física: %d - Valor: %s", pid, direcLogica->numero_segmento, direc_fisica, valor);
+	//free(valor);
 }
+free(direcLogica);
 
 return resultado;
 }
 
 estado_ejec ejecutar_mov_out(int pid, char* direc,char* registro, tabla_segmentos tabla_de_segmentos) {
 
-direc_logica direcLogica = crear_direc_logica(direc);
+direc_logica* direcLogica = crear_direc_logica(direc);
 int tamanio_a_escribir = tamanio_registro(registro);
 estado_ejec resultado = ejecutar_mov(pid,tamanio_a_escribir, direcLogica, tabla_de_segmentos);
 
 
 if(resultado == CONTINUAR) {
 	 int direc_fisica = obtener_direc_fisica(direcLogica,tabla_de_segmentos);
-	 char* valor = get_registro(registro);
-	 escribir_memoria(direc_fisica,valor, tamanio_a_escribir);
-	 log_info(logger, "PID: %d - Acción: ESCRIBIR - Segmento: %d - Dirección Física: %d - Valor: %s", pid, direcLogica.numero_segmento, direc_fisica, valor);
-	 free(valor);
+	 char* valor = get_registro(registro); //tiene el \0
+	 char valor_registro[tamanio_a_escribir];
+	 memcpy(valor_registro, valor, tamanio_a_escribir); //le saco el \0
+	 escribir_memoria(pid, direc_fisica,valor, tamanio_a_escribir);
+	 log_info(logger, "PID: %d - Acción: ESCRIBIR - Segmento: %d - Dirección Física: %d - Valor: %s", pid, direcLogica->numero_segmento, direc_fisica, valor);
+	 //free(valor);
 }
 return resultado;
 
 }
 
 
-estado_ejec ejecutar_mov(int pid, int tamanio_valor, direc_logica direcLogica, tabla_segmentos tabla_de_segmentos) {
+estado_ejec ejecutar_mov(int pid, int tamanio_valor, direc_logica* direcLogica, tabla_segmentos tabla_de_segmentos) {
 
-		if (verificar_num_segmento(direcLogica.numero_segmento,tabla_de_segmentos))
+		if (verificar_num_segmento(direcLogica->numero_segmento,tabla_de_segmentos))
 			{
-			 t_segmento*segmento = list_get(tabla_de_segmentos,direcLogica.numero_segmento);
-			 if (no_produce_seg_fault(pid, direcLogica.desplazamiento,tamanio_valor, segmento) == 1)
+			 t_segmento*segmento = list_get(tabla_de_segmentos,direcLogica->numero_segmento);
+			 if (no_produce_seg_fault(pid, direcLogica->desplazamiento,tamanio_valor, segmento) == 1)
 				 return CONTINUAR;
 			}
 		return ERROR;
 }
 
 
-direc_logica crear_direc_logica(char* direc) {
+direc_logica* crear_direc_logica(char* direc) {
 
-	direc_logica direcLogica;
+	direc_logica* direcLogica = malloc(sizeof(direc_logica));
 	int direc_numero = atoi(direc);
 	int tam_max_segmento = config_get_int_value(config,"TAM_MAX_SEGMENTO");
-	direcLogica.numero_segmento = floor(direc_numero/tam_max_segmento);
-	direcLogica.desplazamiento = direc_numero % tam_max_segmento;
+	direcLogica->numero_segmento = floor(direc_numero/tam_max_segmento);
+	direcLogica->desplazamiento = direc_numero % tam_max_segmento;
 
 	return direcLogica;
 }
@@ -338,7 +373,7 @@ int no_produce_seg_fault(int pid, int desplazamiento,int tamanio_a_leer, t_segme
 	u_int32_t tamanio = segmento->limite - segmento->base;
 	if ((desplazamiento + tamanio_a_leer) > tamanio)
 	{
-		log_info(logger, "PID: %d - Error SEG_FAULT- Segmento: %d  - Offset: %d - Tamaño: %d"
+		log_error(logger, "PID: %d - Error SEG_FAULT- Segmento: %d  - Offset: %d - Tamaño: %d"
 ,pid,segmento->id, desplazamiento, tamanio);
 		return 0;
 	}
@@ -356,10 +391,10 @@ int tamanio_registro(char*registro) {
 }
 
 
-u_int32_t obtener_direc_fisica(direc_logica direcLogica,tabla_segmentos tabla_de_segmentos){
+u_int32_t obtener_direc_fisica(direc_logica* direcLogica,tabla_segmentos tabla_de_segmentos){
 
-	t_segmento*segmento = list_get(tabla_de_segmentos,direcLogica.numero_segmento);
-	int direc_fisica = segmento->base + direcLogica.desplazamiento;
+	t_segmento*segmento = list_get(tabla_de_segmentos,direcLogica->numero_segmento);
+	int direc_fisica = segmento->base + direcLogica->desplazamiento;
 
 	return direc_fisica;
 }

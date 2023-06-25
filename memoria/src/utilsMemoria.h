@@ -32,7 +32,6 @@ tabla_segmentos inicializarTablaHuecosLibres(int tamanioMemoria,int tamanioSegme
 
 // Envia la tabla de segmentos a kernel
 void enviarSegmentosKernel(int socket_kernel, tabla_segmentos tablaSegmentos);
-
 void enviarSegmentoCreado(t_socket socket_kernel, tabla_segmentos tabla_segmentos);
 
 // Dado un pedido de creación de segmento y el algoritmo de asignación,
@@ -64,5 +63,9 @@ void liberarEstructurasProceso(char* pid);
 tabla_segmentos unificarTablas();
 bool esMenorBase(void*, void*);
 void compactar(t_pedido_segmento* pedido);
+
+void* leer(u_int32_t direc, int tamanio, int pid);
+void escribir(u_int32_t direc, int tamanio, char* valor, int pid);
+int hayEspacio(t_pedido_segmento* pedido);
 
 #endif /* SRC_UTILSMEMORIA_H_ */

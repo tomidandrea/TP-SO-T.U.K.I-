@@ -137,7 +137,12 @@ void recibirDeCPU() {
 				log_info(logger, "PID: %d - Eliminar Segmento - Id: %d", proceso->pid, id);
 				recibirEliminarsegmento(proceso);
 				break;
-			//case COMPACTAR:
+			case F_OPEN: //TODO
+				log_info(logger, "Hubo un F_OPEN de PID:%d\n", contexto->pid);
+				break;
+			case F_TRUNCATE: //TODO
+				log_info(logger, "Hubo un F_TRUNCATE de PID:%d\n", contexto->pid);
+				break;
 			default:
 				log_debug(logger, "No se implemento la instruccion");
 				break;

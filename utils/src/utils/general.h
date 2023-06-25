@@ -59,3 +59,4 @@ int idAlgoritmo(char * algoritmo);
 void liberar_contexto(t_contexto* contexto);
 
 #endif
+
