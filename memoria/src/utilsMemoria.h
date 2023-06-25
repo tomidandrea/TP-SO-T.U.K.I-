@@ -41,6 +41,9 @@ void enviarSegmentoCreado(t_socket socket_kernel, tabla_segmentos tabla_segmento
 // retorna que debe compactarse.
 int hayEspacio(t_pedido_segmento* pedido);
 
+t_segmento* obtenerHuecoPorId(tabla_segmentos tabla_huecos, int huecoDisponible);
+void removerHuecoPorId(tabla_segmentos tabla_huecos, int huecoDisponible);
+
 // Se crea el segmento y se guarda en el hueco disponible
 void crearSegmento(t_pedido_segmento* pedido);
 
@@ -60,6 +63,6 @@ void liberarEstructurasProceso(char* pid);
 
 tabla_segmentos unificarTablas();
 bool esMenorBase(void*, void*);
-void compactar();
+void compactar(t_pedido_segmento* pedido);
 
 #endif /* SRC_UTILSMEMORIA_H_ */

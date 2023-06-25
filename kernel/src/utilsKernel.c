@@ -168,7 +168,63 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 		mandar_pcb_a_CPU(proceso);
 		sem_post(&sem_recibir);
 		break;
+	case PEDIDO_COMPACTAR:
+		/*
+		 * Si no esta bloqueado ningun proceso
+		 */
+		log_debug(logger, "hola");
+		int codOp = COMPACTAR;
+		send(conexionMemoria, &codOp, sizeof(int), 0);
+		log_debug(logger, "chau");
+		actualizarTablasDeSegmentos(conexionMemoria);
 	}
+}
+
+void actualizarTablasDeSegmentos(int conexionMemoria){
+	void* buffer;
+	int size;
+	int tamanio_diccionario,tamanio_tabla, tamanio_pid;
+	int desplazamiento = 0;
+	char* pid;
+
+	int cod = recibir_operacion(conexionMemoria);
+	switch(cod){
+	case COMPACTAR:
+		log_debug(logger, "Voy a actualizar tablas");
+		buffer = recibir_buffer(&size, conexionMemoria);
+		memcpy(&(tamanio_diccionario), buffer + desplazamiento, sizeof(int));
+		desplazamiento+=sizeof(int);
+		log_debug(logger, "Cantidad procesos: %d", tamanio_diccionario);
+		for(int i=0; i<tamanio_diccionario;i++){
+			t_list* tabla = list_create();
+			memcpy(&(tamanio_pid), buffer + desplazamiento, sizeof(int));
+			desplazamiento+=sizeof(int);
+			pid = malloc(tamanio_pid);
+			memcpy(pid, buffer + desplazamiento,tamanio_pid);
+			desplazamiento+=tamanio_pid;
+			memcpy(&(tamanio_tabla), buffer + desplazamiento, sizeof(int));
+			desplazamiento+=sizeof(int);
+
+			for(int i=0; i<tamanio_tabla;i++){
+				t_segmento* segmento = malloc(sizeof(t_segmento));
+				memcpy(&(segmento->id), buffer + desplazamiento, sizeof(int));
+				desplazamiento+=sizeof(int);
+				memcpy(&(segmento->base), buffer + desplazamiento, sizeof(u_int32_t));
+				desplazamiento+=sizeof(int);
+				memcpy(&(segmento->limite), buffer + desplazamiento, sizeof(u_int32_t));
+				desplazamiento+=sizeof(int);
+				list_add(tabla, segmento);
+			}
+
+			for(int i=0; i<tamanio_tabla;i++){
+				t_segmento* seg = list_get(tabla,i);
+				printf("Seg %d: base %d, limite %d \n", seg->id, seg->base, seg->limite);
+			}
+		}
+
+		break;
+	}
+
 }
 
 void solicitarEliminarSegmento(int id, t_pcb* proceso) {

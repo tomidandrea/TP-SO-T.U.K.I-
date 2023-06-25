@@ -53,13 +53,12 @@ void escucharKernel(){
 						send(socket_kernel, &estadoCreacion, sizeof(op_code), 0);
 						break;
 					case PEDIDO_COMPACTAR:
-						compactar();
-						/*send(socket_kernel, &estadoCreacion, sizeof(op_code), 0);
+						send(socket_kernel, &estadoCreacion, sizeof(op_code), 0);
 						int cod_op = recibir_operacion(socket_kernel);
 						if (cod_op == COMPACTAR){
-							compactar();
+							compactar(pedido);
+							enviarDiccionarioTablas(socket_kernel);
 						}
-						*/
 						break;
 					default:
 						log_error(logger,"Error en obtener estado memoria");
@@ -119,4 +118,30 @@ void escucharFS(){
 			// cosas q pide file system xd
 		}
 	}
+}
+
+
+
+void enviarDiccionarioTablas(t_socket socket_kernel){
+	t_paquete* paquete = crear_paquete(COMPACTAR);
+	int cantidadProcesos = dictionary_size(diccionarioTablas);
+	agregar_valor_estatico(paquete,&cantidadProcesos);
+
+	void serializarTablaSegmentos(char* pid, void* tablaSegmentos){
+		t_segmento* segmento;
+		int cantidad = list_size(tablaSegmentos);
+		agregar_a_paquete(paquete, pid, strlen(pid)+1);
+		agregar_valor_estatico(paquete,&cantidad);
+		for (int i = 0; i<cantidad; i++){
+			segmento = list_get(tablaSegmentos, i);
+			agregar_valor_estatico(paquete,&(segmento->id));
+			agregar_valor_uint(paquete,&(segmento->base));
+			agregar_valor_uint(paquete,&(segmento->limite));
+		}
+	}
+
+	dictionary_iterator(diccionarioTablas, serializarTablaSegmentos);
+	log_debug(logger, "Diccionario serializado");
+	enviar_paquete(paquete, socket_kernel);
+	eliminar_paquete(paquete);
 }

@@ -7,9 +7,11 @@ extern tabla_segmentos tabla_huecos;
 extern t_log* logger;
 extern t_config* config;
 int cantidadMaxSegmentos;
+int tamanioMemoria;
 t_dictionary* diccionarioTablas;
 t_segmento* segmento0;
 int huecoDisponible;
+int huecoId;
 op_code estadoCreacion;
 char* algoritmoConfig;
 
@@ -31,13 +33,14 @@ void inicializarEstructuras(){
 
 	diccionarioTablas = dictionary_create();
 
-	int tamanioMemoria = config_get_int_value(config,"TAM_MEMORIA");
+	tamanioMemoria = config_get_int_value(config,"TAM_MEMORIA");
 	int tamanioSegmento0 = config_get_int_value(config,"TAM_SEGMENTO_0");
 	cantidadMaxSegmentos = config_get_int_value(config,"CANT_SEGMENTOS");
 
 	espacioMemoria = malloc(tamanioMemoria);
 
 	segmento0 = crear_t_segmento(0, 0, tamanioSegmento0);
+	huecoId = segmento0->id;
 
 	tabla_huecos = inicializarTablaHuecosLibres(tamanioMemoria,tamanioSegmento0) ;
 }
@@ -51,7 +54,7 @@ tabla_segmentos inicializarTablaHuecosLibres(int tamanioMemoria,int tamanioSegme
 }
 
 // ----- SEGMENTACIÓN -----
-
+//TODO: eliminar
 void enviarSegmentosKernel(t_socket socket_kernel, tabla_segmentos tablaSegmentos){
 	t_paquete* paquete = crear_paquete(TABLA_SEGMENTOS);
 	t_segmento* segmento;
@@ -102,9 +105,9 @@ int hayEspacio(t_pedido_segmento* pedido){
 			for(int i=0;i<cantidadHuecos;i++){
 				hueco = list_get(tabla_huecos, i);
 				tamanio=obtenerTamanioSegmento(hueco);
-				log_debug(logger, "Hueco %d - Tamaño: %d", i, tamanio);
+				log_debug(logger, "Hueco %d - Tamaño: %d", hueco->id, tamanio);
 				if(pedido->tamanio <= tamanio){
-					log_info(logger, "Hueco libre disponible");
+					//log_info(logger, "Hueco libre disponible");
 					huecoDisponible = hueco->id; // guardo el hueco en una variable global
 					log_debug(logger,"Hueco asignable: %d - Tamaño: %d", huecoDisponible, tamanio);
 					return HAY_HUECO_ASIGNABLE;
@@ -213,12 +216,37 @@ t_segmento* obtenerHuecoSegunAlgoritmo(t_segmento* huecoAsignable, t_segmento* h
 	}
 }
 
+t_segmento* obtenerHuecoPorId(tabla_segmentos tabla_huecos, int huecoDisponible){
+	t_segmento* hueco;
+	int tamanio = list_size(tabla_huecos);
+	for(int i=0; i<tamanio;i++){
+		hueco = list_get(tabla_huecos, i);
+		if(hueco->id == huecoDisponible)
+			return hueco;
+	}
+	return NULL;
+}
+
+void removerHuecoPorId(tabla_segmentos tabla_huecos, int huecoDisponible){
+	t_segmento* hueco;
+	int tamanio = list_size(tabla_huecos);
+	for(int i=0; i<tamanio;i++){
+		hueco = list_get(tabla_huecos, i);
+		if(hueco->id == huecoDisponible){
+			log_debug(logger, "Libero hueco con id:%d", huecoDisponible);
+			hueco = list_remove(tabla_huecos,i);
+			free(hueco);
+			break;
+		}
+	}
+}
+
 void crearSegmento(t_pedido_segmento* pedido) {
 	int estadoEspacio = hayEspacio(pedido);
 	t_segmento* nuevoSegmento;
 	switch(estadoEspacio){
 	case HAY_HUECO_ASIGNABLE:
-		t_segmento* hueco = list_get(tabla_huecos, huecoDisponible);
+		t_segmento* hueco = obtenerHuecoPorId(tabla_huecos, huecoDisponible);
 				char* pid = string_itoa(pedido->pid);
 				tabla_segmentos tabla_del_proceso = dictionary_get(diccionarioTablas, pid);
 
@@ -229,10 +257,8 @@ void crearSegmento(t_pedido_segmento* pedido) {
 				log_info(logger, "PID: %s - Crear Segmento: %d - Base: %d - TAMAÑO: %d", pid, nuevoSegmento->id, nuevoSegmento->base, nuevoSegmento->limite - nuevoSegmento->base);
 
 				if(hueco->limite == nuevoSegmento->limite){
-					t_segmento* huecoOcupado = list_remove(tabla_huecos, huecoDisponible);
+					removerHuecoPorId(tabla_huecos, huecoDisponible);
 					log_info(logger, "Se ocupó completamente el hueco");
-					free(huecoOcupado);
-
 				}else
 					hueco->base = nuevoSegmento->limite;
 
@@ -275,6 +301,7 @@ bool esMenorBase(void* seg1, void* seg2){
 }
 
 void reubicarEspacioDeMemoria(t_segmento* segmento, u_int32_t limite){
+	log_info(logger, "Reubico segmento %d: de la base %d a la base %d", segmento->id, segmento->base, limite);
 	int tamanio = 	segmento->limite - segmento->base;
 	void* contenido = malloc(tamanio);
 	memcpy(contenido, espacioMemoria + segmento->base, tamanio);
@@ -285,29 +312,38 @@ void reubicarEspacioDeMemoria(t_segmento* segmento, u_int32_t limite){
 	memcpy(espacioMemoria + segmento->base, contenido, tamanio); //asigno espacio de memoria con la "Nueva base"
 }
 
-void compactar(){
+void compactar(t_pedido_segmento* pedido){
 	log_info(logger,"entre en compactar()");
 	tabla_segmentos tablaSegmentosGlobales = unificarTablas();
 	int tamanioLista = list_size(tablaSegmentosGlobales);
 	list_sort(tablaSegmentosGlobales, esMenorBase);
-	for(int i = 0; i<tamanioLista;i++){
+	/*for(int i = 0; i<tamanioLista;i++){
 		t_segmento* seg = list_get(tablaSegmentosGlobales,i);
 		printf("Seg %d: base %d, limite %d\n", seg->id, seg->base,seg->limite);
-	}
+	}*/
 	t_segmento* segmentoActual = list_get(tablaSegmentosGlobales,0);
-	for(int i = 1; i<tamanioLista-1;i++){
+	for(int i = 1; i<tamanioLista;i++){
 		t_segmento* segmentoSiguiente = list_get(tablaSegmentosGlobales,i);
 		if(segmentoActual->limite != segmentoSiguiente->base){
 			reubicarEspacioDeMemoria(segmentoSiguiente, segmentoActual->limite);
-			printf("Diferente base alejo se la come");
+			printf("Diferente base alejo se la come\n");
 		}
 		segmentoActual = segmentoSiguiente;
 	}
 
-	for(int i = 0; i<tamanioLista;i++){
+	//TODO: crear una funcion a parte para la limpieza de la tabla de huecos
+	t_segmento* hueco = crear_t_segmento(++huecoId, segmentoActual->limite, tamanioMemoria);
+	log_debug(logger, "Nuevo hueco %d: con base %d y limite %d", hueco->id, hueco->base, hueco->limite);
+	list_clean_and_destroy_elements(tabla_huecos, free);
+	list_add(tabla_huecos, hueco);
+
+	//TODO: hacer una funcion a parte para no llamar a crearSegmento
+	crearSegmento(pedido);
+
+	/*for(int i = 0; i<tamanioLista;i++){
 		t_segmento* seg = list_get(tablaSegmentosGlobales,i);
 		printf("Seg %d: base %d, limite %d\n", seg->id, seg->base,seg->limite);
-	}
+	}*/
 }
 
 int obtenerIndiceSegmento(tabla_segmentos tabla, int id_segmento) {
@@ -330,10 +366,10 @@ void eliminarSegmento (t_pedido_segmento* pedido) {
 	int indice = obtenerIndiceSegmento(tabla_del_proceso, pedido->id_segmento);
 	segmento = list_remove(tabla_del_proceso, indice);
 
-	int cantidadHuecos = list_size(tabla_huecos);
+	//int cantidadHuecos = list_size(tabla_huecos);
 
-	t_segmento* hueco = crear_t_segmento(cantidadHuecos++, segmento->base, segmento->limite);
-	list_add(tabla_huecos, hueco);
+	t_segmento* hueco = crear_t_segmento(++huecoId, segmento->base, segmento->limite);
+	list_add_sorted(tabla_huecos, hueco, esMenorBase);
 	log_info(logger, "PID: %s - Eliminar Segmento: %d - Base: %d - TAMAÑO: %d", pid, segmento->id, segmento->base, segmento->limite-segmento->base);
 
 	//free(pid);
@@ -344,15 +380,15 @@ void eliminarSegmento (t_pedido_segmento* pedido) {
 // ----- FIN DE PROCESO -----
 
 void actualizarHuecos(tabla_segmentos tablaProceso){
-	int cantidadHuecos = list_size(tabla_huecos);
+	//int cantidadHuecos = list_size(tabla_huecos);
 	t_segmento* segmento;
 	int cantidadSegmentos = list_size(tablaProceso);
 
 	for(int t = 1; t<cantidadSegmentos;t++){
 			segmento = list_get(tablaProceso, t);
 
-			segmento->id = cantidadHuecos++;
-			list_add(tabla_huecos, segmento);
+			segmento->id = ++huecoId;
+			list_add_sorted(tabla_huecos, segmento, esMenorBase);
 			log_debug(logger, "Nuevo hueco: %d - Base: %d Limite: %d", segmento->id, segmento->base, segmento->limite);
 	}
 }

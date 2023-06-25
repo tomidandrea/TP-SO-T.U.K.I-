@@ -11,4 +11,6 @@ void escucharKernel();
 void escucharCPU();
 void escucharFS();
 
+void enviarDiccionarioTablas(t_socket socket_kernel);
+
 #endif
