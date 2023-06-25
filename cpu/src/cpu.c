@@ -149,13 +149,16 @@ estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb* pcb){
 estado_ejec set_registro(char* registro, char* valor) {
 
 	int tamanio = strlen(valor);
-
+	log_debug(logger, "Valor a setear: %s de tamaño %d", valor, tamanio);
 	if(tamanio == 4) {
 
 		switch (registro[0]) {
 		      case 'A':  strcpy(registros->AX, valor);
 		                 break;
 		      case 'B':  strcpy(registros->BX, valor);
+		      	  	  	  for (int i = 0; i < 4; ++i) {
+		                          log_debug(logger, "Valor%d  en BX: %c", i, registros->BX[i]);
+		                    }
 		                 break;
 		      case 'C':  strcpy(registros->CX, valor);
 		                 break;
@@ -184,6 +187,9 @@ estado_ejec set_registro(char* registro, char* valor) {
 
 		switch (registro[1]) {
 			 case 'A':  strcpy(registros->RAX, valor);
+ 	  	  	  for (int i = 0; i < 16; ++i) {
+                     log_debug(logger, "Valor%d  en RAX: %c", i, registros->RAX[i]);
+               }
 			            break;
 			 case 'B':  strcpy(registros->RBX, valor);
 			            break;

@@ -96,7 +96,7 @@ int hayEspacio(t_pedido_segmento* pedido){
 	u_int32_t tamanioTotal = 0; // acumula el tamaño de los huecos
 	int cantidadHuecos = list_size(tabla_huecos);
 	int condicion = NO_ENCONTRO_HUECO;
-
+	log_debug(logger, "Pedido: id %d, tamanio %d", pedido->id_segmento, pedido->tamanio);
 	switch (idAlgoritmo(algoritmoConfig)) {
 		case FIRST_FIT:
 			for(int i=0;i<cantidadHuecos;i++){
@@ -226,7 +226,7 @@ void crearSegmento(t_pedido_segmento* pedido) {
 				nuevoSegmento = crear_t_segmento(pedido->id_segmento, hueco->base, limiteSegmento);
 				list_add(tabla_del_proceso, nuevoSegmento);
 
-				log_info(logger, "PID: %s - Crear Segmento: %d - Base: %d - TAMAÑO: %d", pid, nuevoSegmento->id, nuevoSegmento->base, nuevoSegmento->limite);
+				log_info(logger, "PID: %s - Crear Segmento: %d - Base: %d - TAMAÑO: %d", pid, nuevoSegmento->id, nuevoSegmento->base, nuevoSegmento->limite - nuevoSegmento->base);
 
 				if(hueco->limite == nuevoSegmento->limite){
 					t_segmento* huecoOcupado = list_remove(tabla_huecos, huecoDisponible);
@@ -266,38 +266,47 @@ tabla_segmentos unificarTablas(){
 	return segmentosGlobales;
 }
 
-bool esMenorBase(t_segmento* seg1, t_segmento* seg2){
-	if(seg1->base < seg2->base){
+bool esMenorBase(void* seg1, void* seg2){
+	if(((t_segmento*)seg1)->base < ((t_segmento*)seg2)->base){
 		return true;
 	}
 	else
 		return false;
 }
 
-//void reubicarEspacioDeMemoria(t_segmento* segmento, u_int32_t limite){
+void reubicarEspacioDeMemoria(t_segmento* segmento, u_int32_t limite){
+	int tamanio = 	segmento->limite - segmento->base;
+	void* contenido = malloc(tamanio);
+	memcpy(contenido, espacioMemoria + segmento->base, tamanio);
 
-//}
+	segmento->base = limite;
+	segmento->limite = segmento->base + tamanio;
+
+	memcpy(espacioMemoria + segmento->base, contenido, tamanio); //asigno espacio de memoria con la "Nueva base"
+}
 
 void compactar(){
-	log_info(logger,"entre en compactar() XD DOU");
+	log_info(logger,"entre en compactar()");
 	tabla_segmentos tablaSegmentosGlobales = unificarTablas();
 	int tamanioLista = list_size(tablaSegmentosGlobales);
 	list_sort(tablaSegmentosGlobales, esMenorBase);
-
+	for(int i = 0; i<tamanioLista;i++){
+		t_segmento* seg = list_get(tablaSegmentosGlobales,i);
+		printf("Seg %d: base %d, limite %d\n", seg->id, seg->base,seg->limite);
+	}
 	t_segmento* segmentoActual = list_get(tablaSegmentosGlobales,0);
 	for(int i = 1; i<tamanioLista-1;i++){
 		t_segmento* segmentoSiguiente = list_get(tablaSegmentosGlobales,i);
 		if(segmentoActual->limite != segmentoSiguiente->base){
-			//reubicarEspacioDeMemoria(segmentoSiguiente, segmentoActual->limite);
+			reubicarEspacioDeMemoria(segmentoSiguiente, segmentoActual->limite);
 			printf("Diferente base alejo se la come");
-
 		}
+		segmentoActual = segmentoSiguiente;
 	}
 
 	for(int i = 0; i<tamanioLista;i++){
 		t_segmento* seg = list_get(tablaSegmentosGlobales,i);
-		printf("seg->base %d \n", seg->base);
-		printf("seg->limite %d \n", seg->limite);
+		printf("Seg %d: base %d, limite %d\n", seg->id, seg->base,seg->limite);
 	}
 }
 
@@ -325,10 +334,10 @@ void eliminarSegmento (t_pedido_segmento* pedido) {
 
 	t_segmento* hueco = crear_t_segmento(cantidadHuecos++, segmento->base, segmento->limite);
 	list_add(tabla_huecos, hueco);
-	log_info(logger, "PID: %s - Eliminar Segmento: %d - Base: %d - TAMAÑO: %d", pid, segmento->id, segmento->base, segmento->limite);
+	log_info(logger, "PID: %s - Eliminar Segmento: %d - Base: %d - TAMAÑO: %d", pid, segmento->id, segmento->base, segmento->limite-segmento->base);
 
-	free(pid);
-	free(segmento);
+	//free(pid);
+	//free(segmento);
 
 }
 
