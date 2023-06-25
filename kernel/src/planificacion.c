@@ -66,16 +66,10 @@ void recibirDeCPU() {
 
 		switch(contexto->motivo){
 			case EXT:
-				log_info(logger, "=== Salimos como unos campeones!!!!, PID:%d finalizó ===\n", proceso->pid);
-				proceso = removerDeExecute();
-				log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
-				// liberar_recursos();
-				// avisar_fin_a_memoria();
-				avisar_fin_a_consola(proceso->socket_consola);
-				liberar_pcb(proceso);
-				log_debug(logger, "Lista procesosReady:%d", list_size(procesosReady));
-				log_debug(logger, "POST grado multi");
-				sem_post(&sem_grado_multiprogramacion);
+				finalizar_proceso("SUCCESS");
+				break;
+			case SEG_FAULT:
+				finalizar_proceso("SEG_FAULT");
 				break;
 			case YIELD:
 				log_info(logger, "Hubo un YIELD del proceso %d\n", proceso->pid);
@@ -99,11 +93,7 @@ void recibirDeCPU() {
 				if(verificarRecursos(recurso)){
 					wait(proceso, recurso);
 				} else{
-					avisar_fin_a_consola(proceso->socket_consola);
-					sem_post(&sem_grado_multiprogramacion);
-					log_error(logger, "No existe el recurso: %s", recurso);
-					log_error(logger, "Finalizo proceso PID: %d", proceso->pid);
-					log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
+					finalizar_proceso("RECURSO_INEXISTENTE");
 				}
 				break;
 			case SIGNAL:
@@ -114,12 +104,7 @@ void recibirDeCPU() {
 				if(verificarRecursos(recurso)){
 					ejecutarSignal(proceso, recurso);
 				} else{
-					avisar_fin_a_consola(proceso->socket_consola);
-					sem_post(&sem_grado_multiprogramacion);
-					log_error(logger, "No existe el recurso: %s", recurso);
-					log_error(logger, "Finalizo proceso PID: %d", proceso->pid);
-					log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
-					//FINALIZAR PROCESO
+					finalizar_proceso("RECURSO_INEXISTENTE");
 				}
 				break;
 			case CREATE_SEGMENT:
@@ -154,7 +139,19 @@ void recibirDeCPU() {
 		liberar_contexto(contexto);
 	}
 }
-
+void finalizar_proceso(char* motivo) {
+	t_pcb* proceso = removerDeExecute();
+	log_info(logger, "=== Salimos como unos campeones!!!!, PID:%d finalizó ===\n", proceso->pid);
+	log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
+	log_info(logger, "Finaliza el proceso %d - Motivo: %s", proceso->pid, motivo);
+	// liberar_recursos();
+	// avisar_fin_a_memoria();
+	avisar_fin_a_consola(proceso->socket_consola);
+	liberar_pcb(proceso);
+	log_debug(logger, "Lista procesosReady:%d", list_size(procesosReady));
+	log_debug(logger, "POST grado multi");
+	sem_post(&sem_grado_multiprogramacion);
+}
 void agregarReady(){
 	
 	while (1)
