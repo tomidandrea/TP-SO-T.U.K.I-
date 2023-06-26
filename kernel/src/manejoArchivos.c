@@ -14,7 +14,7 @@ t_archivo_global* inicializarArchivoGlobal(char * nombre) {
 }
 
 t_archivo* inicializarArchivo(char * nombre) {
-	t_archivo* archivo = malloc(sizeof(t_archivo_global));
+	t_archivo* archivo = malloc(sizeof(t_archivo));
 	archivo->nombre = copiar(nombre);
 	archivo->puntero = 0;
 	return archivo;

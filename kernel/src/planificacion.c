@@ -61,6 +61,7 @@ void recibirDeCPU() {
 	sem_wait(&sem_recibir);
 	t_pcb* proceso = list_get(procesosExecute, 0);
 	t_contexto* contexto = actualizar_pcb(proceso);
+	t_archivo* archivoProceso;
 	char* recurso;
 	int id;
 
@@ -147,7 +148,7 @@ void recibirDeCPU() {
 			case F_CLOSE:
 				log_info(logger, "Hubo un F_CLOSE de PID:%d\n", contexto->pid);
 				t_archivo_global* archivoAbiertoGlobal = archivoGlobalQueSeLlama(contexto->parametros[0]);
-				t_archivo* archivoProceso = archivoQueSeLlama(contexto->parametros[0], proceso->archivosAbiertos);
+				archivoProceso = archivoQueSeLlama(contexto->parametros[0], proceso->archivosAbiertos);
 
 				// Si no hay nadie en la cola del archivo lo saco de la tabla global y del proceso
 				if(queue_is_empty(archivoAbiertoGlobal->cola)) {
@@ -161,6 +162,20 @@ void recibirDeCPU() {
 				}
 				mandar_pcb_a_CPU(proceso);
 
+				break;
+			case F_SEEK: //TODO
+				log_info(logger, "Hubo un F_SEEK de PID:%d\n", contexto->pid);
+				archivoProceso = archivoQueSeLlama(contexto->parametros[0], proceso->archivosAbiertos);
+				log_debug(logger, "Valor del puntero antes de ejecutar fseek: %d", archivoProceso->puntero);
+				//Si saca de la lista al archivo pasado por parametro, actualizo el puntero y lo meto de nuevo
+				if(list_remove_element(proceso->archivosAbiertos, archivoProceso)) {
+					archivoProceso->puntero = atoi(contexto->parametros[1]);
+					list_add(proceso->archivosAbiertos, archivoProceso);
+					log_info(logger, "PID: %d - Actualizar puntero Archivo: %s - Puntero %d", proceso->pid, archivoProceso->nombre, archivoProceso->puntero);
+				} else {
+					log_error(logger, "No se pudo actualizar el puntero del archivo %s del proceso %d", archivoProceso->nombre, proceso->pid);
+				}
+				mandar_pcb_a_CPU(proceso);
 				break;
 			case F_TRUNCATE: //TODO
 				log_info(logger, "Hubo un F_TRUNCATE de PID:%d\n", contexto->pid);
