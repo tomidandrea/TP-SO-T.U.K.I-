@@ -32,6 +32,8 @@ void solicitarEliminarSegmento(int id, t_pcb* proceso);
 void recibirEliminarsegmento(t_pcb* proceso);
 void recibirTablaActualizada(t_pcb* proceso);
 
-void actualizarTablasDeSegmentos(int conexionMemoria);
+int obtenerProcesoPorID(int);
+void actualizarTablaProceso(char*,tabla_segmentos, t_pcb*);
+void actualizarTablasDeSegmentos(int conexionMemoria, t_pcb*);
 
 #endif

@@ -9,6 +9,7 @@ extern t_config* config;
 extern t_log* logger;
 extern t_socket conexionCPU;
 extern t_socket conexionMemoria;
+extern t_list* procesosExecute;
 
 extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir, sem_execute;
 
@@ -159,15 +160,45 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 		/*
 		 * Si no esta bloqueado ningun proceso
 		 */
-		log_debug(logger, "hola");
 		int codOp = COMPACTAR;
 		send(conexionMemoria, &codOp, sizeof(int), 0);
-		log_debug(logger, "chau");
-		actualizarTablasDeSegmentos(conexionMemoria);
+		actualizarTablasDeSegmentos(conexionMemoria, proceso);
+		mandar_pcb_a_CPU(proceso);
+		sem_post(&sem_recibir);
 	}
 }
 
-void actualizarTablasDeSegmentos(int conexionMemoria){
+int obtenerProcesoPorID(int pid){
+	int cantidad = list_size(procesosExecute);
+	int index = -1;
+	for(int i=0;i<cantidad;i++){
+		// todo: mutex
+		t_pcb* proceso = list_get(procesosExecute,i);
+		if(proceso->pid == pid){
+			index = i;
+			break;
+		}
+	}
+	return index;
+}
+
+void actualizarTablaProceso(char* pidString, tabla_segmentos tabla, t_pcb* procesoActual){
+	int pid = atoi(pidString);
+	int indice = obtenerProcesoPorID(pid);
+	printf("\n Indice proceso: %d\n", indice);
+
+	// todo:agarrar los procesos de ready para actualizar sus tablas
+
+	procesoActual->tablaSegmentos = list_duplicate(tabla);
+	int tamanio_tabla = list_size(procesoActual->tablaSegmentos);
+
+	for(int i=0; i<tamanio_tabla;i++){
+					t_segmento* seg = list_get(procesoActual->tablaSegmentos,i);
+					printf("Seg %d: base %d, limite %d \n", seg->id, seg->base, seg->limite);
+				}
+}
+
+void actualizarTablasDeSegmentos(int conexionMemoria, t_pcb* proceso){
 	void* buffer;
 	int size;
 	int tamanio_diccionario,tamanio_tabla, tamanio_pid;
@@ -178,9 +209,11 @@ void actualizarTablasDeSegmentos(int conexionMemoria){
 	switch(cod){
 	case COMPACTAR:
 		log_debug(logger, "Voy a actualizar tablas");
+
 		buffer = recibir_buffer(&size, conexionMemoria);
 		memcpy(&(tamanio_diccionario), buffer + desplazamiento, sizeof(int));
 		desplazamiento+=sizeof(int);
+
 		log_debug(logger, "Cantidad procesos: %d", tamanio_diccionario);
 		for(int i=0; i<tamanio_diccionario;i++){
 			t_list* tabla = list_create();
@@ -203,10 +236,7 @@ void actualizarTablasDeSegmentos(int conexionMemoria){
 				list_add(tabla, segmento);
 			}
 
-			for(int i=0; i<tamanio_tabla;i++){
-				t_segmento* seg = list_get(tabla,i);
-				printf("Seg %d: base %d, limite %d \n", seg->id, seg->base, seg->limite);
-			}
+			actualizarTablaProceso(pid,tabla,proceso);
 		}
 
 		break;

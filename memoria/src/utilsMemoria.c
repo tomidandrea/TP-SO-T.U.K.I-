@@ -307,6 +307,14 @@ void reubicarEspacioDeMemoria(t_segmento* segmento, u_int32_t limite){
 	void* contenido = malloc(tamanio);
 	memcpy(contenido, espacioMemoria + segmento->base, tamanio);
 
+	char* valor = malloc(17);
+
+	memcpy(valor, contenido + 4, 16);
+
+	valor[16] = '\0';
+
+	log_debug(logger, "Valor: %s", valor);
+
 	segmento->base = limite;
 	segmento->limite = segmento->base + tamanio;
 
@@ -338,7 +346,7 @@ void compactar(t_pedido_segmento* pedido){
 	list_clean_and_destroy_elements(tabla_huecos, free);
 	list_add(tabla_huecos, hueco);
 
-	//TODO: hacer una funcion a parte para no llamar a crearSegmento
+	//TODO: hacer una funcion aparte para no llamar a crearSegmento
 	crearSegmento(pedido);
 
 	/*for(int i = 0; i<tamanioLista;i++){
