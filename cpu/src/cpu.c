@@ -183,9 +183,9 @@ estado_ejec set_registro(char* registro, char* valor) {
 			  }*/
 		                 break;
 		      case 'B':  memcpy(registros->BX, valor, 4);
-			   				for (int i = 0; i < 4; ++i) {
+			   			/*	for (int i = 0; i < 4; ++i) {
 		                          log_debug(logger, "Valor%d  en BX: %c", i, registros->BX[i]);
-		                    }
+		                    }*/
 		                 break;
 		      case 'C':  memcpy(registros->CX, valor, 4);
 		                 break;
@@ -214,9 +214,9 @@ estado_ejec set_registro(char* registro, char* valor) {
 
 		switch (registro[1]) {
 			 case 'A':  memcpy(registros->RAX, valor, 16);
-						for (int i = 0; i < 16; ++i) {
+						/*for (int i = 0; i < 16; ++i) {
 								log_debug(logger, "Valor%d  en RAX: %c", i, registros->RAX[i]);
-						}
+						}*/
 			            break;
 			 case 'B':  memcpy(registros->RBX, valor, 16);
 			            break;

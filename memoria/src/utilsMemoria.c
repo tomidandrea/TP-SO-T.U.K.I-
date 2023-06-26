@@ -307,14 +307,6 @@ void reubicarEspacioDeMemoria(t_segmento* segmento, u_int32_t limite){
 	void* contenido = malloc(tamanio);
 	memcpy(contenido, espacioMemoria + segmento->base, tamanio);
 
-	char* valor = malloc(17);
-
-	memcpy(valor, contenido + 4, 16);
-
-	valor[16] = '\0';
-
-	log_debug(logger, "Valor: %s", valor);
-
 	segmento->base = limite;
 	segmento->limite = segmento->base + tamanio;
 
@@ -335,7 +327,6 @@ void compactar(t_pedido_segmento* pedido){
 		t_segmento* segmentoSiguiente = list_get(tablaSegmentosGlobales,i);
 		if(segmentoActual->limite != segmentoSiguiente->base){
 			reubicarEspacioDeMemoria(segmentoSiguiente, segmentoActual->limite);
-			printf("Diferente base alejo se la come\n");
 		}
 		segmentoActual = segmentoSiguiente;
 	}
@@ -395,7 +386,7 @@ void actualizarHuecos(tabla_segmentos tablaProceso){
 
 	for(int t = 1; t<cantidadSegmentos;t++){
 			segmento = list_get(tablaProceso, t);
-
+			//TODO: verificar si existe algun hueco pegado y unificarlo
 			segmento->id = ++huecoId;
 			list_add_sorted(tabla_huecos, segmento, esMenorBase);
 			log_debug(logger, "Nuevo hueco: %d - Base: %d Limite: %d", segmento->id, segmento->base, segmento->limite);
