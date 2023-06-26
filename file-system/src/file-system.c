@@ -52,10 +52,15 @@ int main(int argc, char* argv[]) {
      */
 
     //creo un fcb de prueba
+
      char* path_fcbs = config_get_string_value(config,"PATH_FCB");
 
      crear_fcb("/pruebafcb",fcbs,path_fcbs);
 
+     /* TODO recorrer cada archivo fcb del directorio de fcbs y mapearlos en una lista  para manejarlos en memoria
+
+     fcbs = recorrerDirectorioFCB(path_fcbs);
+     */
 
     //inicio servidor para kernel
 	t_socket server_fd = iniciarServidor(config, logger,"PUERTO_ESCUCHA");
@@ -168,3 +173,96 @@ void liberar_fcb(t_fcb*fcb) {
 	free(fcb);
 }
 
+
+
+bool truncar_archivo(char* nombre_archivo,int nuevo_tamanio, size_t tamanio_bloque,t_list*fcbs,t_bitarray*bitmap) {
+
+	size_t cant_bloques;
+	cant_bloques = ceil(nuevo_tamanio/tamanio_bloque);
+
+	t_fcb*fcb = get_fcb(nombre_archivo,fcbs);
+		if(fcb == NULL){
+			log_debug(logger,"no existe el archivo, debe ser creado antes\n");
+			return false;
+		}
+
+	fcb->tamanio = nuevo_tamanio;
+	size_t cant_bloques_anterior = ceil(fcb->tamanio/tamanio_bloque);
+
+	if(cant_bloques > cant_bloques_anterior) {
+		size_t cant_bloques_a_agregar = cant_bloques - cant_bloques_anterior;
+		agregar_bloques(fcb,cant_bloques_a_agregar,bitmap);
+	}
+	else if (cant_bloques < cant_bloques_anterior) {
+		//size_t cant_bloques_a_eliminar = cant_bloques_anterior - cant_bloques;
+		//eliminar_bloques(fcb,cant_bloques_a_eliminar,bitmap);
+	}
+	else ; //NO HACE NADA: la cantidad de bloques nueva es la misma de antes por lo que no hay que agregar ni eliminar bloques
+
+	return true;
+}
+
+
+
+t_fcb* get_fcb(char*archivo, t_list*fcbs) {
+
+	int i;
+	int tamanio = list_size(fcbs);
+	for(i=0; i<tamanio; i++) {
+		t_fcb*fcb = list_get(fcbs,i);
+		if (strcmp(archivo,fcb->nombre) == 0)
+			return fcb;
+	 liberar_fcb(fcb);
+	}
+	return NULL;
+}
+
+void agregar_bloques(t_fcb*fcb,size_t cant_bloques,t_bitarray* bitmap) {
+
+	uint32_t bloques_asignados[cant_bloques];
+	uint32_t i = 0;
+	int j = 0;
+
+	while(se_asignaron_todos_los_bloques(bloques_asignados,cant_bloques) == false) {
+		size_t valor = bitarray_test_bit(bitmap,i);
+		if(valor == 0){
+			bloques_asignados[j]= i+1;
+			j++;
+			bitarray_set_bit(bitmap,i);
+		}
+		i++;
+	}
+
+	asignar_bloques_a_fcb(bloques_asignados,fcb,bitmap);
+}
+
+bool se_asignaron_todos_los_bloques(uint32_t bloques_asignados[],size_t cant_bloques) {
+	int i;
+	for(i=0;i<cant_bloques;i++){
+		if(bloques_asignados[i]==0)
+			return false;
+	}
+	return true;
+}
+
+
+void asignar_bloques_a_fcb(uint32_t bloques_asignados[],t_fcb*fcb,t_bitarray*bitmap) {
+	if(fcb->puntero_directo == 0)  { //esto significa que no tiene bloques asignados
+	 fcb->puntero_directo = bloques_asignados[0];
+	 fcb->puntero_indirecto = asignar_bloque_de_punteros(bitmap);
+	}
+}
+
+uint32_t asignar_bloque_de_punteros(t_bitarray*bitmap) {
+	uint32_t bloque;
+	size_t valor = 1;
+	int i = 0;
+	while(valor == 0){
+		size_t valor = bitarray_test_bit(bitmap,i);
+		if(valor == 0){
+			bloque = i+1;
+		}
+	 i++;
+	}
+	return bloque;
+}
