@@ -156,6 +156,7 @@ t_pcb* inicializar_pcb(){
 	pcb->instrucciones = list_create();
 	pcb->registros = inicializarRegistros();
 	pcb->tablaSegmentos = list_create();
+	pcb->archivosAbiertos = list_create();
 	return pcb;
 }
 

@@ -2,6 +2,7 @@
 #define PLANIF_H
 
 #include <manejoRecursos.h>
+#include <manejoArchivos.h>
 #include <pthread.h>
 #include "utilsKernel.h"
 #include <sincro.h>

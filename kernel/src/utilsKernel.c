@@ -26,6 +26,7 @@ t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola){
     temporal_stop(pcb->tiempoEnReady);
     pcb->tiempoCPU = iniciarTiempo();
     temporal_stop(pcb->tiempoCPU);
+    pcb->archivosAbiertos = list_create();
 
     strcpy(pcb->registros->AX, "0");
     strcpy(pcb->registros->BX, "0");

@@ -10,6 +10,7 @@
 
 #include <utils/general.h>
 #include <utils/sockets.h>
+#include <sincro.h>
 #include <commons/collections/list.h>
 #include <stdint.h>
 #include <string.h>

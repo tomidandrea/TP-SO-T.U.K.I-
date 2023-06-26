@@ -6,7 +6,7 @@ extern t_log* logger;
 extern t_list* procesosExecute;
 extern t_list* procesosReady;
 extern t_list* procesosNew;
-
+extern t_list* archivosAbiertosGlobal;
 uint32_t INICIO = 1;
 
 sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir, sem_execute;
@@ -126,8 +126,41 @@ void recibirDeCPU() {
 				avisar_fin_a_consola(proceso->socket_consola);
 
 				break;
-			case F_OPEN: //TODO
+			case F_OPEN:
 				log_info(logger, "Hubo un F_OPEN de PID:%d\n", contexto->pid);
+				t_archivo* archivo = inicializarArchivo(contexto->parametros[0]);
+				//Si esta en la tabla de archivos abiertos lo agrego a la tabla de archivos del proceso con puntero 0 y bloqueo al proceso
+				if(estaAbiertoElArchivo(archivo->nombre)) {
+
+					list_add(proceso->archivosAbiertos, archivo);
+					t_archivo_global* archivoAbiertoGlobal = archivoGlobalQueSeLlama(archivo->nombre);
+					bloquearEnColaDeArchivo(archivoAbiertoGlobal, proceso);
+
+				} else { //sino le mando al FS para saber si hay que crearlo
+					abrirArchivoEnFS(archivo->nombre);
+					list_add(proceso->archivosAbiertos, archivo);
+					t_archivo_global* archivoGlobal = inicializarArchivoGlobal(archivo->nombre);
+					list_add(archivosAbiertosGlobal, archivoGlobal);
+					mandar_pcb_a_CPU(proceso);
+				}
+				break;
+			case F_CLOSE:
+				log_info(logger, "Hubo un F_CLOSE de PID:%d\n", contexto->pid);
+				t_archivo_global* archivoAbiertoGlobal = archivoGlobalQueSeLlama(contexto->parametros[0]);
+				t_archivo* archivoProceso = archivoQueSeLlama(contexto->parametros[0], proceso->archivosAbiertos);
+
+				// Si no hay nadie en la cola del archivo lo saco de la tabla global y del proceso
+				if(queue_is_empty(archivoAbiertoGlobal->cola)) {
+					list_remove_element(archivosAbiertosGlobal, archivoAbiertoGlobal);
+					liberarArchivoGlobal(archivoAbiertoGlobal);
+					list_remove_element(proceso->archivosAbiertos, archivoProceso);
+					liberarArchivo(archivoProceso);
+
+				} else { //sino desbloqueo al primer proceso de la cola
+					desbloquearDeColaDeArchivo(archivoAbiertoGlobal);
+				}
+				mandar_pcb_a_CPU(proceso);
+
 				break;
 			case F_TRUNCATE: //TODO
 				log_info(logger, "Hubo un F_TRUNCATE de PID:%d\n", contexto->pid);

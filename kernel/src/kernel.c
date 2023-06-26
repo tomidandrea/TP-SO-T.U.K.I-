@@ -7,6 +7,7 @@ t_list* procesosExecute;
 t_list* procesosReady;
 t_list* procesosNew;
 t_list* colasDeBloqueados;
+t_list* archivosAbiertosGlobal;
 t_socket conexionCPU;
 t_socket conexionMemoria;
 t_socket conexionFileSystem;
@@ -27,6 +28,8 @@ int main(int argc, char* argv[]) {
     /*char* recursoEjemplo = "DISCO";
     verificarRecursos(recursoEjemplo);*/
     inicializarSemoforos();
+
+    archivosAbiertosGlobal = list_create();
 
     procesosNew = list_create();
     procesosReady = list_create();
