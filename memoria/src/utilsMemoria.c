@@ -355,18 +355,6 @@ void compactar(t_pedido_segmento* pedido){
 	}*/
 }
 
-int obtenerIndiceSegmento(tabla_segmentos tabla, int id_segmento) {
-	t_segmento* seg;
-	int indice = -1;
-	for(int k=0; k<list_size(tabla);k++){
-		seg = list_get(tabla, k);
-		if(seg->id == id_segmento){
-			indice = k;
-		}
-	}
-	return indice;
-}
-
 void eliminarSegmento (t_pedido_segmento* pedido) {
 	char* pid = string_itoa(pedido->pid);
 	tabla_segmentos tabla_del_proceso = dictionary_get(diccionarioTablas, pid);

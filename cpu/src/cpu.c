@@ -338,7 +338,7 @@ estado_ejec ejecutar_mov(int pid, int tamanio_valor, direc_logica* direcLogica, 
 
 		if (verificar_num_segmento(direcLogica->numero_segmento,tabla_de_segmentos))
 			{
-			 t_segmento*segmento = list_get(tabla_de_segmentos,direcLogica->numero_segmento);
+			 t_segmento*segmento = obtenerSegmentoPorId(tabla_de_segmentos, direcLogica->numero_segmento);
 			 if (no_produce_seg_fault(pid, direcLogica->desplazamiento,tamanio_valor, segmento) == 1)
 				 return CONTINUAR;
 			}
@@ -362,9 +362,11 @@ int verificar_num_segmento(int num_segmento,tabla_segmentos tabla_de_segmentos) 
 
 	int cantidad_segmentos = list_size(tabla_de_segmentos);     //cuenta tambien el segmento 0
 
-	if (num_segmento < cantidad_segmentos)
-		return 1;
-
+	for(int i = 0;i<cantidad_segmentos;i++){
+		t_segmento* seg = list_get(tabla_de_segmentos, i);
+		if (num_segmento == seg->id)
+			return 1;
+	}
 	return 0;
 }
 
@@ -393,7 +395,7 @@ int tamanio_registro(char*registro) {
 
 u_int32_t obtener_direc_fisica(direc_logica* direcLogica,tabla_segmentos tabla_de_segmentos){
 
-	t_segmento*segmento = list_get(tabla_de_segmentos,direcLogica->numero_segmento);
+	t_segmento*segmento = obtenerSegmentoPorId(tabla_de_segmentos,direcLogica->numero_segmento);
 	int direc_fisica = segmento->base + direcLogica->desplazamiento;
 
 	return direc_fisica;

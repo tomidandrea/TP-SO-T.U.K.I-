@@ -56,6 +56,9 @@ int contar(char* cadena, char caracter);
 
 int idAlgoritmo(char * algoritmo);
 
+int obtenerIndiceSegmento(tabla_segmentos, int);
+t_segmento* obtenerSegmentoPorId(tabla_segmentos tabla_segmentos, int id);
+
 void liberar_contexto(t_contexto* contexto);
 
 #endif

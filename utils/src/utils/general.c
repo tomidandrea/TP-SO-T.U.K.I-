@@ -35,6 +35,29 @@ int idAlgoritmo(char * algoritmo) {
 	    exit(EXIT_FAILURE);
 }
 
+int obtenerIndiceSegmento(tabla_segmentos tabla, int id_segmento) {
+	t_segmento* seg;
+	int indice = -1;
+	for(int k=0; k<list_size(tabla);k++){
+		seg = list_get(tabla, k);
+		if(seg->id == id_segmento){
+			indice = k;
+		}
+	}
+	return indice;
+}
+
+t_segmento* obtenerSegmentoPorId(tabla_segmentos tabla_segmentos, int id){
+	t_segmento* seg;
+	int tamanio = list_size(tabla_segmentos);
+	for(int i=0; i<tamanio;i++){
+		seg = list_get(tabla_segmentos, i);
+		if(seg->id == id)
+			return seg;
+	}
+	return NULL;
+}
+
 int cantParametros(char* instruccion){
     for(int i=0;i < CANT_IDENTIFICADORES;i++){
         t_identificador sym;
