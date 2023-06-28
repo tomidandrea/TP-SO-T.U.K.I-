@@ -23,6 +23,7 @@ void escucharKernel(){
 	t_socket socket_kernel = esperar_cliente(server_fd, logger);
 	char* pid;
 	tabla_segmentos tablaSegmentos;
+	//TODO: ver de cambiar el tipo pid en el struct
 	t_pedido_segmento* pedido = malloc(sizeof(t_pedido_segmento));
 
 	while(1){
@@ -56,6 +57,7 @@ void escucharKernel(){
 						break;
 					case OUT_OF_MEMORY:
 						log_error(logger,"Límite de segmentos máximos alcanzado - Limite: %d", cantidadMaxSegmentos);
+						//TODO: esto es porque ya no hay espacio en el espacioMemoria, no por limite de segmentos
 						send(socket_kernel, &estadoCreacion, sizeof(op_code), 0);
 						break;
 					case PEDIDO_COMPACTAR:
@@ -73,6 +75,7 @@ void escucharKernel(){
 				}
 				else{
 					estadoCreacion = LIMITE_SEGMENTOS_SUPERADO;
+					log_error(logger,"Límite de segmentos máximos alcanzado - Limite: %d", cantidadMaxSegmentos);
 					send(socket_kernel, &estadoCreacion, sizeof(op_code), 0);
 				}
 				break;

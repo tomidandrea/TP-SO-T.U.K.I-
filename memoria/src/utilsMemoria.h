@@ -51,7 +51,7 @@ t_segmento* obtenerHuecoSegunAlgoritmo(t_segmento*, t_segmento*, t_algoritmo_mem
 
 u_int32_t obtenerTamanioSegmento(t_segmento*);
 
-
+void agregarHueco(t_segmento* segmento);
 // Elimina el segmento y agrega el hueco que dejó a la lista de huecos
 void eliminarSegmento (t_pedido_segmento*);
 

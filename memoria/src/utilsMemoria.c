@@ -346,18 +346,56 @@ void compactar(t_pedido_segmento* pedido){
 	}*/
 }
 
+void agregarHueco(t_segmento* segmento){
+	bool encontrado = false;
+	int cantidadHuecos = list_size(tabla_huecos);
+	t_segmento* huecoSuperior; //guardo si hay un hueco superior para fijarme si hay uno inferior, unificar desde base del superior hasta limite del inferior
+		for (int i = 0; i < cantidadHuecos; i++) {
+			t_segmento* hueco = list_get(tabla_huecos, i);
+			if(segmento->limite < hueco->base){
+				//si el hueco esta por debajo del segmento no hace falta seguir buscando
+				break;
+			}else if(segmento->limite == hueco->base){
+				//hueco pegado abajo
+				if(encontrado){ //significa que encontro un hueco pegado arriba en la iteracion anterior
+					huecoSuperior->limite = hueco->limite;
+					list_remove_and_destroy_element(tabla_huecos, i, free);
+					log_debug(logger, "Unifico hueco Superior e Inferior: %d - Base: %d Limite: %d", huecoSuperior->id, huecoSuperior->base, huecoSuperior->limite);
+				}else{
+					hueco->base = segmento->base;
+					encontrado = true;
+					log_debug(logger, "Unifico hueco Inferior: %d - Base: %d Limite: %d", hueco->id, hueco->base, hueco->limite);
+				}
+				break;
+			}else if(segmento->base == hueco->limite){
+				//hueco pegado arriba
+				huecoSuperior = list_get(tabla_huecos, i);
+				huecoSuperior->limite = segmento->limite;
+				encontrado = true;
+				log_debug(logger, "Unifico hueco Superior: %d - Base: %d Limite: %d", hueco->id, hueco->base, hueco->limite);
+			}
+		}
+		if(!encontrado){
+			t_segmento* hueco = crear_t_segmento(++huecoId, segmento->base, segmento->limite);
+			list_add_sorted(tabla_huecos, hueco, esMenorBase);
+			log_debug(logger, "Nuevo hueco: %d - Base: %d Limite: %d", hueco->id, hueco->base, hueco->limite);
+		}
+}
+
 void eliminarSegmento (t_pedido_segmento* pedido) {
 	char* pid = string_itoa(pedido->pid);
 	tabla_segmentos tabla_del_proceso = dictionary_get(diccionarioTablas, pid);
-	t_segmento* segmento = malloc(sizeof(t_segmento));
+	t_segmento* segmento = malloc(sizeof(t_segmento)); //creo que no es necesario el malloc
 
 	int indice = obtenerIndiceSegmento(tabla_del_proceso, pedido->id_segmento);
 	segmento = list_remove(tabla_del_proceso, indice);
 
 	//int cantidadHuecos = list_size(tabla_huecos);
+	agregarHueco(segmento);
 
-	t_segmento* hueco = crear_t_segmento(++huecoId, segmento->base, segmento->limite);
-	list_add_sorted(tabla_huecos, hueco, esMenorBase);
+	//t_segmento* hueco = crear_t_segmento(++huecoId, segmento->base, segmento->limite);
+	//list_add_sorted(tabla_huecos, hueco, esMenorBase);
+
 	log_info(logger, "PID: %s - Eliminar Segmento: %d - Base: %d - TAMAÑO: %d", pid, segmento->id, segmento->base, segmento->limite-segmento->base);
 
 	//free(pid);
@@ -387,9 +425,9 @@ void actualizarHuecos(tabla_segmentos tablaProceso){
 	for(int t = 1; t<cantidadSegmentos;t++){
 			segmento = list_get(tablaProceso, t);
 			//TODO: verificar si existe algun hueco pegado y unificarlo
-			segmento->id = ++huecoId;
-			list_add_sorted(tabla_huecos, segmento, esMenorBase);
-			log_debug(logger, "Nuevo hueco: %d - Base: %d Limite: %d", segmento->id, segmento->base, segmento->limite);
+			//segmento->id = ++huecoId;
+			//list_add_sorted(tabla_huecos, segmento, esMenorBase);
+			agregarHueco(segmento);
 	}
 }
 
