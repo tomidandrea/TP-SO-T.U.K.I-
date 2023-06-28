@@ -8,6 +8,7 @@ t_list* procesosReady;
 t_list* procesosNew;
 t_list* colasDeBloqueados;
 t_list* archivosAbiertosGlobal;
+t_list* esperaDeFS;
 t_socket conexionCPU;
 t_socket conexionMemoria;
 t_socket conexionFileSystem;
@@ -43,6 +44,7 @@ int main(int argc, char* argv[]) {
 		crearAgregarReady();
 		crearPlanificar();
 		crearRecibirDeCPU();
+		crearRecibirDeFS();
 		while(1);
 
 		return EXIT_SUCCESS;

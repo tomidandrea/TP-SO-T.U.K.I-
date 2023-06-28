@@ -7,9 +7,10 @@ extern t_list* procesosExecute;
 extern t_list* procesosReady;
 extern t_list* procesosNew;
 extern t_list* archivosAbiertosGlobal;
+extern t_socket conexionFileSystem;
 uint32_t INICIO = 1;
 
-sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir, sem_execute;
+sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir_cpu, sem_recibir_fs, sem_execute;
 pthread_mutex_t mutex_procesos_new = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_procesos_ready = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_procesos_execute = PTHREAD_MUTEX_INITIALIZER;
@@ -49,7 +50,7 @@ void planificar(){
 
 		mandar_pcb_a_CPU(proceso);
 		log_info(logger, "Proceso %d enviado a cpu\n", proceso->pid);
-		sem_post(&sem_recibir);
+		sem_post(&sem_recibir_cpu);
 
 	}
 	free(algoritmo);
@@ -58,7 +59,7 @@ void planificar(){
 void recibirDeCPU() {
 
 	while(1) {
-	sem_wait(&sem_recibir);
+	sem_wait(&sem_recibir_cpu);
 	t_pcb* proceso = list_get(procesosExecute, 0);
 	t_contexto* contexto = actualizar_pcb(proceso);
 	t_archivo* archivoProceso;
@@ -179,6 +180,9 @@ void recibirDeCPU() {
 				break;
 			case F_TRUNCATE: //TODO
 				log_info(logger, "Hubo un F_TRUNCATE de PID:%d\n", contexto->pid);
+				char* nombre = contexto->parametros[0];
+				int tamanioATruncar = atoi(contexto->parametros[1]);
+				truncar_archivo(nombre, tamanioATruncar);
 				break;
 			default:
 				log_debug(logger, "No se implemento la instruccion");
@@ -187,6 +191,29 @@ void recibirDeCPU() {
 		liberar_contexto(contexto);
 	}
 }
+
+void recibirDeFS() {
+
+	while(1) {
+	sem_wait(&sem_recibir_fs);
+
+	if(conexionFileSystem != -1){
+
+	/*	int cod_op = recibir_operacion(conexionFileSystem);
+
+		switch(cod_op){
+			case :
+			break;
+
+			default:
+		} */
+		} else {
+			log_error(logger, "Se rompio la conexion con File System");
+			exit(1);
+		}
+	}
+}
+
 void finalizar_proceso(char* motivo) {
 	t_pcb* proceso = removerDeExecute();
 	log_info(logger, "=== Salimos como unos campeones!!!!, PID:%d finalizó ===\n", proceso->pid);
@@ -211,8 +238,6 @@ void agregarReady(){
 	}
 
 }
-
-
 
 t_pcb* planificarFIFO(){
 	t_pcb* proceso = removerPrimeroDeReady();

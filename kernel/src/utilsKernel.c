@@ -10,7 +10,7 @@ extern t_log* logger;
 extern t_socket conexionCPU;
 extern t_socket conexionMemoria;
 
-extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir, sem_execute;
+extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir_cpu, sem_execute;
 
 
 t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola){
@@ -134,7 +134,7 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 		segmento = recibirSegmento(conexionMemoria);
 		list_add(proceso->tablaSegmentos, segmento);
 		mandar_pcb_a_CPU(proceso);
-		sem_post(&sem_recibir);
+		sem_post(&sem_recibir_cpu);
 		break;
 	case OUT_OF_MEMORY:
 		avisar_fin_a_consola(proceso->socket_consola);
@@ -154,7 +154,7 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 		proceso->tablaSegmentos = recibirTablaSegmentos(conexionMemoria);
 		log_info(logger, "Recibimos la tabla pibe");
 		mandar_pcb_a_CPU(proceso);
-		sem_post(&sem_recibir);
+		sem_post(&sem_recibir_cpu);
 		break;
 	}
 }

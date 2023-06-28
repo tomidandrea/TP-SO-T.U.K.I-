@@ -9,7 +9,7 @@ extern char** instanciasRecursos;
 extern int* instancias;
 extern t_list* colasDeBloqueados;
 extern char** recursos;
-extern sem_t sem_recibir;
+extern sem_t sem_recibir_cpu;
 
 
 void inicializarRecursos(){
@@ -71,7 +71,7 @@ void wait(t_pcb* proceso, char* recurso) {
 		//agregarAlInicioDeReady(proceso);
 		log_info(logger, "Proceso %d vuelve a cpu por disponibilidad del recurso %s\n", proceso->pid, recurso);
 		mandar_pcb_a_CPU(proceso);
-		sem_post(&sem_recibir);
+		sem_post(&sem_recibir_cpu);
     }
 }
 
@@ -85,7 +85,7 @@ void ejecutarSignal(t_pcb* proceso, char* recurso) {
 	//agregarAlInicioDeReady(proceso);
 	log_info(logger, "Se realizo signal del recurso %s. El proceso %d puede seguir ejecutandose en cpu\n", recurso, proceso->pid);
 	mandar_pcb_a_CPU(proceso);
-	sem_post(&sem_recibir);
+	sem_post(&sem_recibir_cpu);
 
 }
 

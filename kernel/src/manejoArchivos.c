@@ -3,7 +3,8 @@
 extern t_log* logger;
 extern t_list* archivosAbiertosGlobal;
 extern t_socket conexionFileSystem;
-
+extern t_list* esperaDeFS;
+extern sem_t sem_recibir_fs;
 
 t_archivo_global* inicializarArchivoGlobal(char * nombre) {
 	t_archivo_global* archivoAbiertoGlobal = malloc(sizeof(t_archivo_global));
@@ -71,15 +72,36 @@ void abrirArchivoEnFS(char* nombre) {
 	enviar_paquete(paquete,conexionFileSystem);
 	eliminar_paquete(paquete);
 
-	//TODO Recibir del FS si tengo que crearlo o no
+	sem_post(&sem_recibir_fs);
 
 }
 
+void truncar_archivo(char* nombre, int tamanio) {
+	t_paquete *paquete = crear_paquete(F_TRUNCATE);
+	agregar_a_paquete(paquete, nombre, strlen(nombre) + 1);
+	agregar_valor_estatico(paquete, &tamanio);
+
+	enviar_paquete(paquete,conexionFileSystem);
+	eliminar_paquete(paquete);
+
+	t_pcb* proceso = removerDeExecute();
+	bloquearPorFS(proceso, "F_TRUNCATE");
+
+	sem_post(&sem_recibir_fs);
+}
+
+void bloquearPorFS(t_pcb* proceso, char* motivo) {
+
+	list_add(esperaDeFS, proceso);
+	log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: BLOCKED", proceso->pid);
+	log_info(logger, "PID: %d - Bloqueado por: %s", proceso->pid, motivo);
+}
 
 void bloquearEnColaDeArchivo(t_archivo_global* archivo, t_pcb* proceso) {
 	queue_push(archivo->cola, proceso);
 	log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: BLOCKED", proceso->pid);
 	log_info(logger, "PID: %d - Bloqueado por: %s", proceso->pid, archivo->nombre);
+
 }
 
 void desbloquearDeColaDeArchivo(t_archivo_global* archivo) {

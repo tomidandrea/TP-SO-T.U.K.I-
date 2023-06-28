@@ -9,6 +9,7 @@
 
 void planificar();
 void recibirDeCPU();
+void recibirDeFS();
 t_pcb* planificarFIFO();
 t_pcb* planificarHRRN();
 void finalizar_proceso(char* motivo);
