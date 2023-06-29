@@ -7,12 +7,12 @@ t_socket conexionMemoria;
 bool RESULT_OK = true;
 bool RESULT_ERROR = false;
 
-size_t cantidad_bloques = 0;
+int cantidad_bloques = 0;
 int tamanio_bloque = 0;
 
 int main(int argc, char* argv[]) {
 
-	size_t cantidad_bloques, cantidad_bytes;
+	size_t cantidad_bytes = 0;
 	t_list* fcbs = list_create();
 	bool result_operacion;
 
@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
 		string_array_destroy(parametros);
 		}
 
-		if(result_operacion==RESULT_OK) {
+		if(result_operacion == RESULT_OK) {
 			enviar_mensaje("OPERACION_OK",socket_cliente);
 		}
 		else {
@@ -209,7 +209,7 @@ bool truncar_archivo(char* nombre_archivo,int nuevo_tamanio,t_list*fcbs,t_bitarr
 		 if(cant_bloques_indirectos_actual >= 0)
 		 result = liberar_bloques(fcb, cant_bloques_a_liberar, cant_bloques_indirectos_actual,bitmap, archivo_bloques);
 	}
-	else ; //NO HACE NADA: la cantidad de bloques nueva es la misma de antes por lo que no hay que agregar ni eliminar bloques
+	else result = RESULT_OK; //NO HACE NADA: la cantidad de bloques nueva es la misma de antes por lo que no hay que agregar ni eliminar bloques
 
 	// persisto fcb en disco
 
