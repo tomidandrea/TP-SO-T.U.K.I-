@@ -45,7 +45,7 @@ void removerHuecoPorId(tabla_segmentos tabla_huecos, int huecoDisponible);
 void removerSegmento0(tabla_segmentos tabla_seg);
 
 // Se crea el segmento y se guarda en el hueco disponible
-void crearSegmento(t_pedido_segmento* pedido);
+op_code crearSegmento(t_pedido_segmento* pedido);
 
 // Retorna el hueco mayor o menor según el algoritmo de asignacion
 t_segmento* obtenerHuecoSegunAlgoritmo(t_segmento*, t_segmento*, t_algoritmo_memoria);

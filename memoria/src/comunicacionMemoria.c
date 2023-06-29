@@ -49,8 +49,9 @@ void escucharKernel(){
 				tablaSegmentos = dictionary_get(diccionarioTablas, pid);
 
 				int cantidadSegmentos = list_size(tablaSegmentos);
+				op_code estadoCreacion;
 				if(cantidadSegmentos < cantidadMaxSegmentos) {
-					crearSegmento(pedido);
+					estadoCreacion = crearSegmento(pedido);
 
 					switch (estadoCreacion) {
 					case CREACION_EXITOSA:

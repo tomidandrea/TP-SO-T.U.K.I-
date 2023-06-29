@@ -123,9 +123,9 @@ void solicitarCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 
 void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 	int cod = recibir_operacion(conexionMemoria);
+	t_segmento* segmento;
 	switch(cod) {
 	case CREACION_EXITOSA:
-		t_segmento* segmento;
 		/*segmento->id = id;
 		//recv(conexionMemoria, &segmento->base, sizeof(int) , MSG_WAITALL);
 		segmento->limite = segmento->base + tamanio;
@@ -163,6 +163,12 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 		int codOp = COMPACTAR;
 		send(conexionMemoria, &codOp, sizeof(int), 0);
 		actualizarTablasDeSegmentos(conexionMemoria, proceso);
+
+		//Tenemos que mandar otra vez el pedido a memoria
+		solicitarCrearSegmento(id,tamanio, proceso); //mandamos a memoria
+
+		segmento = recibirSegmento(conexionMemoria);
+		list_add(proceso->tablaSegmentos, segmento);
 		mandar_pcb_a_CPU(proceso);
 		sem_post(&sem_recibir);
 	}

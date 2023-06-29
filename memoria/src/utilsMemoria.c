@@ -13,7 +13,6 @@ t_dictionary* diccionarioTablas;
 t_segmento* segmento0;
 int huecoDisponible;
 int huecoId;
-op_code estadoCreacion;
 char* algoritmoConfig;
 
 //TODO alejiti: ver si necesitamos mutex para el diccionario y tabla de huecos
@@ -54,7 +53,6 @@ tabla_segmentos inicializarTablaHuecosLibres(int tamanioMemoria,int tamanioSegme
 }
 
 // ----- SEGMENTACIÓN -----
-//TODO: eliminar
 void enviarSegmentosKernel(t_socket socket_kernel, tabla_segmentos tablaSegmentos){
 	t_paquete* paquete = crear_paquete(TABLA_SEGMENTOS);
 	t_segmento* segmento;
@@ -248,9 +246,10 @@ void removerSegmento0(tabla_segmentos tabla_seg){
 	}
 }
 
-void crearSegmento(t_pedido_segmento* pedido) {
+op_code crearSegmento(t_pedido_segmento* pedido) {
 	int estadoEspacio = hayEspacio(pedido);
 	t_segmento* nuevoSegmento;
+	op_code estadoCreacion;
 	switch(estadoEspacio){
 	case HAY_HUECO_ASIGNABLE:
 		t_segmento* hueco = obtenerHuecoPorId(tabla_huecos, huecoDisponible);
@@ -287,6 +286,7 @@ void crearSegmento(t_pedido_segmento* pedido) {
 	default:
 		log_error(logger, "Espacio invalido");
 	}
+	return estadoCreacion;
 }
 
 tabla_segmentos unificarTablas(){
@@ -362,7 +362,7 @@ void compactar(t_pedido_segmento* pedido){
 	list_add(tabla_huecos, hueco);
 
 	//TODO: hacer una funcion aparte para no llamar a crearSegmento
-	crearSegmento(pedido);
+	//crearSegmento(pedido);
 
 	/*for(int i = 0; i<tamanioLista;i++){
 		t_segmento* seg = list_get(tablaSegmentosGlobales,i);
