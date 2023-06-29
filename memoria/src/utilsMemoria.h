@@ -68,5 +68,7 @@ void compactar(t_pedido_segmento* pedido);
 void* leer(u_int32_t direc, int tamanio, int pid);
 void escribir(u_int32_t direc, int tamanio, char* valor, int pid);
 int hayEspacio(t_pedido_segmento* pedido);
+EstadoMemoria asignacion_first(int tamanioPedido);
+EstadoMemoria asignacion_por_algoritmo(int tamanioPedido, int algoritmo); //Para best y worst
 
 #endif /* SRC_UTILSMEMORIA_H_ */

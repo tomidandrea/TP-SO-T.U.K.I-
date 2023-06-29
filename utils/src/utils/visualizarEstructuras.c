@@ -64,4 +64,15 @@ void mostrarListaSegmentos(tabla_segmentos tabla){
 	}
 }
 
+void mostrarTablaHuecos(tabla_segmentos tabla){
+	int cantidad = list_size(tabla);
+	int tamanio;
+	printf("  -- Tabla de huecos - cantidad huecos: %d --  \n", cantidad);
+	for (int i = 0; i < cantidad; ++i) {
+		t_segmento* seg = list_get(tabla, i);
+		tamanio = seg->limite - seg->base;
+		printf("Hueco %d: base %d - limite %d - tamaño %d\n", seg->id, seg->base, seg->limite, tamanio);
+	}
+}
+
 
