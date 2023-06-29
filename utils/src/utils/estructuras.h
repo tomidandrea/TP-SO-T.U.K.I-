@@ -125,6 +125,7 @@ typedef struct {
     char** parametros;
     int cantidadParametros;
     tabla_segmentos tablaSegmentos;
+    u_int32_t direc_fisica;
 } t_contexto;
 
 

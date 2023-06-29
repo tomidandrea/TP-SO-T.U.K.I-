@@ -3,6 +3,7 @@
 extern t_registros* registros;
 extern t_socket conexionMemoria;
 extern t_log* logger;
+extern u_int32_t direcFisicaAEnviar;
 
 t_pcb* recibir_proceso(int socket_cliente) {
 	    int size;
@@ -149,6 +150,7 @@ void enviar_contexto(t_pcb* proceso, t_instruccion* inst, int conexion){
 	agregar_valor_estatico(paquete, &(proceso -> pid));
 	agregar_valor_estatico(paquete, &(proceso -> pc));
 	agregar_valor_estatico(paquete, &(proceso -> motivo));
+	agregar_valor_uint(paquete, &direcFisicaAEnviar);
 	agregar_valor_estatico(paquete, &(cant_parametros));
 	for(int i=0; i<cant_parametros; i++) {
 		agregar_a_paquete(paquete,inst->parametros[i],strlen(inst->parametros[i])+1);

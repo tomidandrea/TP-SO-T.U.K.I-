@@ -6,7 +6,8 @@ t_registros* registros;
 t_socket conexionMemoria;
 uint32_t RESULT_OK = 0;
 uint32_t RESULT_ERROR = 1;
-
+// La uso solo para mandarle a kernel la direccion fisica para F_READ y F_WRITE (ver si hay otra forma)
+u_int32_t direcFisicaAEnviar = 0;
 
 int main(int argc, char* argv[]) {
 
@@ -81,6 +82,8 @@ void decode(char* instruccion) {
 }*/
 
 estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb* pcb){
+
+	direc_logica* direcLogica;
 
 	switch (id(instruccion_ejecutar->instruccion)) {
 		case SET:
@@ -157,10 +160,16 @@ estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb* pcb){
 		case F_READ:
 					log_info(logger,"PID: %d - Ejecutando: %s - %s %s %s", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar->parametros[0], instruccion_ejecutar-> parametros[1], instruccion_ejecutar-> parametros[2]);
 					pcb->motivo = F_READ;
+					direcLogica = crear_direc_logica(instruccion_ejecutar->parametros[1]);
+					direcFisicaAEnviar = obtener_direc_fisica(direcLogica,pcb->tablaSegmentos);
+					free(direcLogica);
 				    return FIN;
 		case F_WRITE:
 					log_info(logger,"PID: %d - Ejecutando: %s - %s %s %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar->parametros[0], instruccion_ejecutar-> parametros[1], instruccion_ejecutar-> parametros[2]);
 					pcb->motivo = F_WRITE;
+					direcLogica = crear_direc_logica(instruccion_ejecutar->parametros[1]);
+					direcFisicaAEnviar = obtener_direc_fisica(direcLogica,pcb->tablaSegmentos);
+					free(direcLogica);
 				    return FIN;
 		default:
 			log_error(logger,"Error en execute. La CPU no conoce todavia la operacion: %s ",instruccion_ejecutar-> instruccion);
@@ -297,7 +306,7 @@ estado_ejec resultado = ejecutar_mov(pid, tamanio_a_leer,direcLogica,tabla_de_se
 
 if(resultado == CONTINUAR) {
 	char* valor;
-	int direc_fisica = obtener_direc_fisica(direcLogica,tabla_de_segmentos);
+	u_int32_t direc_fisica = obtener_direc_fisica(direcLogica,tabla_de_segmentos);
 	valor = leer_memoria(pid, direc_fisica,tamanio_a_leer); //tiene el \0
 	set_registro(registro,valor);
 	log_info(logger, "PID: %d - Acción: LEER - Segmento: %d - Dirección Física: %d - Valor: %s", pid, direcLogica->numero_segmento, direc_fisica, valor);
@@ -316,7 +325,7 @@ estado_ejec resultado = ejecutar_mov(pid,tamanio_a_escribir, direcLogica, tabla_
 
 
 if(resultado == CONTINUAR) {
-	 int direc_fisica = obtener_direc_fisica(direcLogica,tabla_de_segmentos);
+	 u_int32_t direc_fisica = obtener_direc_fisica(direcLogica,tabla_de_segmentos);
 	 char* valor = get_registro(registro); //tiene el \0
 	 char valor_registro[tamanio_a_escribir];
 	 memcpy(valor_registro, valor, tamanio_a_escribir); //le saco el \0

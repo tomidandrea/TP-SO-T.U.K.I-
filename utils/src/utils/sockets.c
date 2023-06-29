@@ -53,7 +53,7 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 	printf("size de mensaje a enviar: %d\n", paquete->buffer->size);
 	paquete->buffer->stream = malloc(paquete->buffer->size);
 	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
-	printf("mensaje a enviar: %s\n", paquete->buffer->stream);
+	printf("mensaje a enviar: %s\n", (char*)paquete->buffer->stream);
 
 	int bytes = paquete->buffer->size + 2*sizeof(int);
 
@@ -209,6 +209,9 @@ t_contexto* recibir_contexto(int socket_cliente) {
 
 		memcpy(&(contexto->motivo), buffer + desplazamiento, sizeof(int));
 		desplazamiento+=sizeof(int);
+
+		memcpy(&(contexto->direc_fisica), buffer + desplazamiento, sizeof(u_int32_t));
+		desplazamiento+=sizeof(u_int32_t);
 
 		memcpy(&(contexto->cantidadParametros), buffer + desplazamiento, sizeof(int));
 		desplazamiento+=sizeof(int);
