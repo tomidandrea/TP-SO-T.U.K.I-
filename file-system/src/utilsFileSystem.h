@@ -20,11 +20,17 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+// levantar archivos y mapeo
 FILE* levantarArchivo(char*path,size_t cantidad_bloques);
 t_bitarray* mapear_bitmap(size_t cant_bits, size_t cant_bytes, FILE*archivo_bitmap);
-//void mapear_bloques(void*bloques,char*path);
 void* mapearArchivo(FILE*archivo,size_t tamanio);
+
+// bitarray
 void inicializar_bitarray(t_bitarray*bitarray,size_t cant_bits);
+void setear_n_primeros_bits_en_bitarray(t_bitarray*bitmap,size_t cant_bits, uint32_t indices_bits_asignados[]);
+bool se_asignaron_todos_los_bits(uint32_t indices_bits_asignados[],size_t cant_bits);
+
+// conexiones, serializacion/deserializacion
 void recibo_parametros(t_socket socket_cliente,char** parametros);
 
 #endif /* SRC_UTILSFILESYSTEM_H_ */

@@ -46,10 +46,6 @@ int main(int argc, char* argv[]) {
      FILE*archivo_bloques = levantarArchivo(path_bloques,tamanio_total);
      free(path_bloques);
      //TODO ver si es mejor directamente usar fseek,fread y frwite (no mapearlo en memoria)
-     /*
-     //mapeo archivo de bloques en un espacio de memoria
-     void*bloques = mapearArchivo(archivo_bloques,tamanio_total);
-     */
 
     //creo un fcb de prueba
 
@@ -86,8 +82,9 @@ int main(int argc, char* argv[]) {
 					 break;
 
 				case F_TRUNCATE:
-					// log_info(logger, "Truncar Archivo: %s - Tamaño: %s", parametros[0], parametros[1]);
-					// result_operacion = truncar_archivo(parametro[0],parametro[1]);
+					log_info(logger, "Truncar Archivo: %s - Tamaño: %s", parametros[0], parametros[1]);
+					int nuevo_tamanio = atoi(parametros[1]);
+					result_operacion = truncar_archivo(parametros[0],nuevo_tamanio,tamanio_bloque,fcbs,bitmap,archivo_bloques);
 					break;
 
 				case F_READ:
@@ -175,10 +172,10 @@ void liberar_fcb(t_fcb*fcb) {
 
 
 
-bool truncar_archivo(char* nombre_archivo,int nuevo_tamanio, size_t tamanio_bloque,t_list*fcbs,t_bitarray*bitmap) {
+bool truncar_archivo(char* nombre_archivo,int nuevo_tamanio, size_t tamanio_bloque,t_list*fcbs,t_bitarray*bitmap, FILE*archivo_bloques) {
 
-	size_t cant_bloques;
-	cant_bloques = ceil(nuevo_tamanio/tamanio_bloque);
+	size_t cant_bloques_nueva;
+	cant_bloques_nueva = ceil(nuevo_tamanio/tamanio_bloque);
 
 	t_fcb*fcb = get_fcb(nombre_archivo,fcbs);
 		if(fcb == NULL){
@@ -186,16 +183,18 @@ bool truncar_archivo(char* nombre_archivo,int nuevo_tamanio, size_t tamanio_bloq
 			return false;
 		}
 
+	size_t cant_bloques_actual = ceil(fcb->tamanio/tamanio_bloque);
 	fcb->tamanio = nuevo_tamanio;
-	size_t cant_bloques_anterior = ceil(fcb->tamanio/tamanio_bloque);
 
-	if(cant_bloques > cant_bloques_anterior) {
-		size_t cant_bloques_a_agregar = cant_bloques - cant_bloques_anterior;
-		agregar_bloques(fcb,cant_bloques_a_agregar,bitmap);
+	if(cant_bloques_nueva > cant_bloques_actual) {
+		size_t cant_bloques_a_agregar = cant_bloques_nueva - cant_bloques_actual;
+		agregar_bloques(fcb,cant_bloques_a_agregar,bitmap, archivo_bloques);
 	}
-	else if (cant_bloques < cant_bloques_anterior) {
-		//size_t cant_bloques_a_eliminar = cant_bloques_anterior - cant_bloques;
-		//eliminar_bloques(fcb,cant_bloques_a_eliminar,bitmap);
+	else if (cant_bloques_nueva < cant_bloques_actual) {
+		 size_t cant_bloques_a_liberar = cant_bloques_actual - cant_bloques_nueva;
+		 size_t cant_bloques_indirectos_actual = cant_bloques_actual - 1;    //necesito tambien saber la cantidad de bloques indirectos que tenia antes para luego saber desde donde hay que leerlos en el archivo de bloques para eliminarlos
+		 if(cant_bloques_indirectos_actual >= 0)
+		 liberar_bloques(fcb, cant_bloques_a_liberar, cant_bloques_indirectos_actual,bitmap, archivo_bloques);
 	}
 	else ; //NO HACE NADA: la cantidad de bloques nueva es la misma de antes por lo que no hay que agregar ni eliminar bloques
 
@@ -217,52 +216,79 @@ t_fcb* get_fcb(char*archivo, t_list*fcbs) {
 	return NULL;
 }
 
-void agregar_bloques(t_fcb*fcb,size_t cant_bloques,t_bitarray* bitmap) {
+void agregar_bloques(t_fcb*fcb,size_t cant_bloques,t_bitarray* bitmap,FILE*archivo_bloques) {
 
 	uint32_t bloques_asignados[cant_bloques];
-	uint32_t i = 0;
-	int j = 0;
 
-	while(se_asignaron_todos_los_bloques(bloques_asignados,cant_bloques) == false) {
-		size_t valor = bitarray_test_bit(bitmap,i);
-		if(valor == 0){
-			bloques_asignados[j]= i+1;
-			j++;
-			bitarray_set_bit(bitmap,i);
-		}
-		i++;
-	}
+	if(fcb->puntero_indirecto == 0 && cant_bloques > 1)             //si no tiene bloque indirecto asignado
+		cant_bloques++;        //le sumo un bloque mas a agregar para el bloque de punteros
 
-	asignar_bloques_a_fcb(bloques_asignados,fcb,bitmap);
-}
+	setear_n_primeros_bits_en_bitarray(bitmap,cant_bloques,bloques_asignados);
 
-bool se_asignaron_todos_los_bloques(uint32_t bloques_asignados[],size_t cant_bloques) {
-	int i;
-	for(i=0;i<cant_bloques;i++){
-		if(bloques_asignados[i]==0)
-			return false;
-	}
-	return true;
+	asignar_bloques_a_fcb(bloques_asignados,cant_bloques,fcb,bitmap,archivo_bloques);
 }
 
 
-void asignar_bloques_a_fcb(uint32_t bloques_asignados[],t_fcb*fcb,t_bitarray*bitmap) {
+
+
+void asignar_bloques_a_fcb(uint32_t bloques_asignados[],size_t cant_bloques,t_fcb*fcb,t_bitarray*bitmap,FILE*archivo_bloques) {
+
+	 size_t cant_bloques_indirectos;
 	if(fcb->puntero_directo == 0)  { //esto significa que no tiene bloques asignados
 	 fcb->puntero_directo = bloques_asignados[0];
-	 fcb->puntero_indirecto = asignar_bloque_de_punteros(bitmap);
+	  if (cant_bloques > 1) {
+		  cant_bloques_indirectos = cant_bloques - 2;
+		  asignar_bloques_indirectos(fcb,bloques_asignados,cant_bloques,cant_bloques_indirectos,1,archivo_bloques);
+	  }
 	}
+	else if (fcb->puntero_indirecto == 0){          //si solo tiene un bloque directo asignados pero no tiene todavia los indirectos
+		cant_bloques_indirectos = cant_bloques - 1;
+		asignar_bloques_indirectos(fcb,bloques_asignados,cant_bloques,cant_bloques_indirectos,0,archivo_bloques);
+	}
+	else {   // ya tiene asignados bloques indirectos (y el directo tambien)
+
+	escribir_bloques_en_bloque_de_punteros(fcb->puntero_indirecto, bloques_asignados,cant_bloques,archivo_bloques);
+}
 }
 
-uint32_t asignar_bloque_de_punteros(t_bitarray*bitmap) {
-	uint32_t bloque;
-	size_t valor = 1;
-	int i = 0;
-	while(valor == 0){
-		size_t valor = bitarray_test_bit(bitmap,i);
-		if(valor == 0){
-			bloque = i+1;
-		}
-	 i++;
+void asignar_bloques_indirectos(t_fcb*fcb,uint32_t bloques_asignados[],size_t cant_bloques,size_t cant_bloques_indirectos, int desde, FILE* archivo_bloques) {
+
+	  fcb->puntero_indirecto = bloques_asignados[cant_bloques-1];  // le asigno el ultimo bloque (donde va a estar el bloque de punteros)
+	  uint32_t bloques_indirectos[cant_bloques_indirectos];
+	  int j=0;
+	  int i;
+	  for(i=desde;i<cant_bloques-1;i++){
+	      bloques_indirectos[j] = bloques_asignados[i];
+	      j++;
+	  }
+	 escribir_bloques_en_bloque_de_punteros(fcb->puntero_indirecto,bloques_indirectos,cant_bloques_indirectos,archivo_bloques);
+}
+
+
+
+void escribir_bloques_en_bloque_de_punteros(uint32_t puntero_indirecto,uint32_t bloques[],size_t cant_bloques,FILE* archivo_bloques){
+
+}
+
+
+void liberar_bloques(t_fcb*fcb,size_t cant_bloques_a_liberar, size_t cant_bloques_indirectos_actual, t_bitarray* bitmap, FILE*archivo_bloques) {
+
+
+	if(fcb->puntero_indirecto == 0){     //solo tiene un bloque (apuntado por el puntero directo)
+	 uint32_t bloque_a_liberar;
+	 bloque_a_liberar = fcb->puntero_directo;
+	 fcb->puntero_directo = 0;
+	 bitarray_clean_bit(bitmap,bloque_a_liberar-1);
 	}
-	return bloque;
+	else  {    //sino significa que se debe empezar a eliminar desde los bloques que estan apuntados de forma indirecta
+    uint32_t bloques_a_liberar[cant_bloques_a_liberar];
+    leer_bloques_a_liberar(fcb->puntero_indirecto,cant_bloques_a_liberar,bloques_a_liberar,cant_bloques_indirectos_actual,archivo_bloques);
+
+	}
+
+}
+
+void leer_bloques_a_liberar(uint32_t puntero_indirecto,size_t cant_bloques_,uint32_t bloques_a_liberar[],size_t cant_bloques_indirectos_actual, FILE*archivo_bloques) {
+
+
 }

@@ -22,13 +22,6 @@ FILE* levantarArchivo(char*path,size_t cantidad_bytes) {
 }
 
 
-void inicializar_bitarray(t_bitarray*bitarray,size_t cant_bits){
-	int i = 0;
-	for(i=0;i<cant_bits;i++){
-	  bitarray_clean_bit(bitarray,i);
-	}
-}
-
 
 t_bitarray* mapear_bitmap(size_t cant_bits,size_t cant_bytes, FILE*archivo_bitmap){
 
@@ -57,7 +50,6 @@ t_bitarray* mapear_bitmap(size_t cant_bits,size_t cant_bytes, FILE*archivo_bitma
 }
 
 
-
 void* mapearArchivo(FILE*archivo,size_t tamanio){
 
 	    void* buffer = mmap(NULL,tamanio, PROT_WRITE, MAP_SHARED,fileno(archivo),0);
@@ -78,6 +70,39 @@ void* mapearArchivo(FILE*archivo,size_t tamanio){
 	    }
 */
 
+}
+
+void inicializar_bitarray(t_bitarray*bitarray,size_t cant_bits){
+	int i = 0;
+	for(i=0;i<cant_bits;i++){
+	  bitarray_clean_bit(bitarray,i);
+	}
+}
+
+void setear_n_primeros_bits_en_bitarray(t_bitarray*bitmap,size_t cant_bits, uint32_t indices_bits_asignados[]){
+
+	uint32_t i = 0;
+	int j = 0;
+
+	while(se_asignaron_todos_los_bits(indices_bits_asignados,cant_bits) == false) {
+			size_t valor = bitarray_test_bit(bitmap,i);
+			if(valor == 0){
+				indices_bits_asignados[j]= i+1;
+				j++;
+				bitarray_set_bit(bitmap,i);
+			}
+			i++;
+		}
+}
+
+
+bool se_asignaron_todos_los_bits(uint32_t indices_bits_asignados[],size_t cant_bits) {
+	int i;
+	for(i=0;i<cant_bits;i++){
+		if(indices_bits_asignados[i]==0)
+			return false;
+	}
+	return true;
 }
 
 
@@ -101,3 +126,6 @@ void recibo_parametros(t_socket socket_cliente,char** parametros) {
 			i++;
         }
 }
+
+
+
