@@ -150,12 +150,6 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 		log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
 		liberar_pcb(proceso);
 		break;
-	case TABLA_SEGMENTOS: //TODO: case temporal, despues borrar
-		proceso->tablaSegmentos = recibirTablaSegmentos(conexionMemoria);
-		log_info(logger, "Recibimos la tabla pibe");
-		mandar_pcb_a_CPU(proceso);
-		sem_post(&sem_recibir);
-		break;
 	case PEDIDO_COMPACTAR:
 		/*
 		 * Si no esta bloqueado ningun proceso
@@ -171,6 +165,9 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 		list_add(proceso->tablaSegmentos, segmento);
 		mandar_pcb_a_CPU(proceso);
 		sem_post(&sem_recibir);
+		break;
+	default:
+		log_error(logger, "El cod_op que me mandó Memoria es invalido");
 	}
 }
 

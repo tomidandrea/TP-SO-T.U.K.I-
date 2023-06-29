@@ -355,19 +355,11 @@ void compactar(t_pedido_segmento* pedido){
 		segmentoActual = segmentoSiguiente;
 	}
 
-	//TODO: crear una funcion a parte para la limpieza de la tabla de huecos
 	t_segmento* hueco = crear_t_segmento(++huecoId, segmentoActual->limite, tamanioMemoria);
 	log_debug(logger, "Nuevo hueco %d: con base %d y limite %d", hueco->id, hueco->base, hueco->limite);
 	list_clean_and_destroy_elements(tabla_huecos, free);
 	list_add(tabla_huecos, hueco);
 
-	//TODO: hacer una funcion aparte para no llamar a crearSegmento
-	//crearSegmento(pedido);
-
-	/*for(int i = 0; i<tamanioLista;i++){
-		t_segmento* seg = list_get(tablaSegmentosGlobales,i);
-		printf("Seg %d: base %d, limite %d\n", seg->id, seg->base,seg->limite);
-	}*/
 }
 
 void agregarHueco(t_segmento* segmento){

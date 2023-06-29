@@ -22,7 +22,6 @@ void escucharKernel(){
 	sem_wait(&sem_cpu); //esperar que se conecte primero cpu
 	t_socket socket_kernel = esperar_cliente(server_fd, logger);
 	char* pid;
-	//TODO: ver de cambiar el tipo pid en el struct
 	t_pedido_segmento* pedido = malloc(sizeof(t_pedido_segmento));
 
 	while(1){

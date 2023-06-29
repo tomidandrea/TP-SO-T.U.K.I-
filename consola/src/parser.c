@@ -5,7 +5,6 @@ void leerParametros(FILE *archivo, int cantParametros,char** parametros){
 	char* parametro = malloc(30);
 	for(j=0;j<cantParametros;j++){
 		fscanf(archivo, "%s",parametro);
-		//string_trim(&parametro); TODO: ver si es necesario para evitar espacios en blanco
 		//printf("El parametro %s tiene tamanio: %lu\n", parametro, strlen(parametro));
 		parametros[j] = copiar(parametro);
 	}
@@ -14,15 +13,16 @@ void leerParametros(FILE *archivo, int cantParametros,char** parametros){
 
 void parsear_instrucciones(char* path, t_list* instrucciones) {
 
-    // Puntero que nos ayuda a leer cada palabra
-	char *operacion = malloc(TAMANIO_OPERACION);
+
     int cant; // Para la cantidad de parametros
     FILE *archivo;
     archivo= fopen(path,"r");
 
     while(!feof(archivo)){
+    	// Puntero que nos ayuda a leer cada palabra
+		char *operacion = malloc(TAMANIO_OPERACION);
         //leemos la primer palabra de la instruccion (una operacion)
-        fscanf(archivo, "%s",operacion);
+        fscanf(archivo, "%s ",operacion);
         //asignamos la cantidad de parametros que tiene la operacion
         cant = cantParametros(operacion);
 
@@ -32,10 +32,10 @@ void parsear_instrucciones(char* path, t_list* instrucciones) {
         //leemos los parametros de la instruccion
         leerParametros(archivo,cant,inst->parametros);
         list_add(instrucciones,inst);
+        free(operacion);
     }
 
     printf("\n------------------\nParser termino bien\n------------------\n\n");
-    free(operacion);
     fclose(archivo);
 }
 

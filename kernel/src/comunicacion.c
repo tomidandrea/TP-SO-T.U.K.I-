@@ -26,7 +26,6 @@ int escucharConsolas(){
 	while(1){
 	socket_cliente = esperar_cliente(server_fd, logger); //Hace el accept
     //printf("\nsocket cliente:%d \n",socket_cliente);
-    //TODO: deberiamos agregar el socket cliente para saber que Consola finalizar
 		if(socket_cliente != -1){
 				int cod_op = recibir_operacion(socket_cliente);
 				switch (cod_op) {
