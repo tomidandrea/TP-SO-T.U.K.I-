@@ -67,7 +67,9 @@ void recibirDeCPU() {
 	t_contexto* contexto = actualizar_pcb(proceso);
 	t_archivo* archivoProceso;
 	char* recurso;
-	int id;
+	char* nombreArchivo;
+	int id, cant_bytes;
+	u_int32_t direc_fisica;
 
 		switch(contexto->motivo){
 			case EXT:
@@ -134,9 +136,10 @@ void recibirDeCPU() {
 			case F_OPEN:
 				log_info(logger, "Hubo un F_OPEN de PID:%d\n", contexto->pid);
 				t_archivo* archivo = inicializarArchivo(contexto->parametros[0]);
+				log_info(logger, "PID: %d - Abrir Archivo: %s", contexto->pid, archivo->nombre);
 				//Si esta en la tabla de archivos abiertos lo agrego a la tabla de archivos del proceso con puntero 0 y bloqueo al proceso
 				if(estaAbiertoElArchivo(archivo->nombre)) {
-
+					log_debug(logger, "El archivo %s ya fue abierto por un proceso", archivo->nombre);
 					list_add(proceso->archivosAbiertos, archivo);
 					t_archivo_global* archivoAbiertoGlobal = archivoGlobalQueSeLlama(archivo->nombre);
 					bloquearEnColaDeArchivo(archivoAbiertoGlobal, proceso);
@@ -154,6 +157,7 @@ void recibirDeCPU() {
 				t_archivo_global* archivoAbiertoGlobal = archivoGlobalQueSeLlama(contexto->parametros[0]);
 				archivoProceso = archivoQueSeLlama(contexto->parametros[0], proceso->archivosAbiertos);
 
+				log_info(logger, "PID: %d - Cerrar Archivo: %s", contexto->pid, archivoProceso->nombre);
 				// Si no hay nadie en la cola del archivo lo saco de la tabla global y del proceso
 				if(queue_is_empty(archivoAbiertoGlobal->cola)) {
 					list_remove_element(archivosAbiertosGlobal, archivoAbiertoGlobal);
@@ -181,11 +185,28 @@ void recibirDeCPU() {
 				}
 				mandar_pcb_a_CPU(proceso);
 				break;
-			case F_TRUNCATE: //TODO
+			case F_TRUNCATE:
 				log_info(logger, "Hubo un F_TRUNCATE de PID:%d\n", contexto->pid);
-				char* nombre = contexto->parametros[0];
+			    nombreArchivo = copiar(contexto->parametros[0]);
 				int tamanioATruncar = atoi(contexto->parametros[1]);
-				truncar_archivo(nombre, tamanioATruncar);
+				truncar_archivo(nombreArchivo, tamanioATruncar);
+				free(nombreArchivo);
+				break;
+			case F_READ: //TODO
+				log_info(logger, "Hubo un F_READ de PID:%d\n", contexto->pid);
+				nombreArchivo = copiar(contexto->parametros[0]);
+				direc_fisica = contexto->direc_fisica;
+				cant_bytes = atoi(contexto->parametros[2]);
+			    leer_archivo(nombreArchivo, direc_fisica, cant_bytes);
+			    free(nombreArchivo);
+				break;
+			case F_WRITE: //TODO
+				log_info(logger, "Hubo un F_WRITE de PID:%d\n", contexto->pid);
+				nombreArchivo = copiar(contexto->parametros[0]);
+				direc_fisica = contexto->direc_fisica;
+				cant_bytes = atoi(contexto->parametros[2]);
+				escribir_archivo(nombreArchivo, direc_fisica, cant_bytes);
+				free(nombreArchivo);
 				break;
 			default:
 				log_debug(logger, "No se implemento la instruccion");

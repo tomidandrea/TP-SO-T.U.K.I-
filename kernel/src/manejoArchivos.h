@@ -25,6 +25,8 @@ t_archivo* archivoQueSeLlama(char* nombre, tabla_archivos archivosAbiertos);
 void abrirArchivoEnFS(char* nombre);
 void crearArchivoEnFS(char* nombre);
 void truncar_archivo(char* nombre, int tamanio);
+void leer_archivo(char* nombreArchivo, u_int32_t direc_fisica, int cant_bytes);
+void escribir_archivo(char* nombreArchivo, u_int32_t direc_fisica, int cant_bytes);
 void bloquearPorFS(t_pcb* proceso, char* motivo);
 void bloquearEnColaDeArchivo(t_archivo_global* archivo, t_pcb* proceso);
 void desbloquearDeColaDeArchivo(t_archivo_global* archivo);

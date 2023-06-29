@@ -109,9 +109,9 @@ void crearArchivoEnFS(char* nombre) {
 	}
 }
 
-void truncar_archivo(char* nombre, int tamanio) {
+void truncar_archivo(char* nombreArchivo, int tamanio) {
 	t_paquete *paquete = crear_paquete(F_TRUNCATE);
-	agregar_a_paquete(paquete, nombre, strlen(nombre) + 1);
+	agregar_a_paquete(paquete, nombreArchivo, strlen(nombreArchivo) + 1);
 	agregar_valor_estatico(paquete, &tamanio);
 
 	enviar_paquete(paquete,conexionFileSystem);
@@ -120,6 +120,40 @@ void truncar_archivo(char* nombre, int tamanio) {
 	t_pcb* proceso = removerDeExecute();
 	bloquearPorFS(proceso, "F_TRUNCATE");
 
+	sem_post(&sem_recibir_fs);
+}
+
+void leer_archivo(char* nombreArchivo, u_int32_t direc_fisica, int cant_bytes) {
+
+	t_paquete *paquete = crear_paquete(F_READ);
+	agregar_a_paquete(paquete, nombreArchivo, strlen(nombreArchivo) + 1);
+	agregar_valor_uint(paquete, &direc_fisica);
+	agregar_valor_estatico(paquete, &cant_bytes);
+
+
+	enviar_paquete(paquete,conexionFileSystem);
+	eliminar_paquete(paquete);
+
+	t_pcb* proceso = removerDeExecute();
+	t_archivo* archivo = archivoQueSeLlama(nombreArchivo, proceso->archivosAbiertos);
+	log_info(logger,"PID: %d - Leer Archivo: %s - Puntero %d - Dirección Memoria &d - Tamaño %d", proceso->pid, nombreArchivo, archivo->puntero, cant_bytes);
+	bloquearPorFS(proceso, "F_READ");
+	sem_post(&sem_recibir_fs);
+}
+
+void escribir_archivo(char* nombreArchivo, u_int32_t direc_fisica, int cant_bytes) {
+	t_paquete *paquete = crear_paquete(F_WRITE);
+	agregar_a_paquete(paquete, nombreArchivo, strlen(nombreArchivo) + 1);
+	agregar_valor_uint(paquete, &direc_fisica);
+	agregar_valor_estatico(paquete, &cant_bytes);
+
+	enviar_paquete(paquete,conexionFileSystem);
+	eliminar_paquete(paquete);
+
+	t_pcb* proceso = removerDeExecute();
+	t_archivo* archivo = archivoQueSeLlama(nombreArchivo, proceso->archivosAbiertos);
+	log_info(logger,"PID: %d - Escribir Archivo: %s - Puntero %d - Dirección Memoria &d - Tamaño %d", proceso->pid, nombreArchivo, archivo->puntero, cant_bytes);
+	bloquearPorFS(proceso, "F_WRITE");
 	sem_post(&sem_recibir_fs);
 }
 
