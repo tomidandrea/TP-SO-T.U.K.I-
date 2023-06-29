@@ -211,6 +211,11 @@ bool truncar_archivo(char* nombre_archivo,int nuevo_tamanio,t_list*fcbs,t_bitarr
 	}
 	else ; //NO HACE NADA: la cantidad de bloques nueva es la misma de antes por lo que no hay que agregar ni eliminar bloques
 
+	// persisto fcb en disco
+
+	actualizar_archivo_fcb(fcb);
+	liberar_fcb(fcb);
+
 	return result;
 }
 
@@ -227,6 +232,15 @@ t_fcb* get_fcb(char*archivo, t_list*fcbs) {
 	 liberar_fcb(fcb);
 	}
 	return NULL;
+}
+
+
+void actualizar_archivo_fcb(t_fcb*fcb) {
+    //el nombre del archivo se supone que no cambia nunca
+	config_set_value(fcb->config,"TAMANIO_ARCHIVO",string_itoa(fcb->tamanio));
+	config_set_value(fcb->config,"PUNTERO_DIRECTO",string_itoa(fcb->puntero_directo));
+	config_set_value(fcb->config,"PUNTERO_INDIRECTO",string_itoa(fcb->puntero_indirecto));
+
 }
 
 bool agregar_bloques(t_fcb*fcb,size_t cant_bloques_a_agregar,t_bitarray* bitmap,FILE*archivo_bloques) {
@@ -326,7 +340,8 @@ bool liberar_bloques(t_fcb*fcb,size_t cant_bloques_a_liberar, size_t cant_bloque
 	else  {                          //sino significa que se debe empezar a eliminar desde los bloques que estan apuntados de forma indirecta
     uint32_t bloques_a_liberar[cant_bloques_a_liberar];
     result = leer_bloques_a_liberar(fcb->puntero_indirecto,cant_bloques_a_liberar,bloques_a_liberar,cant_bloques_indirectos_actual,archivo_bloques);
-    }
+    clean_n_bits_bitarray(bitmap,cant_bloques_a_liberar,bloques_a_liberar);
+	}
 
 	return result;
 }

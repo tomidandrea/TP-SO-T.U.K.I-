@@ -25,6 +25,7 @@ void crear_fcb(char* archivo, t_list*fcbs, char*path);
 int existe_fcb(char*archivo, t_list*fcbs);
 void liberar_fcb(t_fcb*fcb);
 t_fcb* get_fcb(char*archivo, t_list*fcbs);
+void actualizar_archivo_fcb(t_fcb*fcb);
 
 // truncado
 bool truncar_archivo(char*, int, t_list*, t_bitarray*,FILE*) ;

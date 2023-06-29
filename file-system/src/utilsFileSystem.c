@@ -79,17 +79,17 @@ void inicializar_bitarray(t_bitarray*bitarray){
 	}
 }
 
-void setear_n_primeros_bits_en_bitarray(t_bitarray*bitmap,size_t cant_bits, uint32_t indices_bits_asignados[]){
+void setear_n_primeros_bits_en_bitarray(t_bitarray*bitarray,size_t cant_bits, uint32_t indices_bits_asignados[]){
 
 	uint32_t i = 0;
 	int j = 0;
 
 	while(se_asignaron_todos_los_bits(indices_bits_asignados,cant_bits) == false) {
-			size_t valor = bitarray_test_bit(bitmap,i);
+			size_t valor = bitarray_test_bit(bitarray,i);
 			if(valor == 0){
 				indices_bits_asignados[j]= i+1;
 				j++;
-				bitarray_set_bit(bitmap,i);
+				bitarray_set_bit(bitarray,i);
 			}
 			i++;
 		}
@@ -105,6 +105,13 @@ bool se_asignaron_todos_los_bits(uint32_t indices_bits_asignados[],size_t cant_b
 	return true;
 }
 
+void clean_n_bits_bitarray(t_bitarray* bitarray,size_t cant_bits,uint32_t indices_bits_a_limpiar[]) {
+
+	for(int i=0;i<cant_bits;i++) {
+		bitarray_clean_bit(bitarray,indices_bits_a_limpiar[i]);
+	}
+
+}
 
 void recibo_parametros(t_socket socket_cliente,char** parametros) {
 
