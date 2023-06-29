@@ -67,7 +67,6 @@ void recibirDeCPU() {
 	t_contexto* contexto = actualizar_pcb(proceso);
 	t_archivo* archivoProceso;
 	char* recurso;
-	char* nombreArchivo;
 	int id, cant_bytes;
 	u_int32_t direc_fisica;
 
@@ -173,40 +172,35 @@ void recibirDeCPU() {
 				break;
 			case F_SEEK: //TODO
 				log_info(logger, "Hubo un F_SEEK de PID:%d\n", contexto->pid);
+				int nuevoPuntero = atoi(contexto->parametros[1]);
 				archivoProceso = archivoQueSeLlama(contexto->parametros[0], proceso->archivosAbiertos);
 				log_debug(logger, "Valor del puntero antes de ejecutar fseek: %d", archivoProceso->puntero);
 				//Si saca de la lista al archivo pasado por parametro, actualizo el puntero y lo meto de nuevo
-				if(list_remove_element(proceso->archivosAbiertos, archivoProceso)) {
-					archivoProceso->puntero = atoi(contexto->parametros[1]);
-					list_add(proceso->archivosAbiertos, archivoProceso);
-					log_info(logger, "PID: %d - Actualizar puntero Archivo: %s - Puntero %d", proceso->pid, archivoProceso->nombre, archivoProceso->puntero);
-				} else {
-					log_error(logger, "No se pudo actualizar el puntero del archivo %s del proceso %d", archivoProceso->nombre, proceso->pid);
-				}
+				actualizar_puntero(proceso,archivoProceso, nuevoPuntero);
 				mandar_pcb_a_CPU(proceso);
 				break;
 			case F_TRUNCATE:
 				log_info(logger, "Hubo un F_TRUNCATE de PID:%d\n", contexto->pid);
-			    nombreArchivo = copiar(contexto->parametros[0]);
+				char* nombreArchivo = copiar(contexto->parametros[0]);
 				int tamanioATruncar = atoi(contexto->parametros[1]);
 				truncar_archivo(nombreArchivo, tamanioATruncar);
 				free(nombreArchivo);
 				break;
-			case F_READ: //TODO
+			case F_READ:
 				log_info(logger, "Hubo un F_READ de PID:%d\n", contexto->pid);
-				nombreArchivo = copiar(contexto->parametros[0]);
+				archivoProceso = archivoQueSeLlama(contexto->parametros[0], proceso->archivosAbiertos);
 				direc_fisica = contexto->direc_fisica;
 				cant_bytes = atoi(contexto->parametros[2]);
-			    leer_archivo(nombreArchivo, direc_fisica, cant_bytes);
-			    free(nombreArchivo);
+			    leer_archivo(archivoProceso, direc_fisica, cant_bytes);
+			    actualizar_puntero(proceso,archivoProceso, archivoProceso->puntero + cant_bytes);
 				break;
-			case F_WRITE: //TODO
+			case F_WRITE:
 				log_info(logger, "Hubo un F_WRITE de PID:%d\n", contexto->pid);
-				nombreArchivo = copiar(contexto->parametros[0]);
+				archivoProceso = archivoQueSeLlama(contexto->parametros[0], proceso->archivosAbiertos);
 				direc_fisica = contexto->direc_fisica;
 				cant_bytes = atoi(contexto->parametros[2]);
-				escribir_archivo(nombreArchivo, direc_fisica, cant_bytes);
-				free(nombreArchivo);
+				escribir_archivo(archivoProceso, direc_fisica, cant_bytes);
+				actualizar_puntero(proceso,archivoProceso, archivoProceso->puntero + cant_bytes);
 				break;
 			default:
 				log_debug(logger, "No se implemento la instruccion");

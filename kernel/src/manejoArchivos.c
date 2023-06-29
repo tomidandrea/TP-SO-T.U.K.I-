@@ -123,10 +123,11 @@ void truncar_archivo(char* nombreArchivo, int tamanio) {
 	sem_post(&sem_recibir_fs);
 }
 
-void leer_archivo(char* nombreArchivo, u_int32_t direc_fisica, int cant_bytes) {
+void leer_archivo(t_archivo* archivo, u_int32_t direc_fisica, int cant_bytes) {
 
 	t_paquete *paquete = crear_paquete(F_READ);
-	agregar_a_paquete(paquete, nombreArchivo, strlen(nombreArchivo) + 1);
+	agregar_a_paquete(paquete, archivo->nombre, strlen(archivo->nombre) + 1);
+	agregar_valor_estatico(paquete, &(archivo->puntero));
 	agregar_valor_uint(paquete, &direc_fisica);
 	agregar_valor_estatico(paquete, &cant_bytes);
 
@@ -135,15 +136,15 @@ void leer_archivo(char* nombreArchivo, u_int32_t direc_fisica, int cant_bytes) {
 	eliminar_paquete(paquete);
 
 	t_pcb* proceso = removerDeExecute();
-	t_archivo* archivo = archivoQueSeLlama(nombreArchivo, proceso->archivosAbiertos);
-	log_info(logger,"PID: %d - Leer Archivo: %s - Puntero %d - Dirección Memoria &d - Tamaño %d", proceso->pid, nombreArchivo, archivo->puntero, cant_bytes);
+	log_info(logger,"PID: %d - Leer Archivo: %s - Puntero %d - Dirección Memoria &d - Tamaño %d", proceso->pid, archivo->nombre, archivo->puntero, cant_bytes);
 	bloquearPorFS(proceso, "F_READ");
 	sem_post(&sem_recibir_fs);
 }
 
-void escribir_archivo(char* nombreArchivo, u_int32_t direc_fisica, int cant_bytes) {
+void escribir_archivo(t_archivo* archivo, u_int32_t direc_fisica, int cant_bytes) {
 	t_paquete *paquete = crear_paquete(F_WRITE);
-	agregar_a_paquete(paquete, nombreArchivo, strlen(nombreArchivo) + 1);
+	agregar_a_paquete(paquete, archivo->nombre, strlen(archivo->nombre) + 1);
+	agregar_valor_estatico(paquete, &(archivo->puntero));
 	agregar_valor_uint(paquete, &direc_fisica);
 	agregar_valor_estatico(paquete, &cant_bytes);
 
@@ -151,10 +152,19 @@ void escribir_archivo(char* nombreArchivo, u_int32_t direc_fisica, int cant_byte
 	eliminar_paquete(paquete);
 
 	t_pcb* proceso = removerDeExecute();
-	t_archivo* archivo = archivoQueSeLlama(nombreArchivo, proceso->archivosAbiertos);
-	log_info(logger,"PID: %d - Escribir Archivo: %s - Puntero %d - Dirección Memoria &d - Tamaño %d", proceso->pid, nombreArchivo, archivo->puntero, cant_bytes);
+	log_info(logger,"PID: %d - Escribir Archivo: %s - Puntero %d - Dirección Memoria &d - Tamaño %d", proceso->pid, archivo->nombre, archivo->puntero, cant_bytes);
 	bloquearPorFS(proceso, "F_WRITE");
 	sem_post(&sem_recibir_fs);
+}
+
+void actualizar_puntero(t_pcb* proceso, t_archivo* archivoProceso, int nuevoPuntero) {
+	if(list_remove_element(proceso->archivosAbiertos, archivoProceso)) {
+		archivoProceso->puntero = nuevoPuntero;
+		list_add(proceso->archivosAbiertos, archivoProceso);
+		log_info(logger, "PID: %d - Actualizar puntero Archivo: %s - Puntero %d", proceso->pid, archivoProceso->nombre, archivoProceso->puntero);
+	} else {
+		log_error(logger, "No se pudo actualizar el puntero del archivo %s del proceso %d", archivoProceso->nombre, proceso->pid);
+	}
 }
 
 void bloquearPorFS(t_pcb* proceso, char* motivo) {
