@@ -1,9 +1,9 @@
 #include <utilsFileSystem.h>
 
 extern t_log* logger;
+extern size_t cantidad_bloques;
 
-
-FILE* levantarArchivo(char*path,size_t cantidad_bytes) {
+FILE* levantarArchivo(char*path,size_t cant_bytes) {
 
 	FILE*fp;
 
@@ -14,7 +14,7 @@ FILE* levantarArchivo(char*path,size_t cantidad_bytes) {
 	}
 	printf("archivo %s abierto\n", path);
 
-	ftruncate(fileno(fp),cantidad_bytes);
+	ftruncate(fileno(fp),cant_bytes);
 
 	//truncate(path,cantidad_bytes);
 
@@ -23,7 +23,7 @@ FILE* levantarArchivo(char*path,size_t cantidad_bytes) {
 
 
 
-t_bitarray* mapear_bitmap(size_t cant_bits,size_t cant_bytes, FILE*archivo_bitmap){
+t_bitarray* mapear_bitmap(size_t cant_bytes, FILE*archivo_bitmap){
 
 	void* buffer = mapearArchivo(archivo_bitmap,cant_bytes);
 
@@ -31,13 +31,13 @@ t_bitarray* mapear_bitmap(size_t cant_bits,size_t cant_bytes, FILE*archivo_bitma
 
 	t_bitarray* bitmap = bitarray_create_with_mode(buffer,cant_bytes, LSB_FIRST);
 
-	inicializar_bitarray(bitmap,cant_bits);
+	//inicializar_bitarray(bitmap);
 
 	//bitarray_set_bit(bitmap,5);
 
 	printf("testeo bits del bitarray\n");
 
-	for(int i=0;i<cant_bits;i++)
+	for(int i=0;i<cantidad_bloques;i++)
 	printf("%d",bitarray_test_bit(bitmap,i));
 	printf("\n");
 
@@ -72,9 +72,9 @@ void* mapearArchivo(FILE*archivo,size_t tamanio){
 
 }
 
-void inicializar_bitarray(t_bitarray*bitarray,size_t cant_bits){
+void inicializar_bitarray(t_bitarray*bitarray){
 	int i = 0;
-	for(i=0;i<cant_bits;i++){
+	for(i=0;i<cantidad_bloques;i++){
 	  bitarray_clean_bit(bitarray,i);
 	}
 }

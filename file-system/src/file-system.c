@@ -4,9 +4,11 @@ t_log* logger;
 t_config* config;
 t_socket conexionMemoria;
 
-bool RESULT_OK = 1;
-bool RESULT_ERROR = 0;
+bool RESULT_OK = true;
+bool RESULT_ERROR = false;
 
+size_t cantidad_bloques = 0;
+int tamanio_bloque = 0;
 
 int main(int argc, char* argv[]) {
 
@@ -31,16 +33,16 @@ int main(int argc, char* argv[]) {
 
 	//levanto el archivo bitmap (si no esta creado, lo creo
 	char* path_bitmap = config_get_string_value(config,"PATH_BITMAP");
-	FILE* archivo_bitmap = levantarArchivo(path_bitmap,cantidad_bloques);
+	FILE* archivo_bitmap = levantarArchivo(path_bitmap,cantidad_bytes);
 	free(path_bitmap);
 
 	//mapeo el archivo bitmap en un bitarray
-	t_bitarray* bitmap = mapear_bitmap(cantidad_bloques,cantidad_bytes,archivo_bitmap);  // devuelve bitarray creado despues de mapear
+	t_bitarray* bitmap = mapear_bitmap(cantidad_bytes,archivo_bitmap);  // devuelve bitarray creado despues de mapear
 
      //levanto archivo de bloques (si no existe lo creo)
 
 	 char* path_bloques = config_get_string_value(config,"PATH_BLOQUES");
-     int tamanio_bloque = config_get_int_value(superbloque,"BLOCK_SIZE");
+     tamanio_bloque = config_get_int_value(superbloque,"BLOCK_SIZE");
      int tamanio_total = cantidad_bloques*tamanio_bloque;
 
      FILE*archivo_bloques = levantarArchivo(path_bloques,tamanio_total);
@@ -84,7 +86,7 @@ int main(int argc, char* argv[]) {
 				case F_TRUNCATE:
 					log_info(logger, "Truncar Archivo: %s - Tamaño: %s", parametros[0], parametros[1]);
 					int nuevo_tamanio = atoi(parametros[1]);
-					result_operacion = truncar_archivo(parametros[0],nuevo_tamanio,tamanio_bloque,fcbs,bitmap,archivo_bloques);
+					result_operacion = truncar_archivo(parametros[0],nuevo_tamanio,fcbs,bitmap,archivo_bloques);
 					break;
 
 				case F_READ:
@@ -95,10 +97,20 @@ int main(int argc, char* argv[]) {
 					//result_operacion = escribir_archivo(parametros[0],parametros[1],parametros[2]);
 					break;
 
+				case F_CLOSE:
+					log_info(logger, "Cerrar Archivo: %s ", parametros[0]);
+					result_operacion = RESULT_OK;
+					break;
+
 		string_array_destroy(parametros);
 		}
 
-		send(socket_cliente, (void *)(intptr_t)result_operacion, sizeof(uint32_t), (intptr_t)NULL);
+		if(result_operacion==RESULT_OK) {
+			enviar_mensaje("OPERACION_OK",socket_cliente);
+		}
+		else {
+			enviar_mensaje("OPERACION_ERROR",socket_cliente);
+		}
 
 	}
 
@@ -172,15 +184,16 @@ void liberar_fcb(t_fcb*fcb) {
 
 
 
-bool truncar_archivo(char* nombre_archivo,int nuevo_tamanio, size_t tamanio_bloque,t_list*fcbs,t_bitarray*bitmap, FILE*archivo_bloques) {
+bool truncar_archivo(char* nombre_archivo,int nuevo_tamanio,t_list*fcbs,t_bitarray*bitmap, FILE*archivo_bloques) {
 
+	bool result = false;
 	size_t cant_bloques_nueva;
 	cant_bloques_nueva = ceil(nuevo_tamanio/tamanio_bloque);
 
 	t_fcb*fcb = get_fcb(nombre_archivo,fcbs);
 		if(fcb == NULL){
 			log_debug(logger,"no existe el archivo, debe ser creado antes\n");
-			return false;
+			return result;
 		}
 
 	size_t cant_bloques_actual = ceil(fcb->tamanio/tamanio_bloque);
@@ -188,17 +201,17 @@ bool truncar_archivo(char* nombre_archivo,int nuevo_tamanio, size_t tamanio_bloq
 
 	if(cant_bloques_nueva > cant_bloques_actual) {
 		size_t cant_bloques_a_agregar = cant_bloques_nueva - cant_bloques_actual;
-		agregar_bloques(fcb,cant_bloques_a_agregar,bitmap, archivo_bloques);
+		result = agregar_bloques(fcb,cant_bloques_a_agregar,bitmap, archivo_bloques);
 	}
 	else if (cant_bloques_nueva < cant_bloques_actual) {
 		 size_t cant_bloques_a_liberar = cant_bloques_actual - cant_bloques_nueva;
 		 size_t cant_bloques_indirectos_actual = cant_bloques_actual - 1;    //necesito tambien saber la cantidad de bloques indirectos que tenia antes para luego saber desde donde hay que leerlos en el archivo de bloques para eliminarlos
 		 if(cant_bloques_indirectos_actual >= 0)
-		 liberar_bloques(fcb, cant_bloques_a_liberar, cant_bloques_indirectos_actual,bitmap, archivo_bloques);
+		 result = liberar_bloques(fcb, cant_bloques_a_liberar, cant_bloques_indirectos_actual,bitmap, archivo_bloques);
 	}
 	else ; //NO HACE NADA: la cantidad de bloques nueva es la misma de antes por lo que no hay que agregar ni eliminar bloques
 
-	return true;
+	return result;
 }
 
 
@@ -216,43 +229,49 @@ t_fcb* get_fcb(char*archivo, t_list*fcbs) {
 	return NULL;
 }
 
-void agregar_bloques(t_fcb*fcb,size_t cant_bloques,t_bitarray* bitmap,FILE*archivo_bloques) {
+bool agregar_bloques(t_fcb*fcb,size_t cant_bloques_a_agregar,t_bitarray* bitmap,FILE*archivo_bloques) {
 
-	uint32_t bloques_asignados[cant_bloques];
+	bool result = false;
+	uint32_t bloques_asignados[cant_bloques_a_agregar];
 
-	if(fcb->puntero_indirecto == 0 && cant_bloques > 1)             //si no tiene bloque indirecto asignado
-		cant_bloques++;        //le sumo un bloque mas a agregar para el bloque de punteros
+	if(fcb->puntero_indirecto == 0 && cant_bloques_a_agregar > 1)             //si no tiene bloque indirecto asignado
+		cant_bloques_a_agregar++;        //le sumo un bloque mas a agregar para el bloque de punteros
 
-	setear_n_primeros_bits_en_bitarray(bitmap,cant_bloques,bloques_asignados);
+	setear_n_primeros_bits_en_bitarray(bitmap,cant_bloques_a_agregar,bloques_asignados);
 
-	asignar_bloques_a_fcb(bloques_asignados,cant_bloques,fcb,bitmap,archivo_bloques);
+	result = asignar_bloques_a_fcb(bloques_asignados,cant_bloques_a_agregar,fcb,bitmap,archivo_bloques);
+
+	return result;
 }
 
 
 
 
-void asignar_bloques_a_fcb(uint32_t bloques_asignados[],size_t cant_bloques,t_fcb*fcb,t_bitarray*bitmap,FILE*archivo_bloques) {
-
+bool asignar_bloques_a_fcb(uint32_t bloques_asignados[],size_t cant_bloques,t_fcb*fcb,t_bitarray*bitmap,FILE*archivo_bloques) {
+     bool result = false;
 	 size_t cant_bloques_indirectos;
-	if(fcb->puntero_directo == 0)  { //esto significa que no tiene bloques asignados
-	 fcb->puntero_directo = bloques_asignados[0];
-	  if (cant_bloques > 1) {
-		  cant_bloques_indirectos = cant_bloques - 2;
-		  asignar_bloques_indirectos(fcb,bloques_asignados,cant_bloques,cant_bloques_indirectos,1,archivo_bloques);
-	  }
+	 if(fcb->puntero_directo == 0)  { //esto significa que no tiene bloques asignados
+	    fcb->puntero_directo = bloques_asignados[0];
+	    if (cant_bloques > 1) {
+		   cant_bloques_indirectos = cant_bloques - 2;
+		   result = asignar_bloques_indirectos(fcb,bloques_asignados,cant_bloques,cant_bloques_indirectos,1,archivo_bloques);
+	    }
 	}
 	else if (fcb->puntero_indirecto == 0){          //si solo tiene un bloque directo asignados pero no tiene todavia los indirectos
-		cant_bloques_indirectos = cant_bloques - 1;
-		asignar_bloques_indirectos(fcb,bloques_asignados,cant_bloques,cant_bloques_indirectos,0,archivo_bloques);
+		     cant_bloques_indirectos = cant_bloques - 1;
+		     result = asignar_bloques_indirectos(fcb,bloques_asignados,cant_bloques,cant_bloques_indirectos,0,archivo_bloques);
 	}
 	else {   // ya tiene asignados bloques indirectos (y el directo tambien)
 
-	escribir_bloques_en_bloque_de_punteros(fcb->puntero_indirecto, bloques_asignados,cant_bloques,archivo_bloques);
-}
+	result = escribir_bloques_en_bloque_de_punteros(fcb->puntero_indirecto, bloques_asignados,cant_bloques,archivo_bloques);
+    }
+
+	return result;
 }
 
-void asignar_bloques_indirectos(t_fcb*fcb,uint32_t bloques_asignados[],size_t cant_bloques,size_t cant_bloques_indirectos, int desde, FILE* archivo_bloques) {
+bool asignar_bloques_indirectos(t_fcb*fcb,uint32_t bloques_asignados[],size_t cant_bloques,size_t cant_bloques_indirectos, int desde, FILE* archivo_bloques) {
 
+	  bool result = false;
 	  fcb->puntero_indirecto = bloques_asignados[cant_bloques-1];  // le asigno el ultimo bloque (donde va a estar el bloque de punteros)
 	  uint32_t bloques_indirectos[cant_bloques_indirectos];
 	  int j=0;
@@ -261,34 +280,77 @@ void asignar_bloques_indirectos(t_fcb*fcb,uint32_t bloques_asignados[],size_t ca
 	      bloques_indirectos[j] = bloques_asignados[i];
 	      j++;
 	  }
-	 escribir_bloques_en_bloque_de_punteros(fcb->puntero_indirecto,bloques_indirectos,cant_bloques_indirectos,archivo_bloques);
+	 result = escribir_bloques_en_bloque_de_punteros(fcb->puntero_indirecto,bloques_indirectos,cant_bloques_indirectos,archivo_bloques);
+
+	 return result;
 }
 
 
 
-void escribir_bloques_en_bloque_de_punteros(uint32_t puntero_indirecto,uint32_t bloques[],size_t cant_bloques,FILE* archivo_bloques){
+bool escribir_bloques_en_bloque_de_punteros(uint32_t puntero_indirecto,uint32_t bloques[],size_t cant_bloques,FILE* archivo_bloques){
 
+	bool result = false;
+	long int offset = (puntero_indirecto - 1) * tamanio_bloque;
+	int result_f_seek, result_f_write;
+
+	result_f_seek = fseek(archivo_bloques,offset,SEEK_SET);   //cambio el puntero a la direccion donde quiero empezar a escribir
+
+	if(result_f_seek == 0) {  // si devuelve 0 significa que fue exitosa
+
+	  for(int i=0;i<cant_bloques;i++) {   //le resto 1 a cada bloque antes de escribirlo porque los bloques van desde el 0 hasta la cantidad de bloques total - 1
+		  bloques[i]--;
+	  }
+	  result_f_write = fwrite(bloques, sizeof(uint32_t),cant_bloques,archivo_bloques);
+	  if (result_f_write == 0)
+		  result = RESULT_OK;
+	  else result = RESULT_ERROR;
+	}
+
+	else result = RESULT_ERROR;
+
+	return result;
 }
 
 
-void liberar_bloques(t_fcb*fcb,size_t cant_bloques_a_liberar, size_t cant_bloques_indirectos_actual, t_bitarray* bitmap, FILE*archivo_bloques) {
+bool liberar_bloques(t_fcb*fcb,size_t cant_bloques_a_liberar, size_t cant_bloques_indirectos_actual, t_bitarray* bitmap, FILE*archivo_bloques) {
 
+	bool result = false;
 
-	if(fcb->puntero_indirecto == 0){     //solo tiene un bloque (apuntado por el puntero directo)
+	if(fcb->puntero_indirecto == 0) {     //solo tiene un bloque (apuntado por el puntero directo)
 	 uint32_t bloque_a_liberar;
 	 bloque_a_liberar = fcb->puntero_directo;
 	 fcb->puntero_directo = 0;
 	 bitarray_clean_bit(bitmap,bloque_a_liberar-1);
+	 result = RESULT_OK;
 	}
-	else  {    //sino significa que se debe empezar a eliminar desde los bloques que estan apuntados de forma indirecta
+	else  {                          //sino significa que se debe empezar a eliminar desde los bloques que estan apuntados de forma indirecta
     uint32_t bloques_a_liberar[cant_bloques_a_liberar];
-    leer_bloques_a_liberar(fcb->puntero_indirecto,cant_bloques_a_liberar,bloques_a_liberar,cant_bloques_indirectos_actual,archivo_bloques);
+    result = leer_bloques_a_liberar(fcb->puntero_indirecto,cant_bloques_a_liberar,bloques_a_liberar,cant_bloques_indirectos_actual,archivo_bloques);
+    }
 
-	}
-
+	return result;
 }
 
-void leer_bloques_a_liberar(uint32_t puntero_indirecto,size_t cant_bloques_,uint32_t bloques_a_liberar[],size_t cant_bloques_indirectos_actual, FILE*archivo_bloques) {
+bool leer_bloques_a_liberar(uint32_t puntero_indirecto,size_t cant_bloques_a_liberar, uint32_t bloques_a_liberar[],size_t cant_bloques_indirectos_actual, FILE*archivo_bloques) {
 
+	bool result = false;
+	int result_f_seek, result_f_read;
+	size_t bloque_donde_me_paro =  cant_bloques_indirectos_actual - cant_bloques_a_liberar;
 
+	long int offset = (puntero_indirecto - 1) * tamanio_bloque + bloque_donde_me_paro*sizeof(uint32_t) ;       //me paro donde voy a empezar a leer
+
+	result_f_seek = fseek(archivo_bloques,offset,SEEK_SET);            // cambio el puntero a donde voy a empezar a leer
+
+	if(result_f_seek == 0) {
+
+	   result_f_read = fread(bloques_a_liberar,sizeof(uint32_t),cant_bloques_a_liberar,archivo_bloques);
+
+	   if (result_f_read == 0)  // si fread fue exitosa devuelvo true;
+		   result = RESULT_OK;
+	   else result = RESULT_ERROR;
+    }
+
+	else result = RESULT_ERROR;
+
+	return result;
 }

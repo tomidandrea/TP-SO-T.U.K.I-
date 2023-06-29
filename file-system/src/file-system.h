@@ -27,12 +27,12 @@ void liberar_fcb(t_fcb*fcb);
 t_fcb* get_fcb(char*archivo, t_list*fcbs);
 
 // truncado
-bool truncar_archivo(char*, int, size_t, t_list*, t_bitarray*,FILE*) ;
-void agregar_bloques(t_fcb*fcb,size_t cant_bloques,t_bitarray* bitmap,FILE*archivo_bloques);
-void asignar_bloques_a_fcb(uint32_t bloques_asignados[],size_t cant_bloques,t_fcb*fcb,t_bitarray*bitmap,FILE*archivo_bloques);
-void asignar_bloques_indirectos(t_fcb*fcb,uint32_t bloques_asignados[],size_t cant_bloques,size_t cant_bloques_indirectos, int desde, FILE* archivo_bloques);
-void escribir_bloques_en_bloque_de_punteros(uint32_t puntero_indirecto,uint32_t bloques[],size_t cant_bloques,FILE* archivo_bloques);
-void liberar_bloques(t_fcb*fcb,size_t cant_bloques_a_liberar,size_t cant_bloques_indirectos_actual,t_bitarray*bitmap, FILE*archivo_bloques);
-void leer_bloques_a_liberar(uint32_t puntero_indirecto,size_t cant_bloques_,uint32_t bloques_a_liberar[],size_t cant_bloques_indirectos_actual, FILE*archivo_bloques);
+bool truncar_archivo(char*, int, t_list*, t_bitarray*,FILE*) ;
+bool agregar_bloques(t_fcb*fcb,size_t cant_bloques,t_bitarray* bitmap,FILE*archivo_bloques);
+bool asignar_bloques_a_fcb(uint32_t bloques_asignados[],size_t cant_bloques,t_fcb*fcb,t_bitarray*bitmap,FILE*archivo_bloques);
+bool asignar_bloques_indirectos(t_fcb*fcb,uint32_t bloques_asignados[],size_t cant_bloques,size_t cant_bloques_indirectos, int desde, FILE* archivo_bloques);
+bool escribir_bloques_en_bloque_de_punteros(uint32_t puntero_indirecto,uint32_t bloques[],size_t cant_bloques,FILE* archivo_bloques);
+bool liberar_bloques(t_fcb*fcb,size_t cant_bloques_a_liberar,size_t cant_bloques_indirectos_actual,t_bitarray*bitmap, FILE*archivo_bloques);
+bool leer_bloques_a_liberar(uint32_t puntero_indirecto,size_t cant_bloques_a_liberar,uint32_t bloques_a_liberar[],size_t cant_bloques_indirectos_actual, FILE*archivo_bloques);
 
 #endif /* SRC_FILE_SYSTEM_H_ */
