@@ -6,14 +6,17 @@ extern t_log* logger;
 extern t_list* procesosExecute;
 extern t_list* procesosReady;
 extern t_list* procesosNew;
+extern t_list* esperaDeFS;
 extern t_list* archivosAbiertosGlobal;
 extern t_socket conexionFileSystem;
+
 uint32_t INICIO = 1;
 
 sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir_cpu, sem_recibir_fs, sem_execute;
 pthread_mutex_t mutex_procesos_new = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_procesos_ready = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_procesos_execute = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_espera_FS = PTHREAD_MUTEX_INITIALIZER;
 
 
 void planificar(){
@@ -199,18 +202,24 @@ void recibirDeFS() {
 
 	if(conexionFileSystem != -1){
 
-	/*	int cod_op = recibir_operacion(conexionFileSystem);
+	    int cod_op = recibir_operacion(conexionFileSystem);
 
 		switch(cod_op){
-			case :
+			case MENSAJE:
+				char*mensaje = recibir_mensaje(conexionFileSystem, logger);
+				if(strcpy(mensaje, "OPERACION_OK")) {
+					desbloquearDeEsperaDeFS();
+				} else
+					log_error(logger, "No se realizo correctamente la operacion en FS");
 			break;
 
 			default:
-		} */
-		} else {
-			log_error(logger, "Se rompio la conexion con File System");
-			exit(1);
+				log_debug(logger, "No me llego un mensaje");
 		}
+	} else {
+		log_error(logger, "Se rompio la conexion con File System");
+		exit(1);
+	}
 	}
 }
 

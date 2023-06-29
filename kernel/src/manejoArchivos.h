@@ -23,10 +23,12 @@ int estaAbiertoElArchivo(char * nombre);
 t_archivo_global* archivoGlobalQueSeLlama(char* nombre);
 t_archivo* archivoQueSeLlama(char* nombre, tabla_archivos archivosAbiertos);
 void abrirArchivoEnFS(char* nombre);
+void crearArchivoEnFS(char* nombre);
 void truncar_archivo(char* nombre, int tamanio);
 void bloquearPorFS(t_pcb* proceso, char* motivo);
 void bloquearEnColaDeArchivo(t_archivo_global* archivo, t_pcb* proceso);
 void desbloquearDeColaDeArchivo(t_archivo_global* archivo);
+void desbloquearDeEsperaDeFS();
 void liberarArchivoGlobal(t_archivo_global* archivo);
 void liberarArchivo(t_archivo* archivo);
 
