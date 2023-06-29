@@ -33,7 +33,7 @@ t_bitarray* mapear_bitmap(size_t cant_bytes, FILE*archivo_bitmap){
 
 	//inicializar_bitarray(bitmap);
 
-	//bitarray_set_bit(bitmap,5);
+	bitarray_set_bit(bitmap,5);
 
 	printf("testeo bits del bitarray\n");
 

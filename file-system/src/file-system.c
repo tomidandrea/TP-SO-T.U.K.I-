@@ -7,7 +7,7 @@ t_socket conexionMemoria;
 bool RESULT_OK = true;
 bool RESULT_ERROR = false;
 
-int cantidad_bloques = 0;
+size_t cantidad_bloques = 0;
 int tamanio_bloque = 0;
 
 int main(int argc, char* argv[]) {
@@ -330,20 +330,39 @@ bool liberar_bloques(t_fcb*fcb,size_t cant_bloques_a_liberar, size_t cant_bloque
 
 	bool result = false;
 
-	if(fcb->puntero_indirecto == 0) {     //solo tiene un bloque (apuntado por el puntero directo)
-	 uint32_t bloque_a_liberar;
-	 bloque_a_liberar = fcb->puntero_directo;
-	 fcb->puntero_directo = 0;
-	 bitarray_clean_bit(bitmap,bloque_a_liberar-1);
-	 result = RESULT_OK;
+	if(cant_bloques_a_liberar > cant_bloques_indirectos_actual) {     // significa que debo eliminar todos los bloques (el bloque directo, los bloques que estan en el indirecto y el bloque de punteros indiectos)
+
+    	   liberar_bloque_directo(fcb,bitmap);    // libero el bloque directo
+
+    	   if(cant_bloques_indirectos_actual > 0)   // significa que tambien tengo bloques indirectos a liberar
+    		   cant_bloques_a_liberar = cant_bloques_indirectos_actual;
+
+      result = RESULT_OK;
 	}
-	else  {                          //sino significa que se debe empezar a eliminar desde los bloques que estan apuntados de forma indirecta
-    uint32_t bloques_a_liberar[cant_bloques_a_liberar];
-    result = leer_bloques_a_liberar(fcb->puntero_indirecto,cant_bloques_a_liberar,bloques_a_liberar,cant_bloques_indirectos_actual,archivo_bloques);
-    clean_n_bits_bitarray(bitmap,cant_bloques_a_liberar,bloques_a_liberar);
+	else if (cant_bloques_a_liberar == cant_bloques_indirectos_actual) {  //significa que no voy a liberar el bloque directo pero el resto si
+		cant_bloques_a_liberar = cant_bloques_indirectos_actual;
+	}
+	//libero los bloques que estan en el bloque de punteros indirectos
+
+	if(fcb->puntero_indirecto !=0) {                      //libero n bloques que estan en el bloque de punteros indirectos (solo si es que hay bloques indirectos)
+	   uint32_t bloques_a_liberar[cant_bloques_a_liberar];
+	   result = leer_bloques_a_liberar(fcb->puntero_indirecto,cant_bloques_a_liberar,bloques_a_liberar,cant_bloques_indirectos_actual,archivo_bloques);
+	   clean_n_bits_bitarray(bitmap,cant_bloques_a_liberar,bloques_a_liberar);
+	   if(cant_bloques_a_liberar == cant_bloques_indirectos_actual) { //libero el bloque de punteros indirectos
+		  fcb->puntero_indirecto = 0;
+	      bitarray_clean_bit(bitmap,fcb->puntero_indirecto - 1);
+	   }
 	}
 
 	return result;
+}
+
+
+void liberar_bloque_directo (t_fcb*fcb,t_bitarray*bitmap) {
+	uint32_t bloque_a_liberar;
+	bloque_a_liberar = fcb->puntero_directo;
+	fcb->puntero_directo = 0;
+	bitarray_clean_bit(bitmap,bloque_a_liberar-1);
 }
 
 bool leer_bloques_a_liberar(uint32_t puntero_indirecto,size_t cant_bloques_a_liberar, uint32_t bloques_a_liberar[],size_t cant_bloques_indirectos_actual, FILE*archivo_bloques) {
@@ -352,6 +371,7 @@ bool leer_bloques_a_liberar(uint32_t puntero_indirecto,size_t cant_bloques_a_lib
 	int result_f_seek, result_f_read;
 	size_t bloque_donde_me_paro =  cant_bloques_indirectos_actual - cant_bloques_a_liberar;
 
+	if(bloque_donde_me_paro >= 0) {
 	long int offset = (puntero_indirecto - 1) * tamanio_bloque + bloque_donde_me_paro*sizeof(uint32_t) ;       //me paro donde voy a empezar a leer
 
 	result_f_seek = fseek(archivo_bloques,offset,SEEK_SET);            // cambio el puntero a donde voy a empezar a leer
@@ -367,5 +387,7 @@ bool leer_bloques_a_liberar(uint32_t puntero_indirecto,size_t cant_bloques_a_lib
 
 	else result = RESULT_ERROR;
 
+	}
 	return result;
 }
+
