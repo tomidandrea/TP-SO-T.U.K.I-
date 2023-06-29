@@ -42,6 +42,7 @@ int hayEspacio(t_pedido_segmento* pedido);
 
 t_segmento* obtenerHuecoPorId(tabla_segmentos tabla_huecos, int huecoDisponible);
 void removerHuecoPorId(tabla_segmentos tabla_huecos, int huecoDisponible);
+void removerSegmento0(tabla_segmentos tabla_seg);
 
 // Se crea el segmento y se guarda en el hueco disponible
 void crearSegmento(t_pedido_segmento* pedido);

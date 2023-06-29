@@ -116,7 +116,7 @@ int hayEspacio(t_pedido_segmento* pedido){
 					tamanioTotal += tamanio;
 				}
 			}
-			if(tamanioTotal > pedido->tamanio){
+			if(tamanioTotal >= pedido->tamanio){
 				log_debug(logger, "Hay espacio si compactamos");
 				return HAY_ESPACIO_AL_COMPACTAR;
 			}
@@ -242,6 +242,19 @@ void removerHuecoPorId(tabla_segmentos tabla_huecos, int huecoDisponible){
 	}
 }
 
+void removerSegmento0(tabla_segmentos tabla_seg){
+	t_segmento* seg;
+	int tamanio = list_size(tabla_seg);
+	for(int i=0; i<tamanio;i++){
+		seg = list_get(tabla_seg, i);
+		if(seg->id == 0){
+			log_debug(logger, "Remuevo seg0 antes de liberar la tabla de segmentos");
+			seg = list_remove(tabla_seg,i);
+			break;
+		}
+	}
+}
+
 void crearSegmento(t_pedido_segmento* pedido) {
 	int estadoEspacio = hayEspacio(pedido);
 	t_segmento* nuevoSegmento;
@@ -250,10 +263,15 @@ void crearSegmento(t_pedido_segmento* pedido) {
 		t_segmento* hueco = obtenerHuecoPorId(tabla_huecos, huecoDisponible);
 				char* pid = string_itoa(pedido->pid);
 				tabla_segmentos tabla_del_proceso = dictionary_get(diccionarioTablas, pid);
+				printf("-- Tabla de segmentos del proceso antes --\n");
+				mostrarListaSegmentos(tabla_del_proceso);
 
 				u_int32_t limiteSegmento = hueco->base + pedido->tamanio;
 				nuevoSegmento = crear_t_segmento(pedido->id_segmento, hueco->base, limiteSegmento);
 				list_add(tabla_del_proceso, nuevoSegmento);
+
+				printf("-- Tabla de segmentos del proceso despues --\n");
+				mostrarListaSegmentos(tabla_del_proceso);
 
 				log_info(logger, "PID: %s - Crear Segmento: %d - Base: %d - TAMAÑO: %d", pid, nuevoSegmento->id, nuevoSegmento->base, nuevoSegmento->limite - nuevoSegmento->base);
 
@@ -280,16 +298,29 @@ void crearSegmento(t_pedido_segmento* pedido) {
 
 tabla_segmentos unificarTablas(){
 	tabla_segmentos segmentosGlobales = list_create();
+
 	int cantidadDeTablas = dictionary_size(diccionarioTablas);
+	t_list* lista_pid = dictionary_keys(diccionarioTablas);
 
-
-	for(int i = 1;i<=cantidadDeTablas;i++){
-		char* valor = string_itoa(i);
+	for(int i = 0; i < cantidadDeTablas;i++){
+		char* valor = list_get(lista_pid, i);
 		tabla_segmentos tabla_del_proceso = dictionary_get(diccionarioTablas, valor);
-		list_add_all(segmentosGlobales, tabla_del_proceso);
+		printf("-- Tabla de segmentos del proceso que agrego a global --\n");
+		mostrarListaSegmentos(tabla_del_proceso);
+		//list_add_all(segmentosGlobales, tabla_del_proceso);
+		int cantidadSegmentos = list_size(tabla_del_proceso);
+		for (int j = 0; j < cantidadSegmentos; ++j) {
+			t_segmento* seg = list_get(tabla_del_proceso, j);
+			if(seg->id != 0 || i==0){
+				list_add_sorted(segmentosGlobales, seg, esMenorBase);
+			}
+		}
 		//todo ver como limpiar esto
 		//list_clean(tabla_del_proceso);
 	}
+	printf("-- Tabla de segmentos globales --\n");
+	mostrarListaSegmentos(segmentosGlobales);
+
 	return segmentosGlobales;
 }
 
@@ -317,7 +348,7 @@ void compactar(t_pedido_segmento* pedido){
 	log_info(logger,"entre en compactar()");
 	tabla_segmentos tablaSegmentosGlobales = unificarTablas();
 	int tamanioLista = list_size(tablaSegmentosGlobales);
-	list_sort(tablaSegmentosGlobales, esMenorBase);
+	//list_sort(tablaSegmentosGlobales, esMenorBase); ordeno dentro de unificar tablas
 	/*for(int i = 0; i<tamanioLista;i++){
 		t_segmento* seg = list_get(tablaSegmentosGlobales,i);
 		printf("Seg %d: base %d, limite %d\n", seg->id, seg->base,seg->limite);
@@ -422,7 +453,7 @@ void actualizarHuecos(tabla_segmentos tablaProceso){
 	t_segmento* segmento;
 	int cantidadSegmentos = list_size(tablaProceso);
 
-	for(int t = 1; t<cantidadSegmentos;t++){
+	for(int t = 0; t<cantidadSegmentos;t++){
 			segmento = list_get(tablaProceso, t);
 			//TODO: verificar si existe algun hueco pegado y unificarlo
 			//segmento->id = ++huecoId;
@@ -434,7 +465,7 @@ void actualizarHuecos(tabla_segmentos tablaProceso){
 void liberarEstructurasProceso(char* pid){
 	tabla_segmentos tablaProceso;
 	tablaProceso = dictionary_remove(diccionarioTablas, pid);
-
+	removerSegmento0(tablaProceso);
 	actualizarHuecos(tablaProceso);
 
 	list_destroy_and_destroy_elements(tablaProceso, free);

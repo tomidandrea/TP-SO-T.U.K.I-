@@ -22,11 +22,11 @@ void escucharKernel(){
 	sem_wait(&sem_cpu); //esperar que se conecte primero cpu
 	t_socket socket_kernel = esperar_cliente(server_fd, logger);
 	char* pid;
-	tabla_segmentos tablaSegmentos;
 	//TODO: ver de cambiar el tipo pid en el struct
 	t_pedido_segmento* pedido = malloc(sizeof(t_pedido_segmento));
 
 	while(1){
+	tabla_segmentos tablaSegmentos;
 		if(socket_kernel != -1){
 			int cod_op = recibir_operacion(socket_kernel);
 			sem_wait(&ejecutando);
@@ -47,6 +47,7 @@ void escucharKernel(){
 
 				pid = string_itoa(pedido->pid);
 				tablaSegmentos = dictionary_get(diccionarioTablas, pid);
+
 				int cantidadSegmentos = list_size(tablaSegmentos);
 				if(cantidadSegmentos < cantidadMaxSegmentos) {
 					crearSegmento(pedido);
@@ -81,8 +82,10 @@ void escucharKernel(){
 				break;
 			case DELETE_SEGMENT_OP:
 				pedido = recibirPedidoDeleteSegment(socket_kernel);
-
 				log_debug(logger, "Delete segment: PID: %d - Id segmento: %d", pedido->pid, pedido->id_segmento);
+
+				pid = string_itoa(pedido->pid);
+				tablaSegmentos = dictionary_get(diccionarioTablas, pid);
 
 				eliminarSegmento(pedido);
 				enviarSegmentosKernel(socket_kernel, tablaSegmentos);

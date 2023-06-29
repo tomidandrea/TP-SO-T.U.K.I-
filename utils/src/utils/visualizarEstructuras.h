@@ -14,6 +14,7 @@ void mostrarRegistros(t_registros* registros);
 void mostrarListaProcesos(t_list* lista);
 char* lista_procesos_string(t_list* lista);
 void logearInstrucciones(t_list* instrucciones, t_log* logger);
+void mostrarListaSegmentos(tabla_segmentos tabla);
 
 
 #endif /* SRC_UTILS_VISUALIZARESTRUCTURAS_H_ */

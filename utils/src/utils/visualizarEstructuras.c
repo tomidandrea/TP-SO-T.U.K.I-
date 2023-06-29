@@ -56,4 +56,12 @@ void logearInstrucciones(t_list* instrucciones, t_log* logger){
 	    }
 }
 
+void mostrarListaSegmentos(tabla_segmentos tabla){
+	int cantidad = list_size(tabla);
+	for (int i = 0; i < cantidad; ++i) {
+		t_segmento* seg = list_get(tabla, i);
+		printf("Seg %d: base %d - limite %d\n", seg->id, seg->base, seg->limite);
+	}
+}
+
 

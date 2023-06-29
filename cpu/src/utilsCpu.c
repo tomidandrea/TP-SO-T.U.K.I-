@@ -43,7 +43,7 @@ t_pcb* recibir_proceso(int socket_cliente) {
 				desplazamiento+=sizeof(u_int32_t);
 				list_add(pcb->tablaSegmentos, segmento);
 				t_segmento* seg = list_get(pcb->tablaSegmentos, i);
-				printf("Segmento %d - base: %d - limite: %d\n", seg->id, seg->base, seg->limite); //Aca los muestra bien los segmentos
+				printf("PID %d: Segmento %d - base: %d - limite: %d\n", pcb->pid, seg->id, seg->base, seg->limite); //Aca los muestra bien los segmentos
 			}
 
 		/* alternativa con vectores por tamaño
