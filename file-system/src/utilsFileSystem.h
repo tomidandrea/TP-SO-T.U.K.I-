@@ -12,6 +12,7 @@
 #include <commons/bitarray.h>
 #include <string.h>
 #include <math.h>
+#include <unistd.h>
 #include <sys/mman.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -19,11 +20,18 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-t_bitarray* mapear_bitmap(size_t cant_bits, size_t cant_bytes, char*path);
-void mapear_bloques(void*bloques,char*path);
-void* mapearArchivo(void*path,int*fd);
-void set_archivo_bitmap(char*path,size_t cant_bits);
-void inicializar_bitarray(t_bitarray*bitarray,size_t cant_bits);
+// levantar archivos y mapeo
+FILE* levantarArchivo(char*path,size_t cant_bytes);
+t_bitarray* mapear_bitmap(size_t cant_bytes, FILE*archivo_bitmap);
+void* mapearArchivo(FILE*archivo,size_t tamanio);
+
+// bitarray
+void inicializar_bitarray(t_bitarray*bitarray);
+void setear_n_primeros_bits_en_bitarray(t_bitarray*bitarray,size_t cant_bits, uint32_t indices_bits_asignados[]);
+bool se_asignaron_todos_los_bits(uint32_t indices_bits_asignados[],size_t cant_bits);
+void clean_n_bits_bitarray(t_bitarray* bitarray,size_t cant_bits, uint32_t indices_bits_a_limpiar[]);
+
+// conexiones, serializacion/deserializacion
 void recibo_parametros(t_socket socket_cliente,char** parametros);
 
 #endif /* SRC_UTILSFILESYSTEM_H_ */
