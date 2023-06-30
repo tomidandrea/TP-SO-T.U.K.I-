@@ -32,6 +32,7 @@ bool se_asignaron_todos_los_bits(uint32_t indices_bits_asignados[],size_t cant_b
 void clean_n_bits_bitarray(t_bitarray* bitarray,size_t cant_bits, uint32_t indices_bits_a_limpiar[]);
 
 // conexiones, serializacion/deserializacion
-void recibo_parametros(t_socket socket_cliente,char** parametros);
+char* recibirNombreArchivo(void* buffer, int* desplazamiento);
+void recibirLeerOEscribir(void* buffer, int* desplazamiento, int* puntero, u_int32_t* direc_fisica, int* cant_bytes);
 
 #endif /* SRC_UTILSFILESYSTEM_H_ */

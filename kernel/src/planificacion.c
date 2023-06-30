@@ -149,6 +149,8 @@ void recibirDeCPU() {
 					t_archivo_global* archivoGlobal = inicializarArchivoGlobal(archivo->nombre);
 					list_add(archivosAbiertosGlobal, archivoGlobal);
 					mandar_pcb_a_CPU(proceso);
+					sem_post(&sem_recibir_cpu);
+
 				}
 				break;
 			case F_CLOSE:
@@ -168,6 +170,7 @@ void recibirDeCPU() {
 					desbloquearDeColaDeArchivo(archivoAbiertoGlobal);
 				}
 				mandar_pcb_a_CPU(proceso);
+				sem_post(&sem_recibir_cpu);
 
 				break;
 			case F_SEEK: //TODO
@@ -178,6 +181,8 @@ void recibirDeCPU() {
 				//Si saca de la lista al archivo pasado por parametro, actualizo el puntero y lo meto de nuevo
 				actualizar_puntero(proceso,archivoProceso, nuevoPuntero);
 				mandar_pcb_a_CPU(proceso);
+				sem_post(&sem_recibir_cpu);
+
 				break;
 			case F_TRUNCATE:
 				log_info(logger, "Hubo un F_TRUNCATE de PID:%d\n", contexto->pid);
@@ -222,7 +227,7 @@ void recibirDeFS() {
 		switch(cod_op){
 			case MENSAJE:
 				char*mensaje = recibir_mensaje(conexionFileSystem, logger);
-				if(strcpy(mensaje, "OPERACION_OK")) {
+				if(strcmp(mensaje, "OPERACION_OK") == 0) {
 					desbloquearDeEsperaDeFS();
 				} else
 					log_error(logger, "No se realizo correctamente la operacion en FS");

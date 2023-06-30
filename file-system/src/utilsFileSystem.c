@@ -113,25 +113,27 @@ void clean_n_bits_bitarray(t_bitarray* bitarray,size_t cant_bits,uint32_t indice
 
 }
 
-void recibo_parametros(t_socket socket_cliente,char** parametros) {
 
-	int size,tamanio;
-	int desplazamiento = 0;
-	int i=0;
-	void * buffer;
+char* recibirNombreArchivo(void* buffer, int* desplazamiento) {
+	int tamanio;
 
-	buffer = recibir_buffer(&size, socket_cliente);
+	memcpy(&tamanio, buffer + *desplazamiento, sizeof(int));
+	*desplazamiento +=sizeof(int);
+	char* nombreArchivo = malloc(tamanio);
+	memcpy(nombreArchivo, buffer + *desplazamiento, tamanio);
+	*desplazamiento+=tamanio;
 
-	while(desplazamiento < size)
-		{
-			memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
-			desplazamiento+=sizeof(int);
-			char* valor = malloc(tamanio);
-			memcpy(valor, buffer+desplazamiento, tamanio);
-			desplazamiento+=tamanio;
-			strcpy(parametros[i],valor);
-			i++;
-        }
+	return nombreArchivo;
+}
+
+void recibirLeerOEscribir(void* buffer, int* desplazamiento, int* puntero, u_int32_t* direc_fisica, int* cant_bytes) {
+	memcpy(puntero, buffer + *desplazamiento, sizeof(int));
+	*desplazamiento+=sizeof(int);
+	memcpy(direc_fisica, buffer + *desplazamiento, sizeof(u_int32_t));
+	*desplazamiento+=sizeof(u_int32_t);
+	memcpy(cant_bytes, buffer + *desplazamiento, sizeof(int));
+	*desplazamiento+=sizeof(int);
+
 }
 
 

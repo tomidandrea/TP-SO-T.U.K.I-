@@ -28,7 +28,7 @@ t_fcb* get_fcb(char*archivo, t_list*fcbs);
 void actualizar_archivo_fcb(t_fcb*fcb);
 
 // truncado
-bool truncar_archivo(char*, int, t_list*, t_bitarray*,FILE*) ;
+bool truncar(char*, int, t_list*, t_bitarray*,FILE*) ;
 bool agregar_bloques(t_fcb*fcb,size_t cant_bloques,t_bitarray* bitmap,FILE*archivo_bloques);
 bool asignar_bloques_a_fcb(uint32_t bloques_asignados[],size_t cant_bloques,t_fcb*fcb,t_bitarray*bitmap,FILE*archivo_bloques);
 bool asignar_bloques_indirectos(t_fcb*fcb,uint32_t bloques_asignados[],size_t cant_bloques,size_t cant_bloques_indirectos, int desde, FILE* archivo_bloques);

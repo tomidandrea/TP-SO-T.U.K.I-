@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
 
      char* path_fcbs = config_get_string_value(config,"PATH_FCB");
 
-     crear_fcb("/pruebafcb",fcbs,path_fcbs);
+     //crear_fcb("/pruebafcb",fcbs,path_fcbs);
 
      /* TODO recorrer cada archivo fcb del directorio de fcbs y mapearlos en una lista  para manejarlos en memoria
 
@@ -65,44 +65,57 @@ int main(int argc, char* argv[]) {
 
 	t_socket socket_cliente = esperar_cliente(server_fd, logger);
 
+
 	while(1) {
+		if(socket_cliente != -1) {
 		int cod_op = recibir_operacion(socket_cliente);
-		char** parametros = string_array_new();
-		recibo_parametros(socket_cliente,parametros);
+
+		int size,cant_bytes, puntero;
+		u_int32_t direc_fisica;
+		int desplazamiento = 0;
+		void * buffer;
+		char* nombreArchivo;
+		buffer = recibir_buffer(&size, socket_cliente);
 
 		switch (cod_op) {
 
 		        case CREAR_ARCHIVO:
-					 log_info(logger, "Crear Archivo: %s ", parametros[0]);
-					 crear_fcb(parametros[0],fcbs,path_fcbs);
+		        	 nombreArchivo = recibirNombreArchivo(buffer, &desplazamiento);
+					 log_info(logger, "Crear Archivo: %s ", nombreArchivo);
+					 crear_fcb(nombreArchivo,fcbs,path_fcbs);
 		        	 result_operacion = RESULT_OK;
 					 break;
 
 				case F_OPEN:
-					 log_info(logger, "Abrir Archivo: %s ", parametros[0]);
-					 result_operacion = existe_fcb(parametros[0],fcbs);
+					nombreArchivo = recibirNombreArchivo(buffer, &desplazamiento);
+					log_info(logger, "Abrir Archivo: %s ", nombreArchivo);
+					result_operacion = existe_fcb(nombreArchivo,fcbs);
 					 break;
 
 				case F_TRUNCATE:
-					log_info(logger, "Truncar Archivo: %s - Tamaño: %s", parametros[0], parametros[1]);
-					int nuevo_tamanio = atoi(parametros[1]);
-					result_operacion = truncar_archivo(parametros[0],nuevo_tamanio,fcbs,bitmap,archivo_bloques);
+					int tamanioATruncar;
+					nombreArchivo = recibirNombreArchivo(buffer, &desplazamiento);
+					memcpy(&tamanioATruncar, buffer + desplazamiento, sizeof(int));
+					desplazamiento+=sizeof(int);
+					log_info(logger, "Truncar Archivo: %s - Tamaño: %d", nombreArchivo, tamanioATruncar);
+					result_operacion = truncar(nombreArchivo,tamanioATruncar, fcbs,bitmap,archivo_bloques);
 					break;
 
 				case F_READ:
+					nombreArchivo = recibirNombreArchivo(buffer, &desplazamiento);
+					recibirLeerOEscribir(buffer, &desplazamiento, &puntero, &direc_fisica, &cant_bytes);
+
 				    //result_operacion = leer_archivo(parametros[0],parametros[1],parametros[2]);
 				    break;
 
 				case F_WRITE:
+					nombreArchivo = recibirNombreArchivo(buffer, &desplazamiento);
+					recibirLeerOEscribir(buffer, &desplazamiento, &puntero, &direc_fisica, &cant_bytes);
 					//result_operacion = escribir_archivo(parametros[0],parametros[1],parametros[2]);
 					break;
 
-				case F_CLOSE:
-					log_info(logger, "Cerrar Archivo: %s ", parametros[0]);
-					result_operacion = RESULT_OK;
-					break;
 
-		string_array_destroy(parametros);
+		free(nombreArchivo);
 		}
 
 		if(result_operacion == RESULT_OK) {
@@ -111,8 +124,13 @@ int main(int argc, char* argv[]) {
 		else {
 			enviar_mensaje("OPERACION_ERROR",socket_cliente);
 		}
+	 }
+		else  {
+		log_error(logger, "Se rompio la conexion con el cliente");
+		exit(1);
+	 }
 
-	}
+  }
 
 	free(path_fcbs);
 
@@ -137,6 +155,7 @@ void crear_fcb(char* archivo, t_list*fcbs, char*path) {
 
 	strcat(path,"/");
 	strcat(path,archivo);
+
 	FILE * archivo_fcb = fopen(path, "w+");
 
 	fprintf(archivo_fcb,"NOMBRE_ARCHIVO = %s\n",fcb->nombre);
@@ -184,7 +203,7 @@ void liberar_fcb(t_fcb*fcb) {
 
 
 
-bool truncar_archivo(char* nombre_archivo,int nuevo_tamanio,t_list*fcbs,t_bitarray*bitmap, FILE*archivo_bloques) {
+bool truncar(char* nombre_archivo,int nuevo_tamanio,t_list*fcbs,t_bitarray*bitmap, FILE*archivo_bloques) {
 
 	bool result = false;
 	size_t cant_bloques_nueva;

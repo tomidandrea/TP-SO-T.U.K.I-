@@ -77,10 +77,10 @@ void abrirArchivoEnFS(char* nombre) {
 	if(recv(conexionFileSystem, &cod_op, sizeof(int), MSG_WAITALL) > 0){
 			 char* mensaje=recibir_mensaje(conexionFileSystem, logger);
 				log_debug(logger,"Me llego de FS el resultado: %s",mensaje);
-				if(strcpy(mensaje, "OPERACION_OK")) {
+				if(strcmp(mensaje, "OPERACION_OK") == 0) {
 					log_debug(logger,"El archivo %s ya estaba creado en el FS!!", nombre);
 				} else
-					if(strcpy(mensaje, "OPERACION_ERROR")) {
+					if(strcmp(mensaje, "OPERACION_ERROR") == 0) {
 						log_debug(logger, "Enviando creacion del archivo %s al FS", nombre);
 						crearArchivoEnFS(nombre);
 					} else log_error(logger,"Me llego cualquier cosa");
@@ -101,7 +101,7 @@ void crearArchivoEnFS(char* nombre) {
 	if(recv(conexionFileSystem, &cod_op, sizeof(int), MSG_WAITALL) > 0){
 		char* mensaje=recibir_mensaje(conexionFileSystem, logger);
 		log_debug(logger,"Me llego de FS el resultado: %s",mensaje);
-		if(strcpy(mensaje, "OPERACION_OK")) {
+		if(strcmp(mensaje, "OPERACION_OK") == 0) {
 			log_debug(logger,"El archivo %s se creó exitosamente!!", nombre);
 		} else log_error(logger,"Me llego cualquier cosa");
 	} else {
