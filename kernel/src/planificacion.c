@@ -70,12 +70,13 @@ void recibirDeCPU() {
 				proceso = removerDeExecute();
 				log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
 				// liberar_recursos();
-				avisar_fin_a_memoria(proceso->pid);
+				/*avisar_fin_a_memoria(proceso->pid);
 				avisar_fin_a_consola(proceso->socket_consola);
-				liberar_pcb(proceso);
+				liberar_pcb(proceso);*/
+				finalizar_proceso(proceso);
 				log_debug(logger, "Lista procesosReady:%d", list_size(procesosReady));
-				log_debug(logger, "POST grado multi");
-				sem_post(&sem_grado_multiprogramacion);
+				//log_debug(logger, "POST grado multi");
+				//sem_post(&sem_grado_multiprogramacion);
 				break;
 			case YIELD:
 				log_info(logger, "Hubo un YIELD del proceso %d\n", proceso->pid);
@@ -99,8 +100,9 @@ void recibirDeCPU() {
 				if(verificarRecursos(recurso)){
 					wait(proceso, recurso);
 				} else{
-					avisar_fin_a_consola(proceso->socket_consola);
-					sem_post(&sem_grado_multiprogramacion);
+					/*avisar_fin_a_consola(proceso->socket_consola);
+					sem_post(&sem_grado_multiprogramacion);*/
+					finalizar_proceso(proceso);
 					log_error(logger, "No existe el recurso: %s", recurso);
 					log_error(logger, "Finalizo proceso PID: %d", proceso->pid);
 					log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
@@ -114,8 +116,9 @@ void recibirDeCPU() {
 				if(verificarRecursos(recurso)){
 					ejecutarSignal(proceso, recurso);
 				} else{
-					avisar_fin_a_consola(proceso->socket_consola);
-					sem_post(&sem_grado_multiprogramacion);
+					/*avisar_fin_a_consola(proceso->socket_consola);
+					sem_post(&sem_grado_multiprogramacion);*/
+					finalizar_proceso(proceso);
 					log_error(logger, "No existe el recurso: %s", recurso);
 					log_error(logger, "Finalizo proceso PID: %d", proceso->pid);
 					log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);

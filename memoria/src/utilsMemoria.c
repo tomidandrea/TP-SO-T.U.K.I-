@@ -3,7 +3,6 @@
 #define NO_ENCONTRO_HUECO 0
 
 extern void* espacioMemoria;
-extern t_log* logger;
 extern tabla_segmentos tabla_huecos;
 extern t_log* logger;
 extern t_config* config;
@@ -453,4 +452,18 @@ void liberarEstructurasProceso(char* pid){
 
 	list_destroy_and_destroy_elements(tablaProceso, free);
 	//list_destroy(tablaProceso);
+}
+
+void liberarTablaSegmentos(void* tablaProceso){
+	removerSegmento0((tabla_segmentos)tablaProceso);
+	list_destroy_and_destroy_elements((tabla_segmentos)tablaProceso, free);
+}
+
+void liberar_memoria(){
+	log_destroy(logger);
+	config_destroy(config);
+	dictionary_clean_and_destroy_elements(diccionarioTablas, liberarTablaSegmentos);
+	list_destroy_and_destroy_elements(tabla_huecos, free);
+	free(segmento0);
+	free(espacioMemoria);
 }

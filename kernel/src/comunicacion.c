@@ -8,7 +8,7 @@ extern t_socket conexionMemoria;
 
 extern pthread_mutex_t mutex_procesos_new;
 extern t_list* procesosNew;
-extern sem_t sem_new_a_ready;
+extern sem_t sem_new_a_ready, sem_grado_multiprogramacion;
 
 
 uint32_t RESULT_OK = 0;
@@ -149,6 +149,13 @@ void avisar_fin_a_memoria(int pid){
 void avisar_fin_a_consola(t_socket socket_consola){
 	log_debug(logger, "El socket de la consola es:%d", socket_consola);
 	send(socket_consola, &RESULT_OK, sizeof(int), 0);
+}
+
+void finalizar_proceso(t_pcb* proceso){
+	avisar_fin_a_memoria(proceso->pid);
+	avisar_fin_a_consola(proceso->socket_consola);
+	liberar_pcb(proceso);
+	sem_post(&sem_grado_multiprogramacion);
 }
 
 void pedirTablaSegmentos(int pid){

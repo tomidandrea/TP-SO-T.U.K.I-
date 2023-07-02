@@ -137,18 +137,20 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 		sem_post(&sem_recibir);
 		break;
 	case OUT_OF_MEMORY:
-		avisar_fin_a_consola(proceso->socket_consola);
-		sem_post(&sem_grado_multiprogramacion);
+		/*avisar_fin_a_consola(proceso->socket_consola);
+		sem_post(&sem_grado_multiprogramacion);*/
 		log_info(logger, "Finaliza el proceso %d - Motivo: OUT_OF_MEMORY", proceso->pid);
 		log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
-		liberar_pcb(proceso);
+		finalizar_proceso(proceso);
+		//liberar_pcb(proceso);
 		break;
 	case LIMITE_SEGMENTOS_SUPERADO: //todo: mejorar esto, con solo un case de error de creacion reicibiendo el motivo x socket
-		avisar_fin_a_consola(proceso->socket_consola);
-		sem_post(&sem_grado_multiprogramacion);
+		/*avisar_fin_a_consola(proceso->socket_consola);
+		sem_post(&sem_grado_multiprogramacion);*/
+		finalizar_proceso(proceso);
 		log_info(logger, "Finaliza el proceso %d - Motivo: LIMITE_SEGMENTOS_SUPERADO", proceso->pid);
 		log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
-		liberar_pcb(proceso);
+		//liberar_pcb(proceso);
 		break;
 	case PEDIDO_COMPACTAR:
 		/*

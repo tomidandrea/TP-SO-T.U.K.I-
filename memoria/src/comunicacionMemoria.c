@@ -22,7 +22,8 @@ void escucharKernel(){
 	sem_wait(&sem_cpu); //esperar que se conecte primero cpu
 	t_socket socket_kernel = esperar_cliente(server_fd, logger);
 	char* pid;
-	t_pedido_segmento* pedido = malloc(sizeof(t_pedido_segmento));
+	//t_pedido_segmento* pedido = malloc(sizeof(t_pedido_segmento));
+	t_pedido_segmento* pedido;
 
 	while(1){
 	tabla_segmentos tablaSegmentos;
@@ -57,8 +58,7 @@ void escucharKernel(){
 						enviarSegmentoCreado(socket_kernel, tablaSegmentos);
 						break;
 					case OUT_OF_MEMORY:
-						log_error(logger,"Límite de segmentos máximos alcanzado - Limite: %d", cantidadMaxSegmentos);
-						//TODO: esto es porque ya no hay espacio en el espacioMemoria, no por limite de segmentos
+						log_error(logger,"No hay espacio suficiente en memoria para crear el segmento");
 						send(socket_kernel, &estadoCreacion, sizeof(op_code), 0);
 						break;
 					case PEDIDO_COMPACTAR:
@@ -71,12 +71,14 @@ void escucharKernel(){
 						break;
 					default:
 						log_error(logger,"Error en obtener estado memoria");
+						liberar_memoria();
 						break;
 					}
 				}
 				else{
 					estadoCreacion = LIMITE_SEGMENTOS_SUPERADO;
 					log_error(logger,"Límite de segmentos máximos alcanzado - Limite: %d", cantidadMaxSegmentos);
+					liberar_memoria();
 					send(socket_kernel, &estadoCreacion, sizeof(op_code), 0);
 				}
 				break;
@@ -97,10 +99,12 @@ void escucharKernel(){
 				break;
 			default:
 				send(socket_kernel, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);
-				log_error(logger,"Se cerró la conexión");
+				log_error(logger,"Se cerró la conexión / Cod op invalido");
+				liberar_memoria();
 				exit(1);
 			}
 		}else{
+			liberar_memoria();
 			log_error(logger,"Se cerró la conexión");
 		}
 
