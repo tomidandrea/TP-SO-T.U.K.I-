@@ -162,6 +162,7 @@ estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb* pcb){
 					pcb->motivo = F_READ;
 					direcLogica = crear_direc_logica(instruccion_ejecutar->parametros[1]);
 					direcFisicaAEnviar = obtener_direc_fisica(direcLogica,pcb->tablaSegmentos);
+					log_debug(logger, "La direccion fisica a enviar a kernel es: %d", direcFisicaAEnviar);
 					free(direcLogica);
 				    return FIN;
 		case F_WRITE:
@@ -169,6 +170,7 @@ estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb* pcb){
 					pcb->motivo = F_WRITE;
 					direcLogica = crear_direc_logica(instruccion_ejecutar->parametros[1]);
 					direcFisicaAEnviar = obtener_direc_fisica(direcLogica,pcb->tablaSegmentos);
+					log_debug(logger, "La direccion fisica a enviar a kernel es: %d", direcFisicaAEnviar);
 					free(direcLogica);
 				    return FIN;
 		default:

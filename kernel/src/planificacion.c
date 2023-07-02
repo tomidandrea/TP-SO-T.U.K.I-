@@ -141,6 +141,7 @@ void recibirDeCPU() {
 					log_debug(logger, "El archivo %s ya fue abierto por un proceso", archivo->nombre);
 					list_add(proceso->archivosAbiertos, archivo);
 					t_archivo_global* archivoAbiertoGlobal = archivoGlobalQueSeLlama(archivo->nombre);
+					t_pcb* proceso = removerDeExecute();
 					bloquearEnColaDeArchivo(archivoAbiertoGlobal, proceso);
 
 				} else { //sino le mando al FS para saber si hay que crearlo
@@ -197,7 +198,7 @@ void recibirDeCPU() {
 				direc_fisica = contexto->direc_fisica;
 				cant_bytes = atoi(contexto->parametros[2]);
 			    leer_archivo(archivoProceso, direc_fisica, cant_bytes);
-			    actualizar_puntero(proceso,archivoProceso, archivoProceso->puntero + cant_bytes);
+			    //esto no se si hace o no, seria actualizar el puntero cada vez que escribe o lee: actualizar_puntero(proceso,archivoProceso, archivoProceso->puntero + cant_bytes);
 				break;
 			case F_WRITE:
 				log_info(logger, "Hubo un F_WRITE de PID:%d\n", contexto->pid);
@@ -205,7 +206,7 @@ void recibirDeCPU() {
 				direc_fisica = contexto->direc_fisica;
 				cant_bytes = atoi(contexto->parametros[2]);
 				escribir_archivo(archivoProceso, direc_fisica, cant_bytes);
-				actualizar_puntero(proceso,archivoProceso, archivoProceso->puntero + cant_bytes);
+				//esto no se si hace o no: actualizar_puntero(proceso,archivoProceso, archivoProceso->puntero + cant_bytes);
 				break;
 			default:
 				log_debug(logger, "No se implemento la instruccion");
