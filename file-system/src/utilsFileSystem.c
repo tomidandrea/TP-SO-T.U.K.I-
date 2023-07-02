@@ -16,11 +16,19 @@ FILE* levantarArchivo(char*path,size_t cant_bytes) {
 
 	ftruncate(fileno(fp),cant_bytes);
 
-	//truncate(path,cantidad_bytes);
+	//truncate(path,cant_bytes);
 
 	return fp;
 }
 
+char* crear_path_archivo(char*nombre_archivo,char*path_directorio) {
+	char* path_archivo = malloc(strlen(path_directorio)+strlen(nombre_archivo)+2);
+	strcpy(path_archivo,path_directorio);
+	strcat(path_archivo,"/");
+	strcat(path_archivo,nombre_archivo);
+
+	return path_archivo;
+}
 
 
 t_bitarray* mapear_bitmap(size_t cant_bytes, FILE*archivo_bitmap){

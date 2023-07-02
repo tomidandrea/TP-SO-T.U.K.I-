@@ -9,6 +9,7 @@
 #define SRC_UTILSFILESYSTEM_H_
 
 #include <utils/sockets.h>
+#include <utils/general.h>
 #include <commons/bitarray.h>
 #include <string.h>
 #include <math.h>
@@ -22,6 +23,7 @@
 
 // levantar archivos y mapeo
 FILE* levantarArchivo(char*path,size_t cant_bytes);
+char* crear_path_archivo(char*nombre_archivo,char*path_directorio);
 t_bitarray* mapear_bitmap(size_t cant_bytes, FILE*archivo_bitmap);
 void* mapearArchivo(FILE*archivo,size_t tamanio);
 
