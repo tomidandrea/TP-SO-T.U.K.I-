@@ -7,10 +7,10 @@ FILE* levantarArchivo(char*path,size_t cant_bytes) {
 
 	FILE*fp;
 
-	fp = fopen(path,"r+");
+	fp = fopen(path,"rb+");
 
 	if (fp == NULL) {
-		fp = fopen(path,"w+");
+		fp = fopen(path,"wb+");
 	}
 	printf("archivo %s abierto\n", path);
 
@@ -95,7 +95,7 @@ void setear_n_primeros_bits_en_bitarray(t_bitarray*bitarray,size_t cant_bits, ui
 	while(se_asignaron_todos_los_bits(indices_bits_asignados,cant_bits) == false) {
 			size_t valor = bitarray_test_bit(bitarray,i);
 			if(valor == 0){
-				indices_bits_asignados[j]= i+1;
+				indices_bits_asignados[j]= i;
 				j++;
 				bitarray_set_bit(bitarray,i);
 			}
@@ -107,7 +107,7 @@ void setear_n_primeros_bits_en_bitarray(t_bitarray*bitarray,size_t cant_bits, ui
 bool se_asignaron_todos_los_bits(uint32_t indices_bits_asignados[],size_t cant_bits) {
 	int i;
 	for(i=0;i<cant_bits;i++){
-		if(indices_bits_asignados[i]==0)
+		if(indices_bits_asignados[i]==cantidad_bloques)
 			return false;
 	}
 	return true;
