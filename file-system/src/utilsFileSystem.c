@@ -94,10 +94,12 @@ void setear_n_primeros_bits_en_bitarray(t_bitarray*bitarray,size_t cant_bits, ui
 
 	while(se_asignaron_todos_los_bits(indices_bits_asignados,cant_bits) == false) {
 			size_t valor = bitarray_test_bit(bitarray,i);
+			log_info(logger,"Acceso a bitmap - Bloque: %d - Estado: %ld",i,valor);
 			if(valor == 0){
 				indices_bits_asignados[j]= i;
 				j++;
 				bitarray_set_bit(bitarray,i);
+				log_info(logger,"Acceso a bitmap - Bloque: %d - Estado: %ld",i,valor);
 			}
 			i++;
 		}
@@ -117,6 +119,7 @@ void clean_n_bits_bitarray(t_bitarray* bitarray,size_t cant_bits,uint32_t indice
 
 	for(int i=0;i<cant_bits;i++) {
 		bitarray_clean_bit(bitarray,indices_bits_a_limpiar[i]);
+		log_info(logger,"Acceso a bitmap - Bloque: %d - Estado: %d",indices_bits_a_limpiar[i],0);
 	}
 
 }

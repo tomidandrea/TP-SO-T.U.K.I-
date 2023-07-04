@@ -13,7 +13,6 @@ int tamanio_bloque = 0;
 int main(int argc, char* argv[]) {
 
 	size_t cantidad_bytes = 0;
-	//t_list* fcbs = list_create();
 	bool result_operacion;
 
 	logger = iniciar_logger("file-system.log", "FILE SYSTEM", true, LOG_LEVEL_DEBUG);
@@ -40,14 +39,13 @@ int main(int argc, char* argv[]) {
 	t_bitarray* bitmap = mapear_bitmap(cantidad_bytes,archivo_bitmap);  // devuelve bitarray creado despues de mapear
 
      //levanto archivo de bloques (si no existe lo creo)
-
 	 char* path_bloques = config_get_string_value(config,"PATH_BLOQUES");
      tamanio_bloque = config_get_int_value(superbloque,"BLOCK_SIZE");
      int tamanio_total = cantidad_bloques*tamanio_bloque;
 
      FILE*archivo_bloques = levantarArchivo(path_bloques,tamanio_total);
      free(path_bloques);
-     //TODO ver si es mejor directamente usar fseek,fread y frwite (no mapearlo en memoria)
+
 
     //creo un fcb de prueba
 
@@ -62,6 +60,8 @@ int main(int argc, char* argv[]) {
     else
     	printf("truncado anduvo mal\n");
 
+    fclose(archivo_bloques);
+    printf("Archivo de bloques cerrado\n");
 
     //inicio servidor para kernel
 	t_socket server_fd = iniciarServidor(config, logger,"PUERTO_ESCUCHA");
@@ -107,13 +107,14 @@ int main(int argc, char* argv[]) {
 				case F_READ:
 					nombreArchivo = recibirNombreArchivo(buffer, &desplazamiento);
 					recibirLeerOEscribir(buffer, &desplazamiento, &puntero, &direc_fisica, &cant_bytes);
-
+					log_info(logger, "Leer Archivo: %s - Puntero: %d - Memoria: %d - Tamaño: %d", nombreArchivo, puntero, direc_fisica, cant_bytes);
 				    //result_operacion = leer_archivo(parametros[0],parametros[1],parametros[2]);
 				    break;
 
 				case F_WRITE:
 					nombreArchivo = recibirNombreArchivo(buffer, &desplazamiento);
 					recibirLeerOEscribir(buffer, &desplazamiento, &puntero, &direc_fisica, &cant_bytes);
+					log_info(logger, "Escribir Archivo: %s - Puntero: %d - Memoria: %d - Tamaño: %d", nombreArchivo, puntero, direc_fisica, cant_bytes);
 					//result_operacion = escribir_archivo(parametros[0],parametros[1],parametros[2]);
 					break;
 
@@ -187,7 +188,6 @@ bool existe_fcb(char*archivo,char*path) {
 
 void liberar_fcb(t_fcb*fcb) {
 	free(fcb->nombre);
-	//config_destroy(fcb->archivo);
 	free(fcb);
 }
 
@@ -264,10 +264,10 @@ free(path_archivo);
 
 	config_destroy(config_fcb);
 
-	printf("%s\n",fcb->nombre);
-	printf("%d\n",fcb->tamanio);
-	printf("%d\n",fcb->puntero_directo);
-	printf("%d\n",fcb->puntero_indirecto);
+	printf("NOMBRE ARCHIVO: %s\n",fcb->nombre);
+	printf("TAMANIO ARCHIVO: %d\n",fcb->tamanio);
+	printf("PUNTERO DIRECTO: %d\n",fcb->puntero_directo);
+	printf("PUNTERO INDIRECTO: %d\n",fcb->puntero_indirecto);
 	return fcb;
 
 }
@@ -414,7 +414,9 @@ bool liberar_bloques(t_fcb*fcb,size_t cant_bloques_a_liberar, size_t cant_bloque
 	   clean_n_bits_bitarray(bitmap,cant_bloques_a_liberar,bloques_a_liberar);
 	   if(cant_bloques_a_liberar == cant_bloques_indirectos_actual) { //libero el bloque de punteros indirectos
 		   bitarray_clean_bit(bitmap,fcb->puntero_indirecto);
+		   log_info(logger,"Acceso a bitmap - Bloque: %d - Estado: %d",fcb->puntero_indirecto,0);
 		   fcb->puntero_indirecto = 0;
+		   printf("Puntero indirecto = %d\n",fcb->puntero_indirecto);
 	   }
 	}
 
@@ -425,8 +427,10 @@ bool liberar_bloques(t_fcb*fcb,size_t cant_bloques_a_liberar, size_t cant_bloque
 void liberar_bloque_directo (t_fcb*fcb,t_bitarray*bitmap) {
 	uint32_t bloque_a_liberar;
 	bloque_a_liberar = fcb->puntero_directo;
-	fcb->puntero_directo = 0;
 	bitarray_clean_bit(bitmap,bloque_a_liberar);
+	log_info(logger,"Acceso a bitmap - Bloque: %d - Estado: %d",bloque_a_liberar,0);
+	fcb->puntero_directo = 0;
+	printf("Puntero directo = %d\n",fcb->puntero_directo);
 }
 
 bool leer_bloques_a_liberar(uint32_t puntero_indirecto,size_t cant_bloques_a_liberar, uint32_t bloques_a_liberar[],size_t cant_bloques_indirectos_actual, FILE*archivo_bloques) {
