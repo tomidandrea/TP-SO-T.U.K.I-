@@ -25,10 +25,13 @@ int main(int argc, char* argv[]) {
 	char* path_superbloque = config_get_string_value(config,"PATH_SUPERBLOQUE");
 	t_config* superbloque = iniciar_config(path_superbloque);
 	free(path_superbloque);
+	printf("Archivo superbloque levantado\n");
 
 	//obtengo la cantidad de bloques/bits del archivo de superbloque y calculo la cantidad de bytes que equivale
 	cantidad_bloques = config_get_int_value(superbloque,"BLOCK_COUNT");
+	tamanio_bloque = config_get_int_value(superbloque,"BLOCK_SIZE");
 	cantidad_bytes = ceil(cantidad_bloques/8);                        //si da con coma redondea al proximo entero
+	printf("Cantidad de bloques: %ld, Tamaño de Bloque: %d\n", cantidad_bloques, tamanio_bloque);
 
 	//levanto el archivo bitmap (si no esta creado, lo creo
 	char* path_bitmap = config_get_string_value(config,"PATH_BITMAP");
@@ -39,17 +42,15 @@ int main(int argc, char* argv[]) {
 	t_bitarray* bitmap = mapear_bitmap(cantidad_bytes,archivo_bitmap);  // devuelve bitarray creado despues de mapear
 
      //levanto archivo de bloques (si no existe lo creo)
-	 char* path_bloques = config_get_string_value(config,"PATH_BLOQUES");
-     tamanio_bloque = config_get_int_value(superbloque,"BLOCK_SIZE");
-     int tamanio_total = cantidad_bloques*tamanio_bloque;
+	char* path_bloques = config_get_string_value(config,"PATH_BLOQUES");
+    int tamanio_total = cantidad_bloques*tamanio_bloque;
 
-     FILE*archivo_bloques = levantarArchivo(path_bloques,tamanio_total);
-     free(path_bloques);
-
+    FILE*archivo_bloques = levantarArchivo(path_bloques,tamanio_total);
+    free(path_bloques);
 
     //creo un fcb de prueba
 
-     char* path_fcbs = config_get_string_value(config,"PATH_FCB");
+    char* path_fcbs = config_get_string_value(config,"PATH_FCB");
 
     // crear_fcb("PRUEBA",path_fcbs);
 
@@ -108,7 +109,7 @@ int main(int argc, char* argv[]) {
 					nombreArchivo = recibirNombreArchivo(buffer, &desplazamiento);
 					recibirLeerOEscribir(buffer, &desplazamiento, &puntero, &direc_fisica, &cant_bytes);
 					log_info(logger, "Leer Archivo: %s - Puntero: %d - Memoria: %d - Tamaño: %d", nombreArchivo, puntero, direc_fisica, cant_bytes);
-				    //result_operacion = leer_archivo(parametros[0],parametros[1],parametros[2]);
+				    result_operacion = leer_archivo(nombreArchivo,path_fcbs,puntero,direc_fisica,cant_bytes);
 				    break;
 
 				case F_WRITE:
@@ -197,9 +198,7 @@ bool truncar(char* nombre_archivo,int nuevo_tamanio,char*path_directorio,t_bitar
 
 	printf("Empiezo a truncar archivo %s a tamanio %d\n",nombre_archivo, nuevo_tamanio);
 	bool result = false;
-	size_t cant_bloques_nueva;
-	cant_bloques_nueva = ceil(nuevo_tamanio/tamanio_bloque);
-	printf("cantidad de bloques nuevos %ld\n",cant_bloques_nueva);
+	size_t cant_bloques_nueva = ceil(nuevo_tamanio/tamanio_bloque);
 
 	t_fcb*fcb = get_fcb(nombre_archivo,path_directorio);
 
@@ -210,29 +209,33 @@ bool truncar(char* nombre_archivo,int nuevo_tamanio,char*path_directorio,t_bitar
 		}
 	size_t cant_bloques_actual = ceil(fcb->tamanio/tamanio_bloque);     //necesito saber la cantidad de_bloques que tiene antes de truncar
 	size_t cant_bloques_indirectos_actual;                          //necesito tambien saber la cantidad de bloques indirectos que tiene antes de truncar para luego saber desde donde hay que escribir/leer en el archivo de bloques
-	printf("cantidad de bloques antes de truncar %ld\n",cant_bloques_actual);
+	printf("cantidad de bloques de datos antes de truncar %ld\n",cant_bloques_actual);
 
 	if(cant_bloques_actual != 0)
 	    cant_bloques_indirectos_actual = cant_bloques_actual - 1;
 	else
 		cant_bloques_indirectos_actual = 0;
 
-	printf("cantidad de bloques indirectos antes de truncar %ld\n",cant_bloques_indirectos_actual);
+	printf("cantidad de bloques de datos indirectos antes de truncar %ld\n",cant_bloques_indirectos_actual);
 
 
 	if(cant_bloques_nueva > cant_bloques_actual) {            //si la cantidad de bloques nueva es mayor a la actual tengo que agregar bloques
 		size_t cant_bloques_a_agregar = cant_bloques_nueva - cant_bloques_actual;
+		 printf("cantidad de bloques de datos a agregar %ld\n",cant_bloques_a_agregar);
 
 		result = agregar_bloques(fcb,cant_bloques_a_agregar,cant_bloques_indirectos_actual,bitmap, archivo_bloques);
 	}
 	else if (cant_bloques_nueva < cant_bloques_actual) {   // sino si es menor a la actual tengo que liberar bloques
 		 size_t cant_bloques_a_liberar = cant_bloques_actual - cant_bloques_nueva;
+		 printf("cantidad de bloques de datos a liberar %ld\n",cant_bloques_a_liberar);
 		 result = liberar_bloques(fcb, cant_bloques_a_liberar, cant_bloques_indirectos_actual,bitmap, archivo_bloques);
 	}
 	else result = RESULT_OK; // NO HACE NADA: la cantidad de bloques nueva es la misma de antes por lo que no hay que agregar ni eliminar bloques
 
 	fcb->tamanio = nuevo_tamanio;                      // asigno en el fcb el nuevo tamaño.
 	printf("Nuevo tamanio: %d\n",fcb->tamanio);
+
+	mostrar_bitarray(bitmap);  //muestro el bitmap actualizado
 
 	// persisto fcb en disco
 
@@ -260,7 +263,6 @@ free(path_archivo);
 	fcb->tamanio = config_get_int_value(config_fcb,"TAMANIO_ARCHIVO");
 	fcb->puntero_directo = config_get_int_value(config_fcb,"PUNTERO_DIRECTO");
 	fcb->puntero_indirecto = config_get_int_value(config_fcb,"PUNTERO_INDIRECTO");
-	//fcb->archivo = config_fcb;
 
 	config_destroy(config_fcb);
 
@@ -278,10 +280,17 @@ void actualizar_archivo_fcb(t_fcb*fcb,char*path_directorio) {
 	char*path_archivo = crear_path_archivo(fcb->nombre,path_directorio);
 	t_config*archivo_fcb = iniciar_config(path_archivo);
 	free(path_archivo);
-	config_set_value(archivo_fcb,"TAMANIO_ARCHIVO",string_itoa(fcb->tamanio));
-	config_set_value(archivo_fcb,"PUNTERO_DIRECTO",string_itoa(fcb->puntero_directo));
-	config_set_value(archivo_fcb,"PUNTERO_INDIRECTO",string_itoa(fcb->puntero_indirecto));
+	char*tamanio= string_itoa(fcb->tamanio);
+	char*puntero_directo = string_itoa(fcb->puntero_directo);
+	char*puntero_indirecto = string_itoa(fcb->puntero_indirecto);
+
+	config_set_value(archivo_fcb,"TAMANIO_ARCHIVO",tamanio);
+	config_set_value(archivo_fcb,"PUNTERO_DIRECTO",puntero_directo);
+	config_set_value(archivo_fcb,"PUNTERO_INDIRECTO",puntero_indirecto);
 	config_save(archivo_fcb);
+	free(tamanio);
+	free(puntero_directo);
+	free(puntero_indirecto);
 	config_destroy(archivo_fcb);
 
 }
@@ -308,10 +317,10 @@ bool agregar_bloques(t_fcb*fcb,size_t cant_bloques_a_agregar, size_t cant_bloque
 bool condicion_para_agregar_bloque_de_punteros(t_fcb*fcb, size_t cant_bloques_a_agregar) {
 
 	if((fcb->tamanio == 0 && cant_bloques_a_agregar >= 2) ||           // si no tengo bloques asignados todavia y tengo que agregar 2 bloques o mas
-	   (solo_tiene_un_bloque_asignado(fcb)&& cant_bloques_a_agregar >=1))     // si solo un bloque asignado y tengo que agregar al menos un bloque.
-
+	   (solo_tiene_un_bloque_asignado(fcb)&& cant_bloques_a_agregar >=1))  {   // si solo un bloque asignado y tengo que agregar al menos un bloque.
+		printf("Se debe agregar un bloque indice de punteros\n");
 		return true;
-
+	}
   return false;
 
 }
@@ -333,17 +342,19 @@ bool asignar_bloques_a_fcb(uint32_t bloques_asignados[],size_t cant_bloques,size
 	    fcb->puntero_directo = bloques_asignados[0];    //le asigno un bloque al puntero directo
 	    printf("Puntero directo asignado = %d\n",fcb->puntero_directo);
 	    if (cant_bloques > 1) {                         //si ademas tiene que agregar mas de un bloque
-		   cant_bloques_indirectos = cant_bloques - 2;    //calculo la cantidad de bloques que voy a tener que agregar en el bloque de punteros  (los llamo bloques indirectos). Para calcularlo le resto a la cantidad total de bloques a agregar, el bloque para el puntero directo y el bloque para el puntero indirecto
-		   result = asignar_bloques_indirectos(fcb,bloques_asignados,cant_bloques,cant_bloques_indirectos,cant_bloques_indirectos_actual,1,archivo_bloques);   // agrego los bloques indirectos
+		   cant_bloques_indirectos = cant_bloques - 2;    //calculo la cantidad de bloques que voy a tener que agregar en el bloque indice  (los llamo bloques indirectos). Para calcularlo le resto a la cantidad total de bloques a agregar, el bloque para el puntero directo y el bloque indice
+		   fcb->puntero_indirecto = bloques_asignados[1];  // Al puntero indirecto le asigno el segundo bloque (donde va a estar el bloque indice)
+		   result = asignar_bloques_indirectos(fcb,bloques_asignados,cant_bloques,cant_bloques_indirectos,cant_bloques_indirectos_actual,2,archivo_bloques);   // agrego los bloques indirectos
 	    }
 	}
 	else if (solo_tiene_un_bloque_asignado(fcb)){          //si solo tiene un bloque directo asignado
+		     fcb->puntero_indirecto = bloques_asignados[0];    //el primer bloque a asignar va a ser para el bloque indice
 		     cant_bloques_indirectos = cant_bloques - 1;     //ahora la cantidad de bloques indirectos va a ser una unidad mas que en el caso anterior
-		     result = asignar_bloques_indirectos(fcb,bloques_asignados,cant_bloques,cant_bloques_indirectos,cant_bloques_indirectos_actual,0,archivo_bloques);
+		     result = asignar_bloques_indirectos(fcb,bloques_asignados,cant_bloques,cant_bloques_indirectos,cant_bloques_indirectos_actual,1,archivo_bloques);
 	}
 	else {   // ya tiene asignados bloques indirectos (y el directo tambien)
 
-	result = escribir_bloques_en_bloque_de_punteros(fcb->puntero_indirecto, bloques_asignados,cant_bloques,cant_bloques_indirectos_actual,archivo_bloques);
+	result = escribir_bloques_en_bloque_de_punteros(fcb, bloques_asignados,cant_bloques,cant_bloques_indirectos_actual,archivo_bloques);
     }
 
 	return result;
@@ -351,33 +362,33 @@ bool asignar_bloques_a_fcb(uint32_t bloques_asignados[],size_t cant_bloques,size
 
 bool asignar_bloques_indirectos(t_fcb*fcb,uint32_t bloques_asignados[],size_t cant_bloques,size_t cant_bloques_indirectos, size_t cant_bloques_indirectos_actual, int desde, FILE* archivo_bloques) {
 
-	  bool result = false;
-	  fcb->puntero_indirecto = bloques_asignados[cant_bloques-1];  // le asigno el ultimo bloque (donde va a estar el bloque de punteros)
 	  printf("Puntero indirecto asignado = %d\n",fcb->puntero_indirecto);
+	  bool result = false;
 	  uint32_t bloques_indirectos[cant_bloques_indirectos];
 	  int j=0;
 	  int i;
-	  for(i=desde;i<cant_bloques-1;i++){
+	  for(i=desde;i<cant_bloques;i++){
 	      bloques_indirectos[j] = bloques_asignados[i];
+	      printf("Bloque de datos indirecto = %d\n",bloques_indirectos[j]);
 	      j++;
 	  }
-	 result = escribir_bloques_en_bloque_de_punteros(fcb->puntero_indirecto,bloques_indirectos,cant_bloques_indirectos,cant_bloques_indirectos_actual,archivo_bloques);
+	 result = escribir_bloques_en_bloque_de_punteros(fcb,bloques_indirectos,cant_bloques_indirectos,cant_bloques_indirectos_actual,archivo_bloques);
 
 	 return result;
 }
 
 
 
-bool escribir_bloques_en_bloque_de_punteros(uint32_t puntero_indirecto,uint32_t bloques[],size_t cant_bloques_a_escribir,size_t cant_bloques_actual,FILE* archivo_bloques){
+bool escribir_bloques_en_bloque_de_punteros(t_fcb*fcb,uint32_t bloques[],size_t cant_bloques_a_escribir,size_t cant_bloques_actual,FILE* archivo_bloques){
 
 	bool result = false;
-	long int offset = puntero_indirecto * tamanio_bloque + cant_bloques_actual * sizeof(uint32_t);
+	long int offset = fcb->puntero_indirecto * tamanio_bloque + cant_bloques_actual * sizeof(uint32_t);
 	int result_f_seek, result_f_write;
 
 	result_f_seek = fseek(archivo_bloques,offset,SEEK_SET);   //cambio el puntero a la direccion donde quiero empezar a escribir
 
 	if(result_f_seek == 0) {  // si devuelve 0 significa que fue exitosa
-
+      log_info(logger,"Acceso Bloque - Archivo: %s - Bloque Archivo: %d - Bloque File System: %d",fcb->nombre,1,fcb->puntero_indirecto);
 	  result_f_write = fwrite(bloques, sizeof(uint32_t),cant_bloques_a_escribir,archivo_bloques);
 	  if (result_f_write == cant_bloques_a_escribir)
 		  result = RESULT_OK;
@@ -410,7 +421,7 @@ bool liberar_bloques(t_fcb*fcb,size_t cant_bloques_a_liberar, size_t cant_bloque
 
 	if(fcb->puntero_indirecto !=0) {                      //libero n bloques que estan en el bloque de punteros indirectos (solo si es que hay bloques indirectos)
 	   uint32_t bloques_a_liberar[cant_bloques_a_liberar];
-	   result = leer_bloques_a_liberar(fcb->puntero_indirecto,cant_bloques_a_liberar,bloques_a_liberar,cant_bloques_indirectos_actual,archivo_bloques);
+	   result = leer_bloques_a_liberar(fcb,cant_bloques_a_liberar,bloques_a_liberar,cant_bloques_indirectos_actual,archivo_bloques);
 	   clean_n_bits_bitarray(bitmap,cant_bloques_a_liberar,bloques_a_liberar);
 	   if(cant_bloques_a_liberar == cant_bloques_indirectos_actual) { //libero el bloque de punteros indirectos
 		   bitarray_clean_bit(bitmap,fcb->puntero_indirecto);
@@ -433,19 +444,20 @@ void liberar_bloque_directo (t_fcb*fcb,t_bitarray*bitmap) {
 	printf("Puntero directo = %d\n",fcb->puntero_directo);
 }
 
-bool leer_bloques_a_liberar(uint32_t puntero_indirecto,size_t cant_bloques_a_liberar, uint32_t bloques_a_liberar[],size_t cant_bloques_indirectos_actual, FILE*archivo_bloques) {
+bool leer_bloques_a_liberar(t_fcb*fcb, size_t cant_bloques_a_liberar, uint32_t bloques_a_liberar[],size_t cant_bloques_indirectos_actual, FILE*archivo_bloques) {
 
 	bool result = false;
 	int result_f_seek, result_f_read;
 	size_t bloque_donde_me_paro =  cant_bloques_indirectos_actual - cant_bloques_a_liberar;
 
 	if(bloque_donde_me_paro >= 0) {
-	long int offset = puntero_indirecto * tamanio_bloque + bloque_donde_me_paro*sizeof(uint32_t) ;       //me paro donde voy a empezar a leer
+	long int offset = fcb->puntero_indirecto * tamanio_bloque + bloque_donde_me_paro*sizeof(uint32_t) ;       //me paro donde voy a empezar a leer
 
 	result_f_seek = fseek(archivo_bloques,offset,SEEK_SET);            // cambio el puntero a donde voy a empezar a leer
 
 	if(result_f_seek == 0) {
 
+	   log_info(logger,"Acceso Bloque - Archivo: %s - Bloque Archivo: %d - Bloque File System: %d",fcb->nombre,1,fcb->puntero_indirecto);
 	   result_f_read = fread(bloques_a_liberar,sizeof(uint32_t),cant_bloques_a_liberar,archivo_bloques);
 
 	   if (result_f_read == cant_bloques_a_liberar)  // si fread fue exitosa devuelvo true;
@@ -457,4 +469,19 @@ bool leer_bloques_a_liberar(uint32_t puntero_indirecto,size_t cant_bloques_a_lib
 	}
 	return result;
 }
+
+
+
+bool leer_archivo(char* nombreArchivo,char*path_directorio,int puntero, uint32_t direc_fisica, int cant_bytes) {
+
+    //t_fcb*fcb = get_fcb(nombreArchivo,path_directorio);
+
+    //uint32_t bloque_a_leer = calcular_bloque_a_leer(fcb,puntero);
+
+	return true;
+}
+
+
+
+
 

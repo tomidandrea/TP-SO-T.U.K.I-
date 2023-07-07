@@ -43,11 +43,7 @@ t_bitarray* mapear_bitmap(size_t cant_bytes, FILE*archivo_bitmap){
 
 	//bitarray_set_bit(bitmap,5);
 
-	printf("testeo bits del bitarray\n");
-
-	for(int i=0;i<cantidad_bloques;i++)
-	printf("%d",bitarray_test_bit(bitmap,i));
-	printf("\n");
+	mostrar_bitarray(bitmap);
 
 	fclose(archivo_bitmap);
 
@@ -55,6 +51,15 @@ t_bitarray* mapear_bitmap(size_t cant_bytes, FILE*archivo_bitmap){
 
     return bitmap;
 
+}
+
+void mostrar_bitarray(t_bitarray*bitarray) {
+
+	printf("testeo bits del bitarray\n");
+
+		for(int i=0;i<cantidad_bloques;i++)
+		printf("%d",bitarray_test_bit(bitarray,i));
+		printf("\n");
 }
 
 
@@ -93,13 +98,13 @@ void setear_n_primeros_bits_en_bitarray(t_bitarray*bitarray,size_t cant_bits, ui
 	int j = 0;
 
 	while(se_asignaron_todos_los_bits(indices_bits_asignados,cant_bits) == false) {
-			size_t valor = bitarray_test_bit(bitarray,i);
-			log_info(logger,"Acceso a bitmap - Bloque: %d - Estado: %ld",i,valor);
+			bool valor = bitarray_test_bit(bitarray,i);
+			log_info(logger,"Acceso a bitmap - Bloque: %d - Estado: %d",i,valor);
 			if(valor == 0){
 				indices_bits_asignados[j]= i;
 				j++;
 				bitarray_set_bit(bitarray,i);
-				log_info(logger,"Acceso a bitmap - Bloque: %d - Estado: %ld",i,valor);
+				log_info(logger,"Acceso a bitmap - Bloque: %d - Estado: %d",i,bitarray_test_bit(bitarray,i));
 			}
 			i++;
 		}

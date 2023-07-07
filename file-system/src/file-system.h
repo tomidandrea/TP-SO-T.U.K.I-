@@ -34,11 +34,14 @@ bool condicion_para_agregar_bloque_de_punteros(t_fcb*fcb, size_t cant_bloques_a_
 bool solo_tiene_un_bloque_asignado(t_fcb*fcb);
 bool asignar_bloques_a_fcb(uint32_t [],size_t, size_t, t_fcb*, t_bitarray*, FILE*);
 bool asignar_bloques_indirectos(t_fcb*,uint32_t [],size_t,size_t, size_t, int, FILE*);
-bool escribir_bloques_en_bloque_de_punteros(uint32_t, uint32_t[],size_t, size_t, FILE*);
+bool escribir_bloques_en_bloque_de_punteros(t_fcb*fcb, uint32_t[],size_t, size_t, FILE*);
 //truncado achicar
 bool liberar_bloques(t_fcb*, size_t, size_t, t_bitarray*, FILE*);
 void liberar_bloque_directo (t_fcb*fcb,t_bitarray*bitmap);
-bool leer_bloques_a_liberar(uint32_t, size_t, uint32_t[], size_t, FILE*);
+bool leer_bloques_a_liberar(t_fcb*fcb, size_t, uint32_t[], size_t, FILE*);
 
+
+//leer Archivo
+bool leer_archivo(char* nombreArchivo,char*path_directorio,int puntero, uint32_t direc_fisica, int cant_bytes);
 
 #endif /* SRC_FILE_SYSTEM_H_ */
