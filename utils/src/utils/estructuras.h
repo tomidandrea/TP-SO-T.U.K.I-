@@ -6,6 +6,7 @@
 #include<netdb.h>
 
 #include<commons/collections/list.h>
+#include<commons/collections/queue.h>
 #include<commons/temporal.h>
 
 typedef int t_socket;
@@ -72,7 +73,8 @@ typedef enum {
 	DELETE_SEGMENT,
 	F_CLOSE,
 	EXT,
-	CREAR_ARCHIVO
+	CREAR_ARCHIVO,
+	SEG_FAULT
 } operacion;
 
 typedef struct {
@@ -87,7 +89,18 @@ typedef struct {
 	u_int32_t limite;
 } t_segmento;
 
+typedef struct {
+	char* nombre;
+	int puntero;
+} t_archivo;
+
+typedef struct {
+	char* nombre;
+	t_queue* cola;
+} t_archivo_global;
+
 typedef t_list* tabla_segmentos;
+typedef t_list* tabla_archivos;
 
 typedef struct {
     int pid;
@@ -95,6 +108,7 @@ typedef struct {
     int pc;
     t_registros* registros;
     tabla_segmentos tablaSegmentos;
+    tabla_archivos archivosAbiertos;
     operacion motivo;
     t_temporal* tiempoEnReady;
 	t_temporal* tiempoCPU;
@@ -111,6 +125,7 @@ typedef struct {
     char** parametros;
     int cantidadParametros;
     tabla_segmentos tablaSegmentos;
+    u_int32_t direc_fisica;
 } t_contexto;
 
 

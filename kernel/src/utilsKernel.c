@@ -11,7 +11,7 @@ extern t_socket conexionCPU;
 extern t_socket conexionMemoria;
 extern t_list* procesosExecute;
 
-extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir, sem_execute;
+extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir_cpu, sem_execute;
 
 
 t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola){
@@ -27,6 +27,7 @@ t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola){
     temporal_stop(pcb->tiempoEnReady);
     pcb->tiempoCPU = iniciarTiempo();
     temporal_stop(pcb->tiempoCPU);
+    pcb->archivosAbiertos = list_create();
 
     strcpy(pcb->registros->AX, "0");
     strcpy(pcb->registros->BX, "0");
@@ -134,7 +135,7 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 		segmento = recibirSegmento(conexionMemoria);
 		list_add(proceso->tablaSegmentos, segmento);
 		mandar_pcb_a_CPU(proceso);
-		sem_post(&sem_recibir);
+		sem_post(&sem_recibir_cpu);
 		break;
 	case OUT_OF_MEMORY:
 		/*avisar_fin_a_consola(proceso->socket_consola);
@@ -166,7 +167,7 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 		segmento = recibirSegmento(conexionMemoria);
 		list_add(proceso->tablaSegmentos, segmento);
 		mandar_pcb_a_CPU(proceso);
-		sem_post(&sem_recibir);
+		sem_post(&sem_recibir_cpu);
 		break;
 	default:
 		log_error(logger, "El cod_op que me mandó Memoria es invalido");
@@ -266,6 +267,6 @@ void recibirEliminarsegmento(t_pcb* proceso){
 	}
 	log_debug(logger, "Tabla de segmentos actualizada - Se eliminó el segmento");
 	mandar_pcb_a_CPU(proceso);
-	sem_post(&sem_recibir);
+	sem_post(&sem_recibir_cpu);
 
 }

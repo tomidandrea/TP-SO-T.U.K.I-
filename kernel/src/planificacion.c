@@ -6,13 +6,17 @@ extern t_log* logger;
 extern t_list* procesosExecute;
 extern t_list* procesosReady;
 extern t_list* procesosNew;
+extern t_list* esperaDeFS;
+extern t_list* archivosAbiertosGlobal;
+extern t_socket conexionFileSystem;
 
 uint32_t INICIO = 1;
 
-sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir, sem_execute;
+sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir_cpu, sem_recibir_fs, sem_execute;
 pthread_mutex_t mutex_procesos_new = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_procesos_ready = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_procesos_execute = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_espera_FS = PTHREAD_MUTEX_INITIALIZER;
 
 
 void planificar(){
@@ -49,7 +53,7 @@ void planificar(){
 
 		mandar_pcb_a_CPU(proceso);
 		log_info(logger, "Proceso %d enviado a cpu\n", proceso->pid);
-		sem_post(&sem_recibir);
+		sem_post(&sem_recibir_cpu);
 
 	}
 	free(algoritmo);
@@ -58,25 +62,20 @@ void planificar(){
 void recibirDeCPU() {
 
 	while(1) {
-	sem_wait(&sem_recibir);
+	sem_wait(&sem_recibir_cpu);
 	t_pcb* proceso = list_get(procesosExecute, 0);
 	t_contexto* contexto = actualizar_pcb(proceso);
+	t_archivo* archivoProceso;
 	char* recurso;
-	int id;
+	int id, cant_bytes;
+	u_int32_t direc_fisica;
 
 		switch(contexto->motivo){
 			case EXT:
-				log_info(logger, "=== Salimos como unos campeones!!!!, PID:%d finalizó ===\n", proceso->pid);
-				proceso = removerDeExecute();
-				log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
-				// liberar_recursos();
-				/*avisar_fin_a_memoria(proceso->pid);
-				avisar_fin_a_consola(proceso->socket_consola);
-				liberar_pcb(proceso);*/
-				finalizar_proceso(proceso);
-				log_debug(logger, "Lista procesosReady:%d", list_size(procesosReady));
-				//log_debug(logger, "POST grado multi");
-				//sem_post(&sem_grado_multiprogramacion);
+				finalizar_proceso("SUCCESS");
+				break;
+			case SEG_FAULT:
+				finalizar_proceso("SEG_FAULT");
 				break;
 			case YIELD:
 				log_info(logger, "Hubo un YIELD del proceso %d\n", proceso->pid);
@@ -100,12 +99,7 @@ void recibirDeCPU() {
 				if(verificarRecursos(recurso)){
 					wait(proceso, recurso);
 				} else{
-					/*avisar_fin_a_consola(proceso->socket_consola);
-					sem_post(&sem_grado_multiprogramacion);*/
-					finalizar_proceso(proceso);
-					log_error(logger, "No existe el recurso: %s", recurso);
-					log_error(logger, "Finalizo proceso PID: %d", proceso->pid);
-					log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
+					finalizar_proceso("RECURSO_INEXISTENTE");
 				}
 				break;
 			case SIGNAL:
@@ -116,13 +110,7 @@ void recibirDeCPU() {
 				if(verificarRecursos(recurso)){
 					ejecutarSignal(proceso, recurso);
 				} else{
-					/*avisar_fin_a_consola(proceso->socket_consola);
-					sem_post(&sem_grado_multiprogramacion);*/
-					finalizar_proceso(proceso);
-					log_error(logger, "No existe el recurso: %s", recurso);
-					log_error(logger, "Finalizo proceso PID: %d", proceso->pid);
-					log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
-					//FINALIZAR PROCESO
+					finalizar_proceso("RECURSO_INEXISTENTE");
 				}
 				break;
 			case CREATE_SEGMENT:
@@ -140,11 +128,80 @@ void recibirDeCPU() {
 				log_info(logger, "PID: %d - Eliminar Segmento - Id: %d", proceso->pid, id);
 				recibirEliminarsegmento(proceso);
 				break;
-			case F_OPEN: //TODO
+			case F_OPEN:
 				log_info(logger, "Hubo un F_OPEN de PID:%d\n", contexto->pid);
+				t_archivo* archivo = inicializarArchivo(contexto->parametros[0]);
+				log_info(logger, "PID: %d - Abrir Archivo: %s", contexto->pid, archivo->nombre);
+				//Si esta en la tabla de archivos abiertos lo agrego a la tabla de archivos del proceso con puntero 0 y bloqueo al proceso
+				if(estaAbiertoElArchivo(archivo->nombre)) {
+					log_debug(logger, "El archivo %s ya fue abierto por un proceso", archivo->nombre);
+					list_add(proceso->archivosAbiertos, archivo);
+					t_archivo_global* archivoAbiertoGlobal = archivoGlobalQueSeLlama(archivo->nombre);
+					bloquearEnColaDeArchivo(archivoAbiertoGlobal, proceso);
+
+				} else { //sino le mando al FS para saber si hay que crearlo
+					abrirArchivoEnFS(archivo->nombre);
+					list_add(proceso->archivosAbiertos, archivo);
+					t_archivo_global* archivoGlobal = inicializarArchivoGlobal(archivo->nombre);
+					list_add(archivosAbiertosGlobal, archivoGlobal);
+					mandar_pcb_a_CPU(proceso);
+					sem_post(&sem_recibir_cpu);
+
+				}
 				break;
-			case F_TRUNCATE: //TODO
+			case F_CLOSE:
+				log_info(logger, "Hubo un F_CLOSE de PID:%d\n", contexto->pid);
+				t_archivo_global* archivoAbiertoGlobal = archivoGlobalQueSeLlama(contexto->parametros[0]);
+				archivoProceso = archivoQueSeLlama(contexto->parametros[0], proceso->archivosAbiertos);
+
+				log_info(logger, "PID: %d - Cerrar Archivo: %s", contexto->pid, archivoProceso->nombre);
+				// Si no hay nadie en la cola del archivo lo saco de la tabla global y del proceso
+				if(queue_is_empty(archivoAbiertoGlobal->cola)) {
+					list_remove_element(archivosAbiertosGlobal, archivoAbiertoGlobal);
+					liberarArchivoGlobal(archivoAbiertoGlobal);
+					list_remove_element(proceso->archivosAbiertos, archivoProceso);
+					liberarArchivo(archivoProceso);
+
+				} else { //sino desbloqueo al primer proceso de la cola
+					desbloquearDeColaDeArchivo(archivoAbiertoGlobal);
+				}
+				mandar_pcb_a_CPU(proceso);
+				sem_post(&sem_recibir_cpu);
+
+				break;
+			case F_SEEK: //TODO
+				log_info(logger, "Hubo un F_SEEK de PID:%d\n", contexto->pid);
+				int nuevoPuntero = atoi(contexto->parametros[1]);
+				archivoProceso = archivoQueSeLlama(contexto->parametros[0], proceso->archivosAbiertos);
+				log_debug(logger, "Valor del puntero antes de ejecutar fseek: %d", archivoProceso->puntero);
+				//Si saca de la lista al archivo pasado por parametro, actualizo el puntero y lo meto de nuevo
+				actualizar_puntero(proceso,archivoProceso, nuevoPuntero);
+				mandar_pcb_a_CPU(proceso);
+				sem_post(&sem_recibir_cpu);
+
+				break;
+			case F_TRUNCATE:
 				log_info(logger, "Hubo un F_TRUNCATE de PID:%d\n", contexto->pid);
+				char* nombreArchivo = copiar(contexto->parametros[0]);
+				int tamanioATruncar = atoi(contexto->parametros[1]);
+				truncar_archivo(nombreArchivo, tamanioATruncar);
+				free(nombreArchivo);
+				break;
+			case F_READ:
+				log_info(logger, "Hubo un F_READ de PID:%d\n", contexto->pid);
+				archivoProceso = archivoQueSeLlama(contexto->parametros[0], proceso->archivosAbiertos);
+				direc_fisica = contexto->direc_fisica;
+				cant_bytes = atoi(contexto->parametros[2]);
+			    leer_archivo(archivoProceso, direc_fisica, cant_bytes);
+			    actualizar_puntero(proceso,archivoProceso, archivoProceso->puntero + cant_bytes);
+				break;
+			case F_WRITE:
+				log_info(logger, "Hubo un F_WRITE de PID:%d\n", contexto->pid);
+				archivoProceso = archivoQueSeLlama(contexto->parametros[0], proceso->archivosAbiertos);
+				direc_fisica = contexto->direc_fisica;
+				cant_bytes = atoi(contexto->parametros[2]);
+				escribir_archivo(archivoProceso, direc_fisica, cant_bytes);
+				actualizar_puntero(proceso,archivoProceso, archivoProceso->puntero + cant_bytes);
 				break;
 			default:
 				log_debug(logger, "No se implemento la instruccion");
@@ -154,6 +211,47 @@ void recibirDeCPU() {
 	}
 }
 
+void recibirDeFS() {
+
+	while(1) {
+	sem_wait(&sem_recibir_fs);
+
+	if(conexionFileSystem != -1){
+
+	    int cod_op = recibir_operacion(conexionFileSystem);
+
+		switch(cod_op){
+			case MENSAJE:
+				char*mensaje = recibir_mensaje(conexionFileSystem, logger);
+				if(strcmp(mensaje, "OPERACION_OK") == 0) {
+					desbloquearDeEsperaDeFS();
+				} else
+					log_error(logger, "No se realizo correctamente la operacion en FS");
+			break;
+
+			default:
+				log_debug(logger, "No me llego un mensaje");
+		}
+	} else {
+		log_error(logger, "Se rompio la conexion con File System");
+		exit(1);
+	}
+	}
+}
+
+void finalizar_proceso(char* motivo) {
+	t_pcb* proceso = removerDeExecute();
+	log_info(logger, "=== Salimos como unos campeones!!!!, PID:%d finalizó ===\n", proceso->pid);
+	log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
+	log_info(logger, "Finaliza el proceso %d - Motivo: %s", proceso->pid, motivo);
+	// liberar_recursos();
+	// avisar_fin_a_memoria();
+	avisar_fin_a_consola(proceso->socket_consola);
+	liberar_pcb(proceso);
+	log_debug(logger, "Lista procesosReady:%d", list_size(procesosReady));
+	log_debug(logger, "POST grado multi");
+	sem_post(&sem_grado_multiprogramacion);
+}
 void agregarReady(){
 	
 	while (1)
@@ -165,8 +263,6 @@ void agregarReady(){
 	}
 
 }
-
-
 
 t_pcb* planificarFIFO(){
 	t_pcb* proceso = removerPrimeroDeReady();

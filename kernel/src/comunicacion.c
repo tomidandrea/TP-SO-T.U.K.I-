@@ -151,12 +151,12 @@ void avisar_fin_a_consola(t_socket socket_consola){
 	send(socket_consola, &RESULT_OK, sizeof(int), 0);
 }
 
-void finalizar_proceso(t_pcb* proceso){
+/*void finalizar_proceso(t_pcb* proceso){
 	avisar_fin_a_memoria(proceso->pid);
 	avisar_fin_a_consola(proceso->socket_consola);
 	liberar_pcb(proceso);
 	sem_post(&sem_grado_multiprogramacion);
-}
+}*/
 
 void pedirTablaSegmentos(int pid){
 	t_paquete* paquete = crear_paquete(TABLA_SEGMENTOS);
