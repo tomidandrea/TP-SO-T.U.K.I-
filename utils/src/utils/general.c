@@ -153,10 +153,12 @@ void copiarRegistros(t_registros* registrosDestino, t_registros* registrosOrigen
 
 t_pcb* inicializar_pcb(){
 	t_pcb* pcb = malloc(sizeof(t_pcb));
-	pcb->instrucciones = list_create();
+	//pcb->instrucciones = list_create();
 	pcb->registros = inicializarRegistros();
 	pcb->tablaSegmentos = list_create();
 	pcb->archivosAbiertos = list_create();
+	pcb->tiempoCPU = temporal_create();
+	pcb->tiempoEnReady = temporal_create();
 	return pcb;
 }
 
