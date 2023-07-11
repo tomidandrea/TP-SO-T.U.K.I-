@@ -2,6 +2,7 @@
 
 extern t_log* logger;
 extern size_t cantidad_bloques;
+extern t_socket conexionMemoria;
 
 FILE* levantarArchivo(char*path,size_t cant_bytes) {
 
@@ -149,6 +150,61 @@ void recibirLeerOEscribir(void* buffer, int* desplazamiento, int* puntero, u_int
 	*desplazamiento+=sizeof(u_int32_t);
 	memcpy(cant_bytes, buffer + *desplazamiento, sizeof(int));
 	*desplazamiento+=sizeof(int);
+
+}
+
+
+bool enviar_dato_a_escribir_a_memoria(char*dato_leido, uint32_t direc_fisica) {
+	bool result = false;
+
+    t_paquete*paquete=crear_paquete(ESCRIBIR);
+
+    agregar_valor_uint(paquete, &(direc_fisica));
+    agregar_a_paquete(paquete,dato_leido,strlen(dato_leido)+1);
+
+    enviar_paquete(paquete,conexionMemoria);
+    eliminar_paquete(paquete);
+
+    int cod_op;
+    	if(conexionMemoria!=-1){
+    		cod_op = recibir_operacion(conexionMemoria);
+    		if(cod_op==0)
+    			log_debug(logger,"codOP: MENSAJE");
+
+          char* mensaje = recibir_mensaje(conexionMemoria,logger);
+          if(strcmp(mensaje,"OK")== 0)
+              result = true;
+       } else {
+    	   log_error(logger,"No me llego el resultado de memoria");
+       }
+
+
+	return result;
+}
+
+char* solicitar_leer_dato_a_memoria(uint32_t direc_fisica,int cant_bytes) {
+
+	t_paquete *paquete = crear_paquete(LEER);
+
+		agregar_valor_uint(paquete, &(direc_fisica));
+		agregar_valor_estatico(paquete, &(cant_bytes));
+
+		enviar_paquete(paquete,conexionMemoria);
+		eliminar_paquete(paquete);
+		//hago el recv y devuelvo el valor leido
+		char* valor_leido;
+		int cod_op;
+		if(conexionMemoria!=-1){
+			cod_op = recibir_operacion(conexionMemoria);
+			if(cod_op==0)
+				log_debug(logger,"codOP: MENSAJE");
+
+			valor_leido = recibir_mensaje(conexionMemoria, logger); //tiene el \0
+
+		} else {
+			log_error(logger,"No me llego el resultado de memoria");
+		}
+		return valor_leido;
 
 }
 
