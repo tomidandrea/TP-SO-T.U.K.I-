@@ -232,19 +232,6 @@ void removerHuecoPorId(tabla_segmentos tabla_huecos, int huecoDisponible){
 	}
 }
 
-void removerSegmento0(tabla_segmentos tabla_seg){
-	t_segmento* seg;
-	int tamanio = list_size(tabla_seg);
-	for(int i=0; i<tamanio;i++){
-		seg = list_get(tabla_seg, i);
-		if(seg->id == 0){
-			log_debug(logger, "Remuevo seg0 antes de liberar la tabla de segmentos");
-			seg = list_remove(tabla_seg,i);
-			break;
-		}
-	}
-}
-
 op_code crearSegmento(t_pedido_segmento* pedido) {
 	int estadoEspacio = hayEspacio(pedido);
 	t_segmento* nuevoSegmento;
@@ -400,7 +387,7 @@ void agregarHueco(t_segmento* segmento){
 void eliminarSegmento (t_pedido_segmento* pedido) {
 	char* pid = string_itoa(pedido->pid);
 	tabla_segmentos tabla_del_proceso = dictionary_get(diccionarioTablas, pid);
-	t_segmento* segmento = malloc(sizeof(t_segmento)); //creo que no es necesario el malloc
+	t_segmento* segmento; //= malloc(sizeof(t_segmento)); //creo que no es necesario el malloc
 
 	int indice = obtenerIndiceSegmento(tabla_del_proceso, pedido->id_segmento);
 	segmento = list_remove(tabla_del_proceso, indice);
@@ -427,7 +414,9 @@ void enviarSegmentoCreado(t_socket socket_kernel, tabla_segmentos tabla_segmento
 	agregar_valor_uint(paquete,&(nuevoSegmento->limite));
 
 	enviar_paquete(paquete, socket_kernel);
+	printf("cod: %d\n", paquete->codigo_operacion);
 	eliminar_paquete(paquete);
+	mostrarListaSegmentos(tabla_segmentos);
 
 	log_info(logger, "--- Segmento enviado a kernel ---");
 }
@@ -454,10 +443,7 @@ void liberarEstructurasProceso(char* pid){
 	//list_destroy(tablaProceso);
 }
 
-void liberarTablaSegmentos(void* tablaProceso){
-	removerSegmento0((tabla_segmentos)tablaProceso);
-	list_destroy_and_destroy_elements((tabla_segmentos)tablaProceso, free);
-}
+
 
 void liberar_memoria(){
 	log_destroy(logger);

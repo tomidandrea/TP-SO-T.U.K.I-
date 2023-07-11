@@ -61,5 +61,8 @@ t_segmento* obtenerSegmentoPorId(tabla_segmentos tabla_segmentos, int id);
 
 void liberar_contexto(t_contexto* contexto);
 
+void removerSegmento0(tabla_segmentos tabla_seg);
+void liberarTablaSegmentos(void* tablaProceso);
+
 #endif
 

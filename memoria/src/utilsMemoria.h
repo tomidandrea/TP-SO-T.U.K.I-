@@ -42,7 +42,6 @@ int hayEspacio(t_pedido_segmento* pedido);
 
 t_segmento* obtenerHuecoPorId(tabla_segmentos tabla_huecos, int huecoDisponible);
 void removerHuecoPorId(tabla_segmentos tabla_huecos, int huecoDisponible);
-void removerSegmento0(tabla_segmentos tabla_seg);
 
 // Se crea el segmento y se guarda en el hueco disponible
 op_code crearSegmento(t_pedido_segmento* pedido);
@@ -71,7 +70,6 @@ int hayEspacio(t_pedido_segmento* pedido);
 EstadoMemoria asignacion_first(int tamanioPedido);
 EstadoMemoria asignacion_por_algoritmo(int tamanioPedido, int algoritmo); //Para best y worst
 
-void liberarTablaSegmentos(void* tablaProceso);
 void liberar_memoria();
 
 #endif /* SRC_UTILSMEMORIA_H_ */

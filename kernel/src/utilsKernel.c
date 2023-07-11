@@ -210,6 +210,7 @@ void actualizarTablaProceso(char* pidString, tabla_segmentos tabla, t_list* proc
 	printf("\nPidString %s\n", pidString);
 
 	t_pcb* proceso = obtenerProcesoPorPID(pid, procesos);
+	liberarTablaSegmentos(proceso->tablaSegmentos);
 	proceso->tablaSegmentos = list_duplicate(tabla);
 	printf("Pid proceso %d\n", proceso->pid);
 	mostrarListaSegmentos(proceso->tablaSegmentos);
@@ -260,8 +261,10 @@ void actualizarTablasDeSegmentos(int conexionMemoria, t_pcb* proceso){
 			}
 
 			actualizarTablaProceso(pid,tabla,procesos);
+			free(tabla);
+			free(pid);
 		}
-
+		free(buffer);
 		break;
 	}
 

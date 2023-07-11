@@ -208,4 +208,21 @@ void liberar_contexto(t_contexto* contexto){ //por ahora contexto seria lo que n
 	free(contexto);
 }
 
+void removerSegmento0(tabla_segmentos tabla_seg){
+	t_segmento* seg;
+	int tamanio = list_size(tabla_seg);
+	for(int i=0; i<tamanio;i++){
+		seg = list_get(tabla_seg, i);
+		if(seg->id == 0){
+			//log_debug(logger, "Remuevo seg0 antes de liberar la tabla de segmentos");
+			seg = list_remove(tabla_seg,i);
+			break;
+		}
+	}
+}
+
+void liberarTablaSegmentos(void* tablaProceso){
+	removerSegmento0((tabla_segmentos)tablaProceso);
+	list_destroy_and_destroy_elements((tabla_segmentos)tablaProceso, free);
+}
 
