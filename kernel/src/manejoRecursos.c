@@ -153,4 +153,22 @@ void bloquear(t_pcb* proceso, char* recurso) {
 
 }
 
+t_list* obtenerTodosProcesosBloqueados(){
+	t_list* listaProcesos = list_create();
+	int cantidadColas = list_size(colasDeBloqueados);
+	for(int i = 0; i < cantidadColas; i++){
+		t_queue* cola = list_get(colasDeBloqueados, i);
+		int tamanioCola = queue_size(cola);
+		for(int j = 0; j<tamanioCola;j++){
+			t_pcb* proceso = obtenerProcesoQueue(cola, j);
+			list_add(listaProcesos, proceso);
+		}
+	}
+	return listaProcesos;
+}
+
+t_pcb* obtenerProcesoQueue(t_queue *self, int indice) {
+	return list_get(self->elements, indice);
+}
+
 

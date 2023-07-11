@@ -103,6 +103,7 @@ void escucharKernel(){
 				liberar_memoria();
 				exit(1);
 			}
+			//free(pedido);
 		}else{
 			liberar_memoria();
 			log_error(logger,"Se cerró la conexión");

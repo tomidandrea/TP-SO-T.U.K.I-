@@ -26,5 +26,6 @@ void pasarAExecute(t_pcb* proceso);
 void agregarAlInicioDeReady(t_pcb* proceso);
 t_pcb* removerPrimeroDeReady();
 t_pcb* removerDeExecute();
+bool compararProcesoDeExecute(int pid);
 
 #endif

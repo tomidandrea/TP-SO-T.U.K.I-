@@ -144,4 +144,11 @@ t_pcb* removerDeExecute() {
 	return proceso;
 }
 
+bool compararProcesoDeExecute(int pid) {
+    pthread_mutex_lock(&mutex_procesos_execute);
+	t_pcb* proceso = list_get(procesosExecute, 0);
+	pthread_mutex_unlock(&mutex_procesos_execute);
+	return proceso->pid==pid;
+}
+
 

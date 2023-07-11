@@ -53,6 +53,7 @@ t_instruccion* realizar_ciclo_instruccion(t_pcb * pcb){
 		instruccion_ejecutar = fetch(pcb->instrucciones, pcb->pc); // busco la instruccion que apunta el pc
 		decode(instruccion_ejecutar->instruccion);
 		estado = execute(instruccion_ejecutar,pcb); //execute devuelve el estado de ejecucion de la instruccion
+		printf("\nEstado de la instruccion: %d\n", estado);
 		pcb->pc++;
 	}
 	return instruccion_ejecutar;

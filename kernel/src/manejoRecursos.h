@@ -44,5 +44,7 @@ void disminuirInstancias(char* recurso);
 void desbloquearPrimerProceso(char* recurso);
 void bloquear(t_pcb* proceso, char* recurso);
 
+t_list* obtenerTodosProcesosBloqueados();
+t_pcb* obtenerProcesoQueue(t_queue *self, int indice);
 
 #endif /* SRC_MANEJORECURSOS_H_ */

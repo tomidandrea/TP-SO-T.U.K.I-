@@ -13,6 +13,9 @@ extern t_list* procesosExecute;
 
 extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir_cpu, sem_execute;
 
+extern t_list* procesosReady;
+extern pthread_mutex_t mutex_procesos_ready;
+
 
 t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola){
 
@@ -166,42 +169,52 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 
 		segmento = recibirSegmento(conexionMemoria);
 		list_add(proceso->tablaSegmentos, segmento);
+
 		mandar_pcb_a_CPU(proceso);
 		sem_post(&sem_recibir_cpu);
 		break;
 	default:
-		log_error(logger, "El cod_op que me mandó Memoria es invalido");
+		log_error(logger, "El cod_op:%d que me mandó Memoria es invalido", cod);
 	}
 }
 
-int obtenerProcesoPorID(int pid){
-	int cantidad = list_size(procesosExecute);
-	int index = -1;
+t_pcb* obtenerProcesoPorPID(int pid, t_list* procesos){
+	int cantidad = list_size(procesos);
+	t_pcb* proceso;
 	for(int i=0;i<cantidad;i++){
-		// todo: mutex
-		t_pcb* proceso = list_get(procesosExecute,i);
+		proceso = list_get(procesos,i);
 		if(proceso->pid == pid){
-			index = i;
+			printf("\n El proceso %d esta en el indice %d\n", pid, i);
 			break;
 		}
 	}
-	return index;
+	return proceso;
 }
 
-void actualizarTablaProceso(char* pidString, tabla_segmentos tabla, t_pcb* procesoActual){
+void obtenerProcesosReady(t_list* procesos){
+	pthread_mutex_lock(&mutex_procesos_ready);
+	int cantidad = list_size(procesosReady);
+	pthread_mutex_unlock(&mutex_procesos_ready);
+	printf("\n Cantidad de procesos en ready: %d\n", cantidad);
+	for(int i=0;i<cantidad;i++){
+		pthread_mutex_lock(&mutex_procesos_ready);
+		t_pcb* proceso = list_get(procesosReady,i);
+		pthread_mutex_unlock(&mutex_procesos_ready);
+		list_add(procesos, proceso);
+	}
+}
+
+
+void actualizarTablaProceso(char* pidString, tabla_segmentos tabla, t_list* procesos){
 	int pid = atoi(pidString);
-	int indice = obtenerProcesoPorID(pid);
-	printf("\n Indice proceso: %d\n", indice);
+	printf("\nPidString %s\n", pidString);
 
-	// todo:agarrar los procesos de ready para actualizar sus tablas
+	t_pcb* proceso = obtenerProcesoPorPID(pid, procesos);
+	proceso->tablaSegmentos = list_duplicate(tabla);
+	printf("Pid proceso %d\n", proceso->pid);
+	mostrarListaSegmentos(proceso->tablaSegmentos);
 
-	procesoActual->tablaSegmentos = list_duplicate(tabla);
-	int tamanio_tabla = list_size(procesoActual->tablaSegmentos);
 
-	for(int i=0; i<tamanio_tabla;i++){
-					t_segmento* seg = list_get(procesoActual->tablaSegmentos,i);
-					printf("Seg %d: base %d, limite %d \n", seg->id, seg->base, seg->limite);
-				}
 }
 
 void actualizarTablasDeSegmentos(int conexionMemoria, t_pcb* proceso){
@@ -215,6 +228,10 @@ void actualizarTablasDeSegmentos(int conexionMemoria, t_pcb* proceso){
 	switch(cod){
 	case COMPACTAR:
 		log_debug(logger, "Voy a actualizar tablas");
+		t_list* procesos = obtenerTodosProcesosBloqueados();
+		obtenerProcesosReady(procesos);
+		list_add(procesos, proceso);
+
 
 		buffer = recibir_buffer(&size, conexionMemoria);
 		memcpy(&(tamanio_diccionario), buffer + desplazamiento, sizeof(int));
@@ -242,7 +259,7 @@ void actualizarTablasDeSegmentos(int conexionMemoria, t_pcb* proceso){
 				list_add(tabla, segmento);
 			}
 
-			actualizarTablaProceso(pid,tabla,proceso);
+			actualizarTablaProceso(pid,tabla,procesos);
 		}
 
 		break;

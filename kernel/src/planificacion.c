@@ -91,6 +91,7 @@ void recibirDeCPU() {
 				proceso = removerDeExecute();
 				io_contexto* ioContexto = inicializarIoContexto(proceso, tiempo);
 				ejecutarIO(ioContexto);
+				//todo alejiti:agregar semaforo para esparar procesos en IO
 				break;
 			case WAIT:
 				//proceso = removerDeExecute();

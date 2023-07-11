@@ -55,12 +55,12 @@ int main(int argc, char* argv[]) {
     // crear_fcb("PRUEBA",path_fcbs);
 
     //pruebo truncar, le aumento el tamaño a 32 bytes
-    bool truncado =  truncar("PRUEBA",32,path_fcbs,bitmap,archivo_bloques);
+    /*bool truncado =  truncar("PRUEBA",32,path_fcbs,bitmap,archivo_bloques);
     if(truncado)
     	printf("truncado anduvo bien\n");
     else
     	printf("truncado anduvo mal\n");
-
+*/
     fclose(archivo_bloques);
     printf("Archivo de bloques cerrado\n");
 
