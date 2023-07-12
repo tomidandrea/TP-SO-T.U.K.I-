@@ -47,7 +47,7 @@ int minimo(int x,int y);
 
 //escribir archivo
 bool escribir_archivo(char* nombreArchivo,char*path_directorio,int puntero, uint32_t direc_fisica, int cant_bytes,FILE*archivo_bloques);
-bool escribir_dato_en_archivo_de_bloques(t_fcb*fcb,char*dato_a_escribir,uint32_t bloques_fs_a_escribir[],uint32_t bloques_locales_a_escribir[],int puntero,int cant_bytes,FILE*archivo_bloques);
+bool escribir_dato_en_archivo_de_bloques(t_fcb*fcb,char*dato_a_escribir,uint32_t bloques_fs[],uint32_t bloques_locales[],int puntero,int cant_bytes,FILE*archivo_bloques);
 
 //para ambos (leer y escribir)
 bool obtener_bloques_del_fs_a_acceder(t_fcb*fcb,size_t cant_bloques,uint32_t bloques_locales[], uint32_t bloques_fs[],uint32_t bloque_inicio_local, FILE*archivo_bloques);
