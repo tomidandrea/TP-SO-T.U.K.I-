@@ -63,7 +63,9 @@ void escucharKernel(){
 						break;
 					case PEDIDO_COMPACTAR:
 						send(socket_kernel, &estadoCreacion, sizeof(op_code), 0);
+
 						int cod_op = recibir_operacion(socket_kernel);
+
 						if (cod_op == COMPACTAR){
 							compactar(pedido);
 							enviarDiccionarioTablas(socket_kernel);
@@ -205,8 +207,23 @@ void enviarDiccionarioTablas(t_socket socket_kernel){
 	t_paquete* paquete = crear_paquete(COMPACTAR);
 	int cantidadProcesos = dictionary_size(diccionarioTablas);
 	agregar_valor_estatico(paquete,&cantidadProcesos);
+	t_list* keys = dictionary_keys(diccionarioTablas);
 
-	void serializarTablaSegmentos(char* pid, void* tablaSegmentos){
+	for(int i=0;i<cantidadProcesos;i++){
+		char* pid = list_get(keys, i);
+		tabla_segmentos tabla = dictionary_get(diccionarioTablas, pid);
+
+		int cantidad = list_size(tabla);
+		agregar_a_paquete(paquete, pid, strlen(pid)+1);
+		agregar_valor_estatico(paquete,&cantidad);
+		for (int j = 0; j<cantidad; j++){
+			t_segmento* segmento = list_get(tabla, j);
+			agregar_valor_estatico(paquete,&(segmento->id));
+			agregar_valor_uint(paquete,&(segmento->base));
+			agregar_valor_uint(paquete,&(segmento->limite));
+		}
+	}
+/*	void serializarTablaSegmentos(char* pid, void* tablaSegmentos){
 		t_segmento* segmento;
 		int cantidad = list_size(tablaSegmentos);
 		agregar_a_paquete(paquete, pid, strlen(pid)+1);
@@ -220,6 +237,8 @@ void enviarDiccionarioTablas(t_socket socket_kernel){
 	}
 
 	dictionary_iterator(diccionarioTablas, serializarTablaSegmentos);
+*/
+
 	log_debug(logger, "Diccionario serializado");
 	enviar_paquete(paquete, socket_kernel);
 	eliminar_paquete(paquete);

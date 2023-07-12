@@ -295,6 +295,10 @@ t_list* recibirTablaSegmentos(t_socket socket_memoria){
 		t_segmento* seg = list_get(tabla, i);
 		printf("Segmento %d\n", seg->id);
 	}*/
+
+	printf("\ndespla: %d - size: %d\n", desplazamiento, size);
+
+	free(buffer);
 	return tabla;
 
 }
@@ -313,7 +317,7 @@ t_segmento* recibirSegmento(t_socket socket_memoria){
 	desplazamiento+=sizeof(int);
 	memcpy(&(segmento->limite), buffer + desplazamiento, sizeof(u_int32_t));
 	desplazamiento+=sizeof(int);
-
+	free(buffer);
 	return segmento;
 }
 

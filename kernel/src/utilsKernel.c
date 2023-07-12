@@ -159,14 +159,18 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 	case PEDIDO_COMPACTAR:
 		/*
 		 * Si no esta bloqueado ningun proceso
-		 */
+		*/
+
 		int codOp = COMPACTAR;
 		send(conexionMemoria, &codOp, sizeof(int), 0);
+
 		actualizarTablasDeSegmentos(conexionMemoria, proceso);
 
 		//Tenemos que mandar otra vez el pedido a memoria
 		solicitarCrearSegmento(id,tamanio, proceso); //mandamos a memoria
 
+		// recibimos el segmento
+		int codigo_op = recibir_operacion(conexionMemoria);
 		segmento = recibirSegmento(conexionMemoria);
 		list_add(proceso->tablaSegmentos, segmento);
 
@@ -254,9 +258,9 @@ void actualizarTablasDeSegmentos(int conexionMemoria, t_pcb* proceso){
 				memcpy(&(segmento->id), buffer + desplazamiento, sizeof(int));
 				desplazamiento+=sizeof(int);
 				memcpy(&(segmento->base), buffer + desplazamiento, sizeof(u_int32_t));
-				desplazamiento+=sizeof(int);
+				desplazamiento+=sizeof(u_int32_t);
 				memcpy(&(segmento->limite), buffer + desplazamiento, sizeof(u_int32_t));
-				desplazamiento+=sizeof(int);
+				desplazamiento+=sizeof(u_int32_t);
 				list_add(tabla, segmento);
 			}
 
@@ -284,8 +288,8 @@ void recibirEliminarsegmento(t_pcb* proceso){
 	int cod = recibir_operacion(conexionMemoria);
 	if (cod == TABLA_SEGMENTOS){
 		proceso->tablaSegmentos = recibirTablaSegmentos(conexionMemoria);
+		log_debug(logger, "Tabla de segmentos actualizada - Se eliminó el segmento");
 	}
-	log_debug(logger, "Tabla de segmentos actualizada - Se eliminó el segmento");
 	mandar_pcb_a_CPU(proceso);
 	sem_post(&sem_recibir_cpu);
 

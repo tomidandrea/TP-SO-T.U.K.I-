@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
 
 	crearEscucharCPU();
 	crearEscucharKernel();
-	crearEscucharFS();
+	//crearEscucharFS();
 
 	while(1);
 
