@@ -184,6 +184,7 @@ void escucharCPU(){
 				enviar_mensaje(mensaje, socket_cpu);
 				free(valor);
 				free(buffer);
+				break;
 			}
 			// cosas q pide cpu xd
 		}
@@ -198,8 +199,65 @@ void escucharFS(){
 	while(1){
 		if(socket_file_system != -1){
 			int cod_op = recibir_operacion(socket_file_system);
-			// cosas q pide file system xd
+			sem_wait(&ejecutando);
+			u_int32_t direc_fisica;
+			int pid, tamanio, size;
+			void* buffer;
+			int desplazamiento = 0;
+
+			switch (cod_op) {
+			case LEER:
+				buffer = recibir_buffer(&size, socket_file_system);
+				memcpy(&direc_fisica, buffer + desplazamiento, sizeof(u_int32_t));
+				desplazamiento += sizeof(u_int32_t);
+				memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
+				log_debug(logger,"Case LEER, recibi dir fisica %d, tamaño %d", direc_fisica, tamanio);
+				//devuelvo el valor leido en la direccion pedida
+				char* valor_leido = leer(direc_fisica, tamanio, pid);
+				//valor_leido[tamanio] = '\0';
+				char* valor_a_enviar=malloc(tamanio+1);
+				memcpy(valor_a_enviar, valor_leido, tamanio);
+				valor_a_enviar[tamanio] = '\0';
+
+				log_debug(logger,"Lei el valor %s de tamaño %d. Enviando a FS...", valor_a_enviar, tamanio);
+				//hago el retardo que pide el enuncuado por acceder al espacio de memoria
+				usleep(retardo_memoria * 1000);
+
+				enviar_mensaje(valor_a_enviar, socket_file_system);
+
+				free(valor_leido);
+				free(buffer);
+				break;
+			case ESCRIBIR:
+				//recibo los datos para escritura
+				buffer = recibir_buffer(&size, socket_file_system);
+				memcpy(&direc_fisica, buffer + desplazamiento, sizeof(u_int32_t));
+				desplazamiento += sizeof(u_int32_t);
+				memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
+				desplazamiento += sizeof(int);
+				log_debug(logger,"Case ESCRIBIR, recibi pid %d, dir fisica %d, tamaño %d", pid, direc_fisica, tamanio);
+
+				char* valor = malloc(tamanio);
+				memcpy(valor, buffer + desplazamiento, tamanio);
+				//valor[tamanio] = '\0';
+				char* para_guardar = malloc(tamanio-1);
+				memcpy(para_guardar, buffer + desplazamiento, tamanio-1);
+				log_debug(logger,"Me llego una escritura del valor %s en la direccion %d ", valor, direc_fisica);
+				free(valor);
+
+				memcpy(espacioMemoria + direc_fisica, para_guardar, tamanio-1);
+				usleep(retardo_memoria * 1000);
+				//le mando OK a cpu para que siga ejecutando
+				//send(socket_cpu, &RESULT_OK, tamanio, 0);
+				char* mensaje="OK";
+				enviar_mensaje(mensaje, socket_file_system);
+				free(para_guardar);
+				free(buffer);
+				break;
+			}
+			// cosas q pide cpu xd
 		}
+		sem_post(&ejecutando);
 	}
 }
 

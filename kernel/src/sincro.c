@@ -7,7 +7,7 @@ extern t_list* procesosExecute;
 extern t_list* procesosReady;
 extern t_list* procesosNew;
 
-extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir_cpu, sem_recibir_fs, sem_execute;
+extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir_cpu, sem_recibir_fs, sem_execute, sem_proceso_fs_rw;;
 extern pthread_mutex_t mutex_procesos_new;
 extern pthread_mutex_t mutex_procesos_ready;
 extern pthread_mutex_t mutex_procesos_execute;
@@ -70,6 +70,7 @@ void inicializarSemoforos(){
 	sem_init(&sem_execute, 0, 1);
 	sem_init(&sem_recibir_cpu, 0, 0);
 	sem_init(&sem_recibir_fs, 0, 0);
+	sem_init(&sem_proceso_fs_rw, 0, 1);
 }
 
 
@@ -80,6 +81,7 @@ void liberarSemoforos(){
 	sem_destroy(&sem_execute);
 	sem_destroy(&sem_recibir_cpu);
 	sem_destroy(&sem_recibir_fs);
+	sem_destroy(&sem_proceso_fs_rw);
 	liberarMutex();
 }
 

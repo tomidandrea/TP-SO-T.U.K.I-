@@ -118,6 +118,9 @@ EstadoMemoria asignacion_por_algoritmo(int tamanioPedido, int algoritmo){
 	u_int32_t tamanioTotal = 0; // acumula el tamaño de los huecos
 	int cantidadHuecos = list_size(tabla_huecos);
 	int condicion = NO_ENCONTRO_HUECO;
+
+	log_debug(logger, "Algoritmo %d", algoritmo);
+
 	for(int i=0;i<cantidadHuecos;i++){
 		hueco = list_get(tabla_huecos, i);
 		tamanio=obtenerTamanioSegmento(hueco);

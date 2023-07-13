@@ -11,7 +11,7 @@ extern t_socket conexionCPU;
 extern t_socket conexionMemoria;
 extern t_list* procesosExecute;
 
-extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir_cpu, sem_execute;
+extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir_cpu, sem_execute, sem_proceso_fs_rw;
 
 extern t_list* procesosReady;
 extern pthread_mutex_t mutex_procesos_ready;
@@ -147,22 +147,21 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 		sem_post(&sem_grado_multiprogramacion);*/
 		log_info(logger, "Finaliza el proceso %d - Motivo: OUT_OF_MEMORY", proceso->pid);
 		log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
-		finalizar_proceso(proceso);
+		finalizar_proceso("OUT_OF_MEMORY");
 		//liberar_pcb(proceso);
 		break;
 	case LIMITE_SEGMENTOS_SUPERADO: //todo: mejorar esto, con solo un case de error de creacion reicibiendo el motivo x socket
 		/*avisar_fin_a_consola(proceso->socket_consola);
 		sem_post(&sem_grado_multiprogramacion);*/
-		finalizar_proceso(proceso);
+		finalizar_proceso("LIMITE_SEGMENTOS_SUPERADO");
 		log_info(logger, "Finaliza el proceso %d - Motivo: LIMITE_SEGMENTOS_SUPERADO", proceso->pid);
 		log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
 		//liberar_pcb(proceso);
 		break;
 	case PEDIDO_COMPACTAR:
-		/*
-		 * Si no esta bloqueado ningun proceso
-		*/
-
+		log_debug(logger,"Esperamos procesos de fs");
+		sem_wait(&sem_proceso_fs_rw);
+		log_debug(logger,"Ya volvieron procesos de fs");
 		int codOp = COMPACTAR;
 		send(conexionMemoria, &codOp, sizeof(int), 0);
 
@@ -176,6 +175,7 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 		segmento = recibirSegmento(conexionMemoria);
 		list_add(proceso->tablaSegmentos, segmento);
 
+		sem_post(&sem_proceso_fs_rw);
 		mandar_pcb_a_CPU(proceso);
 		sem_post(&sem_recibir_cpu);
 		break;

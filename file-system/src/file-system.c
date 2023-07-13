@@ -60,11 +60,11 @@ int main(int argc, char* argv[]) {
     //pruebo truncar, le aumento el tamaño a 256 bytes
 
 
-    bool truncado =  truncar("Consoles",0,path_fcbs,bitmap,archivo_bloques);
+    /*bool truncado =  truncar("Consoles",0,path_fcbs,bitmap,archivo_bloques);
     if(truncado)
     	printf("truncado anduvo bien\n");
     else
-    	printf("truncado anduvo mal\n");
+    	printf("truncado anduvo mal\n");*/
 
     //pruebo fwrite
    // result_operacion = escribir_archivo("Consoles",path_fcbs,128,32,80,archivo_bloques);
@@ -72,15 +72,16 @@ int main(int argc, char* argv[]) {
     //pruebo fread
     //result_operacion = leer_archivo("Consoles",path_fcbs,128,32,80,archivo_bloques);
 
-    fclose(archivo_bloques);
+    /*fclose(archivo_bloques);
     printf("Archivo de bloques cerrado\n");
-
+*/
     //inicio servidor para kernel
 	t_socket server_fd = iniciarServidor(config, logger,"PUERTO_ESCUCHA");
 
 
 	t_socket socket_cliente = esperar_cliente(server_fd, logger);
 
+	char* mensaje = malloc(9);
 
 	while(1) {
 		if(socket_cliente != -1) {
@@ -92,12 +93,14 @@ int main(int argc, char* argv[]) {
 		void * buffer;
 		char* nombreArchivo;
 		buffer = recibir_buffer(&size, socket_cliente);
+		strcpy(mensaje, "OP_OK");
 
 		switch (cod_op) {
 
 		        case CREAR_ARCHIVO:
 		        	 nombreArchivo = recibirNombreArchivo(buffer, &desplazamiento);
 					 log_info(logger, "Crear Archivo: %s ", nombreArchivo);
+					 log_info(logger, "Path fcb: %s ", path_fcbs);
 					 crear_fcb(nombreArchivo,path_fcbs);
 		        	 result_operacion = RESULT_OK;
 					 break;
@@ -122,6 +125,7 @@ int main(int argc, char* argv[]) {
 					recibirLeerOEscribir(buffer, &desplazamiento, &puntero, &direc_fisica, &cant_bytes);
 					log_info(logger, "Leer Archivo: %s - Puntero: %d - Memoria: %d - Tamaño: %d", nombreArchivo, puntero, direc_fisica, cant_bytes);
 				    result_operacion = leer_archivo(nombreArchivo,path_fcbs,puntero,direc_fisica,cant_bytes,archivo_bloques);
+				    strcpy(mensaje, "OP_READ");
 				    break;
 
 				case F_WRITE:
@@ -129,6 +133,7 @@ int main(int argc, char* argv[]) {
 					recibirLeerOEscribir(buffer, &desplazamiento, &puntero, &direc_fisica, &cant_bytes);
 					log_info(logger, "Escribir Archivo: %s - Puntero: %d - Memoria: %d - Tamaño: %d", nombreArchivo, puntero, direc_fisica, cant_bytes);
 					result_operacion = escribir_archivo(nombreArchivo,path_fcbs,puntero,direc_fisica,cant_bytes,archivo_bloques);
+					strcpy(mensaje, "OP_WRITE");
 					break;
 				default:
 					log_error(logger,"Se cerró la conexión");
@@ -139,19 +144,21 @@ int main(int argc, char* argv[]) {
 		}
 
 		if(result_operacion == RESULT_OK) {
-			enviar_mensaje("OPERACION_OK",socket_cliente);
+			enviar_mensaje(mensaje ,socket_cliente);
 		}
 		else {
-			enviar_mensaje("OPERACION_ERROR",socket_cliente);
+			enviar_mensaje("OP_ERROR",socket_cliente);
 		}
 	 }
 		else  {
 		log_error(logger, "Se rompio la conexion con el cliente");
-		exit(1);
+		break;
 	 }
 
   }
-
+	fclose(archivo_bloques);
+	printf("Archivo de bloques cerrado\n");
+	free(mensaje);
 	free(path_fcbs);
 
 	return EXIT_SUCCESS;
@@ -164,6 +171,7 @@ void crear_fcb(char* archivo, char*path_directorio) {
 
 	char*path_archivo = crear_path_archivo(archivo,path_directorio);
 
+	log_info(logger, "Path archivo para crear: %s ", path_archivo);
 	FILE * archivo_fcb = fopen(path_archivo, "w+");
 
 	fprintf(archivo_fcb,"NOMBRE_ARCHIVO=%s\n",archivo);
@@ -180,15 +188,13 @@ void crear_fcb(char* archivo, char*path_directorio) {
 
 
 bool existe_fcb(char*archivo,char*path) {
-
-	strcat(path,"/");
-	strcat(path,archivo);
+	char* path_archivo = crear_path_archivo(archivo, path);
 
 	printf("Verificando si existe archivo: %s\n",archivo);
 
-	printf("path archivo = %s\n",path);
+	printf("path archivo = %s\n",path_archivo);
 
-	FILE*fd = fopen(path,"r");
+	FILE*fd = fopen(path_archivo,"r");
 
 	if(fd == NULL) {
 		printf("El archivo %s no existe\n",archivo);
@@ -300,9 +306,9 @@ void actualizar_archivo_fcb(t_fcb*fcb,char*path_directorio) {
 	char*puntero_indirecto = string_itoa(fcb->puntero_indirecto);
 
 	config_set_value(archivo_fcb,"TAMANIO_ARCHIVO",tamanio);
-	config_save(archivo_fcb);
 	config_set_value(archivo_fcb,"PUNTERO_DIRECTO",puntero_directo);
 	config_set_value(archivo_fcb,"PUNTERO_INDIRECTO",puntero_indirecto);
+	config_save(archivo_fcb);
 
 	free(tamanio);
 	free(puntero_directo);
@@ -361,7 +367,8 @@ bool asignar_bloques_a_fcb(uint32_t bloques_asignados[],size_t cant_bloques,size
 		   cant_bloques_indirectos = cant_bloques - 2;    //calculo la cantidad de bloques que voy a tener que agregar en el bloque indice  (los llamo bloques indirectos). Para calcularlo le resto a la cantidad total de bloques a agregar, el bloque para el puntero directo y el bloque indice
 		   fcb->puntero_indirecto = bloques_asignados[1];  // Al puntero indirecto le asigno el segundo bloque (donde va a estar el bloque indice)
 		   result = asignar_bloques_indirectos(fcb,bloques_asignados,cant_bloques,cant_bloques_indirectos,cant_bloques_indirectos_actual,2,archivo_bloques);   // agrego los bloques indirectos
-	    }
+	    }else
+	    	result = RESULT_OK;
 	}
 	else if (solo_tiene_un_bloque_asignado(fcb)){          //si solo tiene un bloque directo asignado
 		     fcb->puntero_indirecto = bloques_asignados[0];    //el primer bloque a asignar va a ser para el bloque indice
@@ -604,8 +611,9 @@ int minimo(int x,int y) {
 bool escribir_archivo(char* nombreArchivo,char*path_directorio,int puntero, uint32_t direc_fisica, int cant_bytes,FILE*archivo_bloques){
 
 	bool result = false;
-	char*dato_a_escribir = "SonyPlaystation1SonyPlaystation2SonyPlaystation3SonyPlaystation4SonyPlaystation5";//solicitar_leer_dato_a_memoria(direc_fisica,cant_bytes);
-
+	//char*dato_a_escribir = "SonyPlaystation1SonyPlaystation2SonyPlaystation3SonyPlaystation4SonyPlaystation5";
+	char*dato_a_escribir = solicitar_leer_dato_a_memoria(direc_fisica,cant_bytes);
+	printf("Voy a escribir: %s\n", dato_a_escribir);
 	t_fcb*fcb = get_fcb(nombreArchivo,path_directorio);
 
 	uint32_t bloque_inicio_local = floor(puntero/tamanio_bloque);   // obtengo el numero de bloque en mi archivo donde se encuentra el puntero desde el cual voy a iniciar a escribir
@@ -659,7 +667,8 @@ bool obtener_bloques_del_fs_a_acceder(t_fcb*fcb,size_t cant_bloques,uint32_t blo
 	                j++;
 	    	    }
 	    	    result_get_bloques = RESULT_OK;
-	       }
+	       }else
+	    	   result_get_bloques = RESULT_OK;
 	    }
 
 	    else {               //sino significa que voy a tener que obtener todos bloques indirectos

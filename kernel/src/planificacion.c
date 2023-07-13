@@ -13,7 +13,7 @@ extern t_socket conexionFileSystem;
 
 uint32_t INICIO = 1;
 
-sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir_cpu, sem_recibir_fs, sem_execute;
+sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir_cpu, sem_recibir_fs, sem_execute, sem_proceso_fs_rw;;
 pthread_mutex_t mutex_procesos_new = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_procesos_ready = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_procesos_execute = PTHREAD_MUTEX_INITIALIZER;
@@ -229,8 +229,11 @@ void recibirDeFS() {
 		switch(cod_op){
 			case MENSAJE:
 				char*mensaje = recibir_mensaje(conexionFileSystem, logger);
-				if(strcmp(mensaje, "OPERACION_OK") == 0) {
+				if(strcmp(mensaje, "OP_OK") == 0) {
 					desbloquearDeEsperaDeFS();
+				} else if(strcmp(mensaje, "OP_READ") == 0 || strcmp(mensaje, "OP_WRITE") == 0){
+					desbloquearDeEsperaDeFS();
+					sem_post(&sem_proceso_fs_rw);
 				} else
 					log_error(logger, "No se realizo correctamente la operacion en FS");
 			break;

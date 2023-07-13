@@ -5,6 +5,7 @@ extern t_list* archivosAbiertosGlobal;
 extern t_socket conexionFileSystem;
 extern t_list* esperaDeFS;
 extern sem_t sem_recibir_fs;
+extern sem_t sem_proceso_fs_rw;
 extern pthread_mutex_t mutex_espera_FS;
 
 t_archivo_global* inicializarArchivoGlobal(char * nombre) {
@@ -77,10 +78,10 @@ void abrirArchivoEnFS(char* nombre) {
 	if(recv(conexionFileSystem, &cod_op, sizeof(int), MSG_WAITALL) > 0){
 			 char* mensaje=recibir_mensaje(conexionFileSystem, logger);
 				log_debug(logger,"Me llego de FS el resultado: %s",mensaje);
-				if(strcmp(mensaje, "OPERACION_OK") == 0) {
+				if(strcmp(mensaje, "OP_OK") == 0) {
 					log_debug(logger,"El archivo %s ya estaba creado en el FS!!", nombre);
 				} else
-					if(strcmp(mensaje, "OPERACION_ERROR") == 0) {
+					if(strcmp(mensaje, "OP_ERROR") == 0) {
 						log_debug(logger, "Enviando creacion del archivo %s al FS", nombre);
 						crearArchivoEnFS(nombre);
 					} else log_error(logger,"Me llego cualquier cosa");
@@ -101,7 +102,7 @@ void crearArchivoEnFS(char* nombre) {
 	if(recv(conexionFileSystem, &cod_op, sizeof(int), MSG_WAITALL) > 0){
 		char* mensaje=recibir_mensaje(conexionFileSystem, logger);
 		log_debug(logger,"Me llego de FS el resultado: %s",mensaje);
-		if(strcmp(mensaje, "OPERACION_OK") == 0) {
+		if(strcmp(mensaje, "OP_OK") == 0) {
 			log_debug(logger,"El archivo %s se creó exitosamente!!", nombre);
 		} else log_error(logger,"Me llego cualquier cosa");
 	} else {
@@ -118,8 +119,8 @@ void truncar_archivo(char* nombreArchivo, int tamanio) {
 	eliminar_paquete(paquete);
 
 	t_pcb* proceso = removerDeExecute();
-	bloquearPorFS(proceso, "F_TRUNCATE");
 
+	bloquearPorFS(proceso, "F_TRUNCATE");
 	sem_post(&sem_recibir_fs);
 }
 
@@ -136,8 +137,9 @@ void leer_archivo(t_archivo* archivo, u_int32_t direc_fisica, int cant_bytes) {
 	eliminar_paquete(paquete);
 
 	t_pcb* proceso = removerDeExecute();
-	log_info(logger,"PID: %d - Leer Archivo: %s - Puntero %d - Dirección Memoria &d - Tamaño %d", proceso->pid, archivo->nombre, archivo->puntero, cant_bytes);
+	log_info(logger,"PID: %d - Leer Archivo: %s - Puntero %d - Dirección Memoria %d - Tamaño %d", proceso->pid, archivo->nombre, archivo->puntero, cant_bytes);
 	bloquearPorFS(proceso, "F_READ");
+	sem_wait(&sem_proceso_fs_rw);
 	sem_post(&sem_recibir_fs);
 }
 
@@ -152,8 +154,9 @@ void escribir_archivo(t_archivo* archivo, u_int32_t direc_fisica, int cant_bytes
 	eliminar_paquete(paquete);
 
 	t_pcb* proceso = removerDeExecute();
-	log_info(logger,"PID: %d - Escribir Archivo: %s - Puntero %d - Dirección Memoria &d - Tamaño %d", proceso->pid, archivo->nombre, archivo->puntero, cant_bytes);
+	log_info(logger,"PID: %d - Escribir Archivo: %s - Puntero %d - Dirección Memoria %d - Tamaño %d", proceso->pid, archivo->nombre, archivo->puntero, cant_bytes);
 	bloquearPorFS(proceso, "F_WRITE");
+	sem_wait(&sem_proceso_fs_rw);
 	sem_post(&sem_recibir_fs);
 }
 

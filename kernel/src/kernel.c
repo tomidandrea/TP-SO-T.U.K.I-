@@ -38,6 +38,7 @@ int main(int argc, char* argv[]) {
     procesosExecute = list_create();
 
     esperaDeIO = list_create();
+    esperaDeFS = list_create();
 
     conexionCPU = iniciarConexion(config, logger, "IP_CPU", "PUERTO_CPU");
     conexionMemoria = iniciarConexion(config, logger, "IP_MEMORIA", "PUERTO_MEMORIA");
