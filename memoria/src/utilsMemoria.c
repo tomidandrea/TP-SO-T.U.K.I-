@@ -414,7 +414,7 @@ void enviarSegmentoCreado(t_socket socket_kernel, tabla_segmentos tabla_segmento
 	agregar_valor_uint(paquete,&(nuevoSegmento->limite));
 
 	enviar_paquete(paquete, socket_kernel);
-	printf("cod: %d\n", paquete->codigo_operacion);
+	//printf("cod: %d\n", paquete->codigo_operacion);
 	eliminar_paquete(paquete);
 	mostrarListaSegmentos(tabla_segmentos);
 

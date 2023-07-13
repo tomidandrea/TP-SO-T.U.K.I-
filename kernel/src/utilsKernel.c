@@ -16,6 +16,8 @@ extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibi
 extern t_list* procesosReady;
 extern pthread_mutex_t mutex_procesos_ready;
 
+extern t_list* esperaDeIO;
+
 
 t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola){
 
@@ -188,7 +190,7 @@ t_pcb* obtenerProcesoPorPID(int pid, t_list* procesos){
 	for(int i=0;i<cantidad;i++){
 		proceso = list_get(procesos,i);
 		if(proceso->pid == pid){
-			printf("\n El proceso %d esta en el indice %d\n", pid, i);
+			printf("\n==El proceso %d esta en el indice %d==\n", pid, i);
 			break;
 		}
 	}
@@ -199,7 +201,7 @@ void obtenerProcesosReady(t_list* procesos){
 	pthread_mutex_lock(&mutex_procesos_ready);
 	int cantidad = list_size(procesosReady);
 	pthread_mutex_unlock(&mutex_procesos_ready);
-	printf("\n Cantidad de procesos en ready: %d\n", cantidad);
+	printf("\nCantidad de procesos en ready: %d\n", cantidad);
 	for(int i=0;i<cantidad;i++){
 		pthread_mutex_lock(&mutex_procesos_ready);
 		t_pcb* proceso = list_get(procesosReady,i);
@@ -211,7 +213,7 @@ void obtenerProcesosReady(t_list* procesos){
 
 void actualizarTablaProceso(char* pidString, tabla_segmentos tabla, t_list* procesos){
 	int pid = atoi(pidString);
-	printf("\nPidString %s\n", pidString);
+	//printf("\nPidString %s\n", pidString);
 
 	t_pcb* proceso = obtenerProcesoPorPID(pid, procesos);
 	liberarTablaSegmentos(proceso->tablaSegmentos);
@@ -235,7 +237,10 @@ void actualizarTablasDeSegmentos(int conexionMemoria, t_pcb* proceso){
 		log_debug(logger, "Voy a actualizar tablas");
 		t_list* procesos = obtenerTodosProcesosBloqueados();
 		obtenerProcesosReady(procesos);
+		agregarProcesosDeIO(procesos);
 		list_add(procesos, proceso);
+		char* lista = lista_procesos_string(procesos);
+		printf("Lista :[%s]\n", lista);
 
 
 		buffer = recibir_buffer(&size, conexionMemoria);

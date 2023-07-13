@@ -296,7 +296,7 @@ t_list* recibirTablaSegmentos(t_socket socket_memoria){
 		printf("Segmento %d\n", seg->id);
 	}*/
 
-	printf("\ndespla: %d - size: %d\n", desplazamiento, size);
+	//printf("\ndespla: %d - size: %d\n", desplazamiento, size);
 
 	free(buffer);
 	return tabla;

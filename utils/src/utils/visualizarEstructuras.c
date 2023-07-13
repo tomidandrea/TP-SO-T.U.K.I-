@@ -21,7 +21,7 @@ void mostrarListaProcesos(t_list* lista){
 	int tamanio = list_size(lista);
 	for(int i=0; i<tamanio; i++){
 		t_pcb* proceso = list_get(lista, i);
-		log_info(logger,"Proceso %d\n", proceso->pid);
+		log_info(logger,"Proceso %d", proceso->pid);
 	}
 }
 

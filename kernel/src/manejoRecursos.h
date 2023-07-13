@@ -46,5 +46,7 @@ void bloquear(t_pcb* proceso, char* recurso);
 
 t_list* obtenerTodosProcesosBloqueados();
 t_pcb* obtenerProcesoQueue(t_queue *self, int indice);
+void removerProcesoPorPID(int pid);
+void agregarProcesosDeIO(t_list* procesos);
 
 #endif /* SRC_MANEJORECURSOS_H_ */

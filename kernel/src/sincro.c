@@ -11,6 +11,7 @@ extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibi
 extern pthread_mutex_t mutex_procesos_new;
 extern pthread_mutex_t mutex_procesos_ready;
 extern pthread_mutex_t mutex_procesos_execute;
+extern pthread_mutex_t mutex_procesos_io;
 
 // creamos los hilos
 
@@ -86,6 +87,7 @@ void liberarMutex(){ //Semaforos mutex para acceder a las listas de procesos
 	pthread_mutex_destroy(&mutex_procesos_ready);
 	pthread_mutex_destroy(&mutex_procesos_new);
 	pthread_mutex_destroy(&mutex_procesos_execute);
+	pthread_mutex_destroy(&mutex_procesos_io);
 }
 
 void pasarNewAReady(){

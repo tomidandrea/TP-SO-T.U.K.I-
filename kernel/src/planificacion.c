@@ -7,6 +7,7 @@ extern t_list* procesosExecute;
 extern t_list* procesosReady;
 extern t_list* procesosNew;
 extern t_list* esperaDeFS;
+extern t_list* esperaDeIO;
 extern t_list* archivosAbiertosGlobal;
 extern t_socket conexionFileSystem;
 
@@ -17,6 +18,7 @@ pthread_mutex_t mutex_procesos_new = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_procesos_ready = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_procesos_execute = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_espera_FS = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_procesos_io = PTHREAD_MUTEX_INITIALIZER;
 
 
 void planificar(){
@@ -91,7 +93,9 @@ void recibirDeCPU() {
 				proceso = removerDeExecute();
 				io_contexto* ioContexto = inicializarIoContexto(proceso, tiempo);
 				ejecutarIO(ioContexto);
-				//todo alejiti:agregar semaforo para esparar procesos en IO
+				pthread_mutex_lock(&mutex_procesos_io);
+				list_add(esperaDeIO, proceso);
+				pthread_mutex_unlock(&mutex_procesos_io);
 				break;
 			case WAIT:
 				//proceso = removerDeExecute();

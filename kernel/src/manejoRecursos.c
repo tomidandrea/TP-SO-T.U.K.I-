@@ -11,6 +11,10 @@ extern t_list* colasDeBloqueados;
 extern char** recursos;
 extern sem_t sem_recibir_cpu;
 
+extern t_list* esperaDeIO;
+extern pthread_mutex_t mutex_procesos_io;
+
+
 
 void inicializarRecursos(){
 	char* recursos_config =  config_get_string_value(config, "RECURSOS");
@@ -110,6 +114,9 @@ void bloquearYPasarAReady(io_contexto* contexto) {
 	//log_info(logger,"Finaliza bloqueo de Proceso %d por IO y pasa a estado ready", contexto->proceso->pid);
 	log_info(logger, "PID: %d - Estado Anterior: BLOCKED - Estado Actual: READY", contexto->proceso->pid);
 	pasarAReady(contexto->proceso);
+	pthread_mutex_lock(&mutex_procesos_io);
+	removerProcesoPorPID(contexto->proceso->pid);
+	pthread_mutex_unlock(&mutex_procesos_io);
 	//sem_post(&sem_ready);
 }
 
@@ -164,11 +171,39 @@ t_list* obtenerTodosProcesosBloqueados(){
 			list_add(listaProcesos, proceso);
 		}
 	}
+	int tamanio = list_size(listaProcesos);
+	printf("Cantidad de procesos bloqueados %d\n", tamanio);
 	return listaProcesos;
 }
 
 t_pcb* obtenerProcesoQueue(t_queue *self, int indice) {
 	return list_get(self->elements, indice);
+}
+
+void removerProcesoPorPID(int pid){
+	t_pcb* proceso;
+	int tamanio = list_size(esperaDeIO);
+	for(int i=0; i<tamanio;i++){
+		proceso = list_get(esperaDeIO, i);
+		if(proceso->pid == pid){
+			log_debug(logger, "Proceso pid:%d, sale de IO", pid);
+			proceso = list_remove(esperaDeIO,i);
+			break;
+		}
+	}
+}
+
+void agregarProcesosDeIO(t_list* procesos){
+	pthread_mutex_lock(&mutex_procesos_io);
+	int cantidadProcesos = list_size(esperaDeIO);
+	printf("cant IO: %d\n", cantidadProcesos);
+	for(int i=0;i<cantidadProcesos;i++){
+		t_pcb* proceso = list_get(esperaDeIO, i);
+		printf("pid proceso IO: %d\n", proceso->pid);
+		list_add(procesos, proceso);
+	}
+	//list_add_all(procesos,esperaDeIO);
+	pthread_mutex_unlock(&mutex_procesos_io);
 }
 
 

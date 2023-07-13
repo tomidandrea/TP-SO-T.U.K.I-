@@ -9,6 +9,7 @@ t_list* procesosNew;
 t_list* colasDeBloqueados;
 t_list* archivosAbiertosGlobal;
 t_list* esperaDeFS;
+t_list* esperaDeIO;
 t_socket conexionCPU;
 t_socket conexionMemoria;
 t_socket conexionFileSystem;
@@ -35,6 +36,8 @@ int main(int argc, char* argv[]) {
     procesosNew = list_create();
     procesosReady = list_create();
     procesosExecute = list_create();
+
+    esperaDeIO = list_create();
 
     conexionCPU = iniciarConexion(config, logger, "IP_CPU", "PUERTO_CPU");
     conexionMemoria = iniciarConexion(config, logger, "IP_MEMORIA", "PUERTO_MEMORIA");
