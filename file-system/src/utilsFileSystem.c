@@ -13,7 +13,7 @@ FILE* levantarArchivo(char*path,size_t cant_bytes) {
 	if (fp == NULL) {
 		fp = fopen(path,"wb+");
 	}
-	printf("archivo %s abierto\n", path);
+	//printf("archivo %s abierto\n", path);
 
 	ftruncate(fileno(fp),cant_bytes);
 
@@ -40,15 +40,19 @@ t_bitarray* mapear_bitmap(size_t cant_bytes, FILE*archivo_bitmap){
 
 	t_bitarray* bitmap = bitarray_create_with_mode(buffer,cant_bytes, LSB_FIRST);
 
-	//inicializar_bitarray(bitmap);
+	if(bitmap!= NULL) {
+		log_info(logger,"Archivo bitmap mapeado en bitarray\n");
+		//inicializar_bitarray(bitmap);
+		mostrar_bitarray(bitmap);
+	}
+
 
 	//bitarray_set_bit(bitmap,5);
 
-	mostrar_bitarray(bitmap);
 
 	fclose(archivo_bitmap);
 
-    printf("archivo bitmap cerrado\n");
+    //printf("archivo bitmap cerrado\n");
 
     return bitmap;
 
@@ -158,10 +162,10 @@ bool enviar_dato_a_escribir_a_memoria(char*dato_leido, uint32_t direc_fisica) {
 	bool result = false;
 
     t_paquete*paquete=crear_paquete(ESCRIBIR);
-
     agregar_valor_uint(paquete, &(direc_fisica));
     agregar_a_paquete(paquete,dato_leido,strlen(dato_leido)+1);
 
+    log_info(logger,"Enviando lectura a memoria");
     enviar_paquete(paquete,conexionMemoria);
     eliminar_paquete(paquete);
 
@@ -183,8 +187,9 @@ bool enviar_dato_a_escribir_a_memoria(char*dato_leido, uint32_t direc_fisica) {
 
 char* solicitar_leer_dato_a_memoria(uint32_t direc_fisica,int cant_bytes) {
 
-	t_paquete *paquete = crear_paquete(LEER);
+	    t_paquete *paquete = crear_paquete(LEER);
 
+	    log_info(logger,"Enviando solicitud de lectura a memoria");
 		agregar_valor_uint(paquete, &(direc_fisica));
 		agregar_valor_estatico(paquete, &(cant_bytes));
 
@@ -195,11 +200,9 @@ char* solicitar_leer_dato_a_memoria(uint32_t direc_fisica,int cant_bytes) {
 		int cod_op;
 		if(conexionMemoria!=-1){
 			cod_op = recibir_operacion(conexionMemoria);
-			if(cod_op==0)
-				log_debug(logger,"codOP: MENSAJE");
-
+			if(cod_op==MENSAJE){
 			valor_leido = recibir_mensaje(conexionMemoria, logger); //tiene el \0
-
+			}
 		} else {
 			log_error(logger,"No me llego el resultado de memoria");
 		}
