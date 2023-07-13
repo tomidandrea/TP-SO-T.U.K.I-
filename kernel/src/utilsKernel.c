@@ -9,14 +9,11 @@ extern t_config* config;
 extern t_log* logger;
 extern t_socket conexionCPU;
 extern t_socket conexionMemoria;
-extern t_list* procesosExecute;
 
-extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir_cpu, sem_execute, sem_proceso_fs_rw;
+extern sem_t sem_recibir_cpu, sem_proceso_fs_rw;
 
 extern t_list* procesosReady;
 extern pthread_mutex_t mutex_procesos_ready;
-
-extern t_list* esperaDeIO;
 
 
 t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola){
@@ -172,12 +169,15 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 
 		// recibimos el segmento
 		int codigo_op = recibir_operacion(conexionMemoria);
+		if(codigo_op == CREACION_EXITOSA){
 		segmento = recibirSegmento(conexionMemoria);
 		list_add(proceso->tablaSegmentos, segmento);
 
 		sem_post(&sem_proceso_fs_rw);
 		mandar_pcb_a_CPU(proceso);
 		sem_post(&sem_recibir_cpu);
+		}
+		else log_error(logger, "El cod_op:%d que me mandó Memoria es invalido", cod);
 		break;
 	default:
 		log_error(logger, "El cod_op:%d que me mandó Memoria es invalido", cod);
@@ -219,7 +219,7 @@ void actualizarTablaProceso(char* pidString, tabla_segmentos tabla, t_list* proc
 	liberarTablaSegmentos(proceso->tablaSegmentos);
 	proceso->tablaSegmentos = list_duplicate(tabla);
 	printf("Pid proceso %d\n", proceso->pid);
-	mostrarListaSegmentos(proceso->tablaSegmentos);
+	mostrarListaSegmentos(proceso->tablaSegmentos,logger);
 
 
 }

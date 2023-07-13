@@ -2,8 +2,8 @@
 
 extern t_socket server_fd;
 extern t_log* logger;
-extern t_config* config;
-extern sem_t sem_cpu, sem_kernel, ejecutando;
+
+extern sem_t sem_cpu, ejecutando;
 extern t_dictionary* diccionarioTablas;
 extern t_segmento* segmento0;
 extern void* espacioMemoria;
@@ -22,7 +22,6 @@ void escucharKernel(){
 	sem_wait(&sem_cpu); //esperar que se conecte primero cpu
 	t_socket socket_kernel = esperar_cliente(server_fd, logger);
 	char* pid;
-	//t_pedido_segmento* pedido = malloc(sizeof(t_pedido_segmento));
 	t_pedido_segmento* pedido;
 
 	while(1){
@@ -62,11 +61,13 @@ void escucharKernel(){
 						send(socket_kernel, &estadoCreacion, sizeof(op_code), 0);
 						break;
 					case PEDIDO_COMPACTAR:
+						log_info(logger, "Solicitud de compactación");
 						send(socket_kernel, &estadoCreacion, sizeof(op_code), 0);
 
 						int cod_op = recibir_operacion(socket_kernel);
 
 						if (cod_op == COMPACTAR){
+							log_info(logger, "Inicio compactación");
 							compactar(pedido);
 							enviarDiccionarioTablas(socket_kernel);
 						}
@@ -139,9 +140,9 @@ void escucharCPU(){
 				memcpy(&direc_fisica, buffer + desplazamiento, sizeof(u_int32_t));
 				desplazamiento += sizeof(u_int32_t);
 				memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
-				log_debug(logger,"Case LEER, recibi pid %d, dir fisica %d, tamaño %d", pid, direc_fisica, tamanio);
 				//devuelvo el valor leido en la direccion pedida
-				char* valor_leido = leer(direc_fisica, tamanio, pid);
+				char* valor_leido = leer(direc_fisica, tamanio);
+				log_info(logger,  "PID: %d- Acción: LEER - Dirección física: %d - Tamaño: %d- Origen: CPU", pid, direc_fisica, tamanio);
 				//valor_leido[tamanio] = '\0';
 				char* valor_a_enviar=malloc(tamanio+1);
 				memcpy(valor_a_enviar, valor_leido, tamanio);
@@ -165,7 +166,7 @@ void escucharCPU(){
 				desplazamiento += sizeof(u_int32_t);
 				memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
 				desplazamiento += sizeof(int);
-				log_debug(logger,"Case ESCRIBIR, recibi pid %d, dir fisica %d, tamaño %d", pid, direc_fisica, tamanio);
+				log_info(logger,  "PID: %d- Acción: ESCRIBIR - Dirección física: %d - Tamaño: %d- Origen: CPU", pid, direc_fisica, tamanio);
 
 				char* valor = malloc(tamanio);
 	     		memcpy(valor, buffer + desplazamiento, tamanio);
@@ -179,14 +180,13 @@ void escucharCPU(){
 	     		escribir(direc_fisica, tamanio, valor, pid);
 				usleep(retardo_memoria * 1000);
 				//le mando OK a cpu para que siga ejecutando
-				//send(socket_cpu, &RESULT_OK, tamanio, 0);
 				char* mensaje="OK";
 				enviar_mensaje(mensaje, socket_cpu);
 				free(valor);
 				free(buffer);
 				break;
 			}
-			// cosas q pide cpu xd
+
 		}
 		sem_post(&ejecutando);
 	}
@@ -211,9 +211,11 @@ void escucharFS(){
 				memcpy(&direc_fisica, buffer + desplazamiento, sizeof(u_int32_t));
 				desplazamiento += sizeof(u_int32_t);
 				memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
-				log_debug(logger,"Case LEER, recibi dir fisica %d, tamaño %d", direc_fisica, tamanio);
+
 				//devuelvo el valor leido en la direccion pedida
-				char* valor_leido = leer(direc_fisica, tamanio, pid);
+				char* valor_leido = leer(direc_fisica, tamanio);
+				log_info(logger,  "PID: %d- Acción: LEER - Dirección física: %d - Tamaño: %d- Origen: FS", pid, direc_fisica, tamanio);
+
 				//valor_leido[tamanio] = '\0';
 				char* valor_a_enviar=malloc(tamanio+1);
 				memcpy(valor_a_enviar, valor_leido, tamanio);
@@ -235,7 +237,7 @@ void escucharFS(){
 				desplazamiento += sizeof(u_int32_t);
 				memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
 				desplazamiento += sizeof(int);
-				log_debug(logger,"Case ESCRIBIR, recibi pid %d, dir fisica %d, tamaño %d", pid, direc_fisica, tamanio);
+				log_info(logger,  "PID: %d- Acción: ESCRIBIR - Dirección física: %d - Tamaño: %d- Origen: FS", pid, direc_fisica, tamanio);
 
 				char* valor = malloc(tamanio);
 				memcpy(valor, buffer + desplazamiento, tamanio);
@@ -248,7 +250,6 @@ void escucharFS(){
 				memcpy(espacioMemoria + direc_fisica, para_guardar, tamanio-1);
 				usleep(retardo_memoria * 1000);
 				//le mando OK a cpu para que siga ejecutando
-				//send(socket_cpu, &RESULT_OK, tamanio, 0);
 				char* mensaje="OK";
 				enviar_mensaje(mensaje, socket_file_system);
 				free(para_guardar);
@@ -267,6 +268,9 @@ void enviarDiccionarioTablas(t_socket socket_kernel){
 	agregar_valor_estatico(paquete,&cantidadProcesos);
 	t_list* keys = dictionary_keys(diccionarioTablas);
 
+	printf("\n");
+	log_info(logger,"--- Resultado compactación ---");
+
 	for(int i=0;i<cantidadProcesos;i++){
 		char* pid = list_get(keys, i);
 		tabla_segmentos tabla = dictionary_get(diccionarioTablas, pid);
@@ -279,23 +283,12 @@ void enviarDiccionarioTablas(t_socket socket_kernel){
 			agregar_valor_estatico(paquete,&(segmento->id));
 			agregar_valor_uint(paquete,&(segmento->base));
 			agregar_valor_uint(paquete,&(segmento->limite));
-		}
-	}
-/*	void serializarTablaSegmentos(char* pid, void* tablaSegmentos){
-		t_segmento* segmento;
-		int cantidad = list_size(tablaSegmentos);
-		agregar_a_paquete(paquete, pid, strlen(pid)+1);
-		agregar_valor_estatico(paquete,&cantidad);
-		for (int i = 0; i<cantidad; i++){
-			segmento = list_get(tablaSegmentos, i);
-			agregar_valor_estatico(paquete,&(segmento->id));
-			agregar_valor_uint(paquete,&(segmento->base));
-			agregar_valor_uint(paquete,&(segmento->limite));
-		}
-	}
 
-	dictionary_iterator(diccionarioTablas, serializarTablaSegmentos);
-*/
+			// Muestro lo segmentos por proceso post-compactación (log obligatorio)
+			log_info(logger, "PID: %s - Segmento: %d - Base: %d - Tamaño %d", pid, segmento->id, segmento->base, segmento->limite - segmento->base);
+		}
+		printf("\n");
+	}
 
 	log_debug(logger, "Diccionario serializado");
 	enviar_paquete(paquete, socket_kernel);

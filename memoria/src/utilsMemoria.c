@@ -14,8 +14,6 @@ int huecoDisponible;
 int huecoId;
 char* algoritmoConfig;
 
-//TODO alejiti: ver si necesitamos mutex para el diccionario y tabla de huecos
-
 // ---- INICIO DE MEMORIA ----
 t_segmento* crear_t_segmento(int id, u_int32_t base, u_int32_t limite){
 	t_segmento* segmento = malloc(sizeof(t_segmento));
@@ -27,7 +25,6 @@ t_segmento* crear_t_segmento(int id, u_int32_t base, u_int32_t limite){
 
 void inicializarEstructuras(){
 	algoritmoConfig = config_get_string_value(config,"ALGORITMO_ASIGNACION");
-	//algoritmoConfig = "BEST";
 
 	diccionarioTablas = dictionary_create();
 
@@ -67,11 +64,11 @@ void enviarSegmentosKernel(t_socket socket_kernel, tabla_segmentos tablaSegmento
 	eliminar_paquete(paquete);
 }
 
-void* leer(u_int32_t direc, int tamanio, int pid) {
+void* leer(u_int32_t direc, int tamanio) {
 	//valor no tiene \0, tamaño es igual que el registro (4,8,16)
 	void* valor = malloc(tamanio);
 	memcpy(valor, espacioMemoria + direc, tamanio);
-	log_info(logger,  "PID: %d- Acción: LEER - Dirección física: %d - Tamaño: %d- Origen: CPU", pid, direc, tamanio);
+
 
 	return valor;
 }
@@ -94,9 +91,7 @@ EstadoMemoria asignacion_first(int tamanioPedido){
 	for(int i=0;i<cantidadHuecos;i++){
 		hueco = list_get(tabla_huecos, i);
 		tamanio=obtenerTamanioSegmento(hueco);
-		//log_debug(logger, "Hueco %d - Tamaño: %d", hueco->id, tamanio);
 		if(tamanioPedido <= tamanio){
-			//log_info(logger, "Hueco libre disponible");
 			huecoDisponible = hueco->id; // guardo el hueco en una variable global
 			log_debug(logger,"Hueco asignable: %d - Tamaño: %d", huecoDisponible, tamanio);
 			return HAY_HUECO_ASIGNABLE;
@@ -124,8 +119,6 @@ EstadoMemoria asignacion_por_algoritmo(int tamanioPedido, int algoritmo){
 	for(int i=0;i<cantidadHuecos;i++){
 		hueco = list_get(tabla_huecos, i);
 		tamanio=obtenerTamanioSegmento(hueco);
-
-		//log_debug(logger, "Hueco %d - Tamaño: %d", i, tamanio);
 
 		if(tamanioPedido <= tamanio && condicion == NO_ENCONTRO_HUECO){
 			//si no encontro hueco guarda el primero en el que entra
@@ -160,12 +153,6 @@ EstadoMemoria asignacion_por_algoritmo(int tamanioPedido, int algoritmo){
 // Si no entra el pedido en ningún hueco, pero si en la suma de los mismos,
 // retorna que debe compactarse.
 int hayEspacio(t_pedido_segmento* pedido){
-	/*t_segmento* hueco;
-	t_segmento* huecoAsignable;
-	u_int32_t tamanio;
-	u_int32_t tamanioTotal = 0; // acumula el tamaño de los huecos
-	int cantidadHuecos = list_size(tabla_huecos);
-	int condicion = NO_ENCONTRO_HUECO;*/
 	EstadoMemoria estado;
 	log_debug(logger, "Pedido: id %d, tamanio %d", pedido->id_segmento, pedido->tamanio);
 	switch (idAlgoritmo(algoritmoConfig)) {
@@ -244,15 +231,10 @@ op_code crearSegmento(t_pedido_segmento* pedido) {
 		t_segmento* hueco = obtenerHuecoPorId(tabla_huecos, huecoDisponible);
 				char* pid = string_itoa(pedido->pid);
 				tabla_segmentos tabla_del_proceso = dictionary_get(diccionarioTablas, pid);
-				/*printf("-- Tabla de segmentos del proceso antes --\n");
-				mostrarListaSegmentos(tabla_del_proceso);*/
 
 				u_int32_t limiteSegmento = hueco->base + pedido->tamanio;
 				nuevoSegmento = crear_t_segmento(pedido->id_segmento, hueco->base, limiteSegmento);
 				list_add(tabla_del_proceso, nuevoSegmento);
-
-				/*printf("-- Tabla de segmentos del proceso despues --\n");
-				mostrarListaSegmentos(tabla_del_proceso);*/
 
 				log_info(logger, "PID: %s - Crear Segmento: %d - Base: %d - TAMAÑO: %d", pid, nuevoSegmento->id, nuevoSegmento->base, nuevoSegmento->limite - nuevoSegmento->base);
 
@@ -287,9 +269,7 @@ tabla_segmentos unificarTablas(){
 	for(int i = 0; i < cantidadDeTablas;i++){
 		char* valor = list_get(lista_pid, i);
 		tabla_segmentos tabla_del_proceso = dictionary_get(diccionarioTablas, valor);
-		printf("-- Tabla de segmentos del proceso que agrego a global --\n");
-		mostrarListaSegmentos(tabla_del_proceso);
-		//list_add_all(segmentosGlobales, tabla_del_proceso);
+
 		int cantidadSegmentos = list_size(tabla_del_proceso);
 		for (int j = 0; j < cantidadSegmentos; ++j) {
 			t_segmento* seg = list_get(tabla_del_proceso, j);
@@ -300,8 +280,8 @@ tabla_segmentos unificarTablas(){
 		//todo ver como limpiar esto
 		//list_clean(tabla_del_proceso);
 	}
-	printf("-- Tabla de segmentos globales --\n");
-	mostrarListaSegmentos(segmentosGlobales);
+	log_debug(logger, "--- Tabla de segmentos globales ---");
+	mostrarListaSegmentos(segmentosGlobales,logger);
 
 	return segmentosGlobales;
 }
@@ -327,14 +307,9 @@ void reubicarEspacioDeMemoria(t_segmento* segmento, u_int32_t limite){
 }
 
 void compactar(t_pedido_segmento* pedido){
-	log_info(logger,"entre en compactar()");
 	tabla_segmentos tablaSegmentosGlobales = unificarTablas();
 	int tamanioLista = list_size(tablaSegmentosGlobales);
-	//list_sort(tablaSegmentosGlobales, esMenorBase); ordeno dentro de unificar tablas
-	/*for(int i = 0; i<tamanioLista;i++){
-		t_segmento* seg = list_get(tablaSegmentosGlobales,i);
-		printf("Seg %d: base %d, limite %d\n", seg->id, seg->base,seg->limite);
-	}*/
+
 	t_segmento* segmentoActual = list_get(tablaSegmentosGlobales,0);
 	for(int i = 1; i<tamanioLista;i++){
 		t_segmento* segmentoSiguiente = list_get(tablaSegmentosGlobales,i);
@@ -390,16 +365,12 @@ void agregarHueco(t_segmento* segmento){
 void eliminarSegmento (t_pedido_segmento* pedido) {
 	char* pid = string_itoa(pedido->pid);
 	tabla_segmentos tabla_del_proceso = dictionary_get(diccionarioTablas, pid);
-	t_segmento* segmento; //= malloc(sizeof(t_segmento)); //creo que no es necesario el malloc
+	t_segmento* segmento;
 
 	int indice = obtenerIndiceSegmento(tabla_del_proceso, pedido->id_segmento);
 	segmento = list_remove(tabla_del_proceso, indice);
 
-	//int cantidadHuecos = list_size(tabla_huecos);
 	agregarHueco(segmento);
-
-	//t_segmento* hueco = crear_t_segmento(++huecoId, segmento->base, segmento->limite);
-	//list_add_sorted(tabla_huecos, hueco, esMenorBase);
 
 	log_info(logger, "PID: %s - Eliminar Segmento: %d - Base: %d - TAMAÑO: %d", pid, segmento->id, segmento->base, segmento->limite-segmento->base);
 
@@ -417,9 +388,10 @@ void enviarSegmentoCreado(t_socket socket_kernel, tabla_segmentos tabla_segmento
 	agregar_valor_uint(paquete,&(nuevoSegmento->limite));
 
 	enviar_paquete(paquete, socket_kernel);
-	//printf("cod: %d\n", paquete->codigo_operacion);
 	eliminar_paquete(paquete);
-	mostrarListaSegmentos(tabla_segmentos);
+
+	log_debug(logger, "------ Tabla de segmentos ------");
+	mostrarListaSegmentos(tabla_segmentos,logger);
 
 	log_info(logger, "--- Segmento enviado a kernel ---");
 }

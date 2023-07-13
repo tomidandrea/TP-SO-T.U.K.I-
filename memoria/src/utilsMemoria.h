@@ -64,7 +64,7 @@ tabla_segmentos unificarTablas();
 bool esMenorBase(void*, void*);
 void compactar(t_pedido_segmento* pedido);
 
-void* leer(u_int32_t direc, int tamanio, int pid);
+void* leer(u_int32_t direc, int tamanio);
 void escribir(u_int32_t direc, int tamanio, char* valor, int pid);
 int hayEspacio(t_pedido_segmento* pedido);
 EstadoMemoria asignacion_first(int tamanioPedido);
