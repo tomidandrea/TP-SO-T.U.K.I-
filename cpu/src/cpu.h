@@ -44,7 +44,6 @@ typedef struct {
 t_instruccion* realizar_ciclo_instruccion(t_pcb * pcb);
 t_instruccion* fetch(t_list* instrucciones, int pc);
 void decode(char* instruccion);
-//int requiere_memoria(char* instruccion);
 estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb *pcb);
 estado_ejec set_registro(char* registro, char* valor);
 char* get_registro(char*registro);

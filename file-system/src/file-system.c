@@ -132,6 +132,9 @@ int main(int argc, char* argv[]) {
 					log_info(logger, "Escribir Archivo: %s - Puntero: %d - Memoria: %d - Tamaño: %d", nombreArchivo, puntero, direc_fisica, cant_bytes);
 					result_operacion = escribir_archivo(nombreArchivo,path_fcbs,puntero,direc_fisica,cant_bytes,archivo_bloques);
 					break;
+				default:
+					log_error(logger,"Se cerró la conexión");
+					exit(1);
 
 
 		free(nombreArchivo);
