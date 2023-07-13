@@ -9,6 +9,7 @@ bool RESULT_ERROR = false;
 
 size_t cantidad_bloques = 0;
 int tamanio_bloque = 0;
+int retardo_acceso_bloque = 0;
 
 int main(int argc, char* argv[]) {
 
@@ -17,8 +18,9 @@ int main(int argc, char* argv[]) {
 
 	logger = iniciar_logger("file-system.log", "FILE SYSTEM", true, LOG_LEVEL_DEBUG);
 	config = iniciar_config(argv[1]);
+    retardo_acceso_bloque = config_get_int_value(config,"RETARDO_ACCESO_BLOQUE")/1000;   //obtengo el tiempo de retardo en milisegundos y lo paso a segundos
 
-	//inicio conexion con memoria
+    //inicio conexion con memoria
 	conexionMemoria = iniciarConexion(config, logger, "IP_MEMORIA","PUERTO_MEMORIA");
 
 	//levanto archivo superbloque (lo trato como config ya que es compatible)
@@ -48,24 +50,34 @@ int main(int argc, char* argv[]) {
     FILE*archivo_bloques = levantarArchivo(path_bloques,tamanio_total);
     free(path_bloques);
 
+
     //creo un fcb de prueba
 
     char* path_fcbs = config_get_string_value(config,"PATH_FCB");
 
-    // crear_fcb("PRUEBA",path_fcbs);
+     //crear_fcb("Consoles",path_fcbs);
 
-    //pruebo truncar, le aumento el tamaño a 32 bytes
-    /*bool truncado =  truncar("PRUEBA",32,path_fcbs,bitmap,archivo_bloques);
+    //pruebo truncar, le aumento el tamaño a 256 bytes
+
+
+    bool truncado =  truncar("Consoles",0,path_fcbs,bitmap,archivo_bloques);
     if(truncado)
     	printf("truncado anduvo bien\n");
     else
     	printf("truncado anduvo mal\n");
-*/
+
+    //pruebo fwrite
+   // result_operacion = escribir_archivo("Consoles",path_fcbs,128,32,80,archivo_bloques);
+
+    //pruebo fread
+    //result_operacion = leer_archivo("Consoles",path_fcbs,128,32,80,archivo_bloques);
+
     fclose(archivo_bloques);
     printf("Archivo de bloques cerrado\n");
 
     //inicio servidor para kernel
 	t_socket server_fd = iniciarServidor(config, logger,"PUERTO_ESCUCHA");
+
 
 	t_socket socket_cliente = esperar_cliente(server_fd, logger);
 
@@ -109,14 +121,14 @@ int main(int argc, char* argv[]) {
 					nombreArchivo = recibirNombreArchivo(buffer, &desplazamiento);
 					recibirLeerOEscribir(buffer, &desplazamiento, &puntero, &direc_fisica, &cant_bytes);
 					log_info(logger, "Leer Archivo: %s - Puntero: %d - Memoria: %d - Tamaño: %d", nombreArchivo, puntero, direc_fisica, cant_bytes);
-				    result_operacion = leer_archivo(nombreArchivo,path_fcbs,puntero,direc_fisica,cant_bytes);
+				    result_operacion = leer_archivo(nombreArchivo,path_fcbs,puntero,direc_fisica,cant_bytes,archivo_bloques);
 				    break;
 
 				case F_WRITE:
 					nombreArchivo = recibirNombreArchivo(buffer, &desplazamiento);
 					recibirLeerOEscribir(buffer, &desplazamiento, &puntero, &direc_fisica, &cant_bytes);
 					log_info(logger, "Escribir Archivo: %s - Puntero: %d - Memoria: %d - Tamaño: %d", nombreArchivo, puntero, direc_fisica, cant_bytes);
-					//result_operacion = escribir_archivo(parametros[0],parametros[1],parametros[2]);
+					result_operacion = escribir_archivo(nombreArchivo,path_fcbs,puntero,direc_fisica,cant_bytes,archivo_bloques);
 					break;
 				default:
 					log_error(logger,"Se cerró la conexión");
@@ -288,9 +300,10 @@ void actualizar_archivo_fcb(t_fcb*fcb,char*path_directorio) {
 	char*puntero_indirecto = string_itoa(fcb->puntero_indirecto);
 
 	config_set_value(archivo_fcb,"TAMANIO_ARCHIVO",tamanio);
+	config_save(archivo_fcb);
 	config_set_value(archivo_fcb,"PUNTERO_DIRECTO",puntero_directo);
 	config_set_value(archivo_fcb,"PUNTERO_INDIRECTO",puntero_indirecto);
-	config_save(archivo_fcb);
+
 	free(tamanio);
 	free(puntero_directo);
 	free(puntero_indirecto);
@@ -392,7 +405,9 @@ bool escribir_bloques_en_bloque_de_punteros(t_fcb*fcb,uint32_t bloques[],size_t 
 
 	if(result_f_seek == 0) {  // si devuelve 0 significa que fue exitosa
       log_info(logger,"Acceso Bloque - Archivo: %s - Bloque Archivo: %d - Bloque File System: %d",fcb->nombre,1,fcb->puntero_indirecto);
-	  result_f_write = fwrite(bloques, sizeof(uint32_t),cant_bloques_a_escribir,archivo_bloques);
+      sleep(retardo_acceso_bloque);
+      log_info(logger,"retardo bloque: %d",retardo_acceso_bloque);
+      result_f_write = fwrite(bloques, sizeof(uint32_t),cant_bloques_a_escribir,archivo_bloques);
 	  if (result_f_write == cant_bloques_a_escribir)
 		  result = RESULT_OK;
 	  else result = RESULT_ERROR;
@@ -424,7 +439,8 @@ bool liberar_bloques(t_fcb*fcb,size_t cant_bloques_a_liberar, size_t cant_bloque
 
 	if(fcb->puntero_indirecto !=0) {                      //libero n bloques que estan en el bloque de punteros indirectos (solo si es que hay bloques indirectos)
 	   uint32_t bloques_a_liberar[cant_bloques_a_liberar];
-	   result = leer_bloques_a_liberar(fcb,cant_bloques_a_liberar,bloques_a_liberar,cant_bloques_indirectos_actual,archivo_bloques);
+	   size_t bloque_donde_me_paro =  cant_bloques_indirectos_actual - cant_bloques_a_liberar;   //calculo bloque donde empiezo a leer
+	   result = obtener_bloques_del_bloque_de_punteros(fcb,cant_bloques_a_liberar,bloques_a_liberar,bloque_donde_me_paro,archivo_bloques);
 	   clean_n_bits_bitarray(bitmap,cant_bloques_a_liberar,bloques_a_liberar);
 	   if(cant_bloques_a_liberar == cant_bloques_indirectos_actual) { //libero el bloque de punteros indirectos
 		   bitarray_clean_bit(bitmap,fcb->puntero_indirecto);
@@ -447,11 +463,10 @@ void liberar_bloque_directo (t_fcb*fcb,t_bitarray*bitmap) {
 	printf("Puntero directo = %d\n",fcb->puntero_directo);
 }
 
-bool leer_bloques_a_liberar(t_fcb*fcb, size_t cant_bloques_a_liberar, uint32_t bloques_a_liberar[],size_t cant_bloques_indirectos_actual, FILE*archivo_bloques) {
+bool obtener_bloques_del_bloque_de_punteros(t_fcb*fcb, size_t cant_bloques, uint32_t bloques_a_leer[],size_t bloque_donde_me_paro, FILE*archivo_bloques) {
 
 	bool result = false;
 	int result_f_seek, result_f_read;
-	size_t bloque_donde_me_paro =  cant_bloques_indirectos_actual - cant_bloques_a_liberar;
 
 	if(bloque_donde_me_paro >= 0) {
 	long int offset = fcb->puntero_indirecto * tamanio_bloque + bloque_donde_me_paro*sizeof(uint32_t) ;       //me paro donde voy a empezar a leer
@@ -461,9 +476,10 @@ bool leer_bloques_a_liberar(t_fcb*fcb, size_t cant_bloques_a_liberar, uint32_t b
 	if(result_f_seek == 0) {
 
 	   log_info(logger,"Acceso Bloque - Archivo: %s - Bloque Archivo: %d - Bloque File System: %d",fcb->nombre,1,fcb->puntero_indirecto);
-	   result_f_read = fread(bloques_a_liberar,sizeof(uint32_t),cant_bloques_a_liberar,archivo_bloques);
+	   sleep(retardo_acceso_bloque);
+	   result_f_read = fread(bloques_a_leer,sizeof(uint32_t),cant_bloques,archivo_bloques);
 
-	   if (result_f_read == cant_bloques_a_liberar)  // si fread fue exitosa devuelvo true;
+	   if (result_f_read == cant_bloques)  // si fread fue exitosa devuelvo true;
 		   result = RESULT_OK;
     }
 
@@ -475,16 +491,245 @@ bool leer_bloques_a_liberar(t_fcb*fcb, size_t cant_bloques_a_liberar, uint32_t b
 
 
 
-bool leer_archivo(char* nombreArchivo,char*path_directorio,int puntero, uint32_t direc_fisica, int cant_bytes) {
+bool leer_archivo(char* nombreArchivo,char*path_directorio,int puntero, uint32_t direc_fisica, int cant_bytes,FILE*archivo_bloques) {
 
-    //t_fcb*fcb = get_fcb(nombreArchivo,path_directorio);
+	bool result = false ;
+    t_fcb*fcb = get_fcb(nombreArchivo,path_directorio);
 
-    //uint32_t bloque_a_leer = calcular_bloque_a_leer(fcb,puntero);
+    uint32_t bloque_inicio_local = floor(puntero/tamanio_bloque);   // obtengo el numero de bloque en mi archivo donde se encuentra el puntero desde el cual voy a iniciar a leer
 
-	return true;
+    uint32_t bloque_fin_local = floor((puntero+cant_bytes)/tamanio_bloque);  // obtengo el bloque en mi archivo donde termino de leer
+
+    if(bloque_inicio_local >0)  {                   //significa me tengo que saltear el bloque de punteros, por lo que le sumo 1 a los bloques
+    		bloque_inicio_local ++;
+    		bloque_fin_local ++;
+    	}
+
+    int puntero_desde_bloque = puntero % tamanio_bloque;            //obtengo el puntero desde el inicio del bloque inicial
+
+    size_t cant_bloques_a_leer =  bloque_fin_local - bloque_inicio_local + 1  ;   //obtengo cantidad de bloques a leer
+
+    uint32_t bloques_locales_a_leer[cant_bloques_a_leer];          //creo un vector donde van a guardarse los numeros de bloques de mi archivo a leer.
+
+    uint32_t bloques_fs_a_leer[cant_bloques_a_leer];              //creo un vector donde van a guardarse los numeros de bloques del file system de donde voy a leer.
+
+    bool result_get_bloques = false;
+
+    result_get_bloques = obtener_bloques_del_fs_a_acceder(fcb,cant_bloques_a_leer,bloques_locales_a_leer,bloques_fs_a_leer,bloque_inicio_local,archivo_bloques);
+
+    if(result_get_bloques==RESULT_OK) {
+       char* dato_leido = leer_dato_en_archivo_de_bloques(fcb,bloques_fs_a_leer,bloques_locales_a_leer,puntero_desde_bloque,cant_bytes,archivo_bloques);
+
+       if(dato_leido !=NULL) {
+    	  result = enviar_dato_a_escribir_a_memoria(dato_leido,direc_fisica);
+       }
+       free(dato_leido);
+    }
+
+    liberar_fcb(fcb);
+
+	return result;
 }
 
 
+
+char* leer_dato_en_archivo_de_bloques(t_fcb*fcb,uint32_t bloques_fs[],uint32_t bloques_locales[],int puntero,int cant_bytes,FILE*archivo_bloques) {
+
+	char* dato = malloc(cant_bytes+1);  //le sumo un byte para agregarle el \0 al valor leido ya que lo trato como un char*
+
+	int result_f_seek, result_f_read;
+
+	long int offset = bloques_fs[0] * tamanio_bloque + puntero ;       //me paro donde voy a empezar a leer
+
+	result_f_seek = fseek(archivo_bloques,offset,SEEK_SET);            // cambio el puntero a donde voy a empezar a leer
+
+	if(result_f_seek == 0) {
+
+	   int cant_bytes_limite = tamanio_bloque - puntero;   // calculo la cantidad de bytes limite que me quedan para leer del primer bloque
+
+	   if(cant_bytes <= cant_bytes_limite)  {    //si lo que hay que leer es menor o igual al limite significa que solo voy a leer en un bloque.
+		   log_info(logger,"Acceso Bloque - Archivo: %s - Bloque Archivo: %d - Bloque File System: %d",fcb->nombre,bloques_locales[0],bloques_fs[0]);
+		   sleep(retardo_acceso_bloque);
+		   result_f_read = fread(dato,1,cant_bytes,archivo_bloques);
+
+	      if (result_f_read == cant_bytes) { // si fread fue exitosa devuelvo el dato
+	    	  dato[cant_bytes]='\0';
+	    	  printf("El dato leido es: %s\n",dato);
+	    	  return dato;
+	        }
+	   }
+	   else {           //sino significa que voy a tener que leer en mas de un bloque
+	         int cant_bytes_leidos = 0, i = 0;
+	         int cant_bytes_a_leer = cant_bytes_limite;
+		     while(cant_bytes_leidos != cant_bytes) {
+		    	  if(cant_bytes_a_leer > cant_bytes_limite)
+		    		  cant_bytes_a_leer = cant_bytes_limite;
+
+		    	  log_info(logger,"Acceso Bloque - Archivo: %s - Bloque Archivo: %d - Bloque File System: %d",fcb->nombre,bloques_locales[i],bloques_fs[i]);
+		    	  sleep(retardo_acceso_bloque);
+		    	  result_f_read = fread(dato+cant_bytes_leidos,1,cant_bytes_a_leer,archivo_bloques);
+		          if (result_f_read == cant_bytes_a_leer)  {
+		  	         cant_bytes_leidos += cant_bytes_a_leer;
+		             cant_bytes_a_leer = cant_bytes - cant_bytes_leidos;
+		             cant_bytes_limite = minimo(tamanio_bloque,cant_bytes_a_leer);
+		             i++;
+		             if(cant_bytes_a_leer != 0) {
+		                offset = bloques_fs[i] * tamanio_bloque;       //me paro en el bloque donde voy a empezar a leer
+		                fseek(archivo_bloques,offset,SEEK_SET);
+		             }
+		          }
+
+		      }
+		     dato[cant_bytes]='\0';
+		     printf("El dato leido es: %s\n",dato);
+		     return dato;
+	    }
+
+
+	}
+	return NULL;
+
+}
+
+
+int minimo(int x,int y) {
+	if(x<y)
+		return x;
+	else
+		return y;
+}
+
+
+
+bool escribir_archivo(char* nombreArchivo,char*path_directorio,int puntero, uint32_t direc_fisica, int cant_bytes,FILE*archivo_bloques){
+
+	bool result = false;
+	char*dato_a_escribir = "SonyPlaystation1SonyPlaystation2SonyPlaystation3SonyPlaystation4SonyPlaystation5";//solicitar_leer_dato_a_memoria(direc_fisica,cant_bytes);
+
+	t_fcb*fcb = get_fcb(nombreArchivo,path_directorio);
+
+	uint32_t bloque_inicio_local = floor(puntero/tamanio_bloque);   // obtengo el numero de bloque en mi archivo donde se encuentra el puntero desde el cual voy a iniciar a escribir
+
+	uint32_t bloque_fin_local = floor((puntero+cant_bytes)/tamanio_bloque);  // obtengo el bloque en mi archivo donde termino de escribir
+
+	if(bloque_inicio_local >0)  {                   //significa me tengo que saltear el bloque de punteros, por lo que le sumo 1 a los bloques
+		bloque_inicio_local ++;
+		bloque_fin_local ++;
+	}
+
+	int puntero_desde_bloque = puntero % tamanio_bloque;              //obtengo el puntero desde el inicio del bloque inicial
+
+	size_t cant_bloques_a_escribir =  bloque_fin_local - bloque_inicio_local + 1  ;   //obtengo cantidad de bloques a escribir
+
+	uint32_t bloques_locales_a_escribir[cant_bloques_a_escribir];          //creo un vector donde van a guardarse los numeros de bloques de mi archivo a escribir.
+
+	uint32_t bloques_fs_a_escribir[cant_bloques_a_escribir];
+
+	bool result_get_bloques = false;
+
+	result_get_bloques = obtener_bloques_del_fs_a_acceder(fcb,cant_bloques_a_escribir,bloques_locales_a_escribir,bloques_fs_a_escribir,bloque_inicio_local,archivo_bloques);
+
+	if(result_get_bloques==RESULT_OK)
+	   result = escribir_dato_en_archivo_de_bloques(fcb,dato_a_escribir,bloques_fs_a_escribir,bloques_locales_a_escribir,puntero_desde_bloque,cant_bytes,archivo_bloques);
+
+	liberar_fcb(fcb);
+
+	return result;
+}
+
+
+bool obtener_bloques_del_fs_a_acceder(t_fcb*fcb,size_t cant_bloques,uint32_t bloques_locales[], uint32_t bloques_fs[],uint32_t bloque_inicio_local, FILE*archivo_bloques){
+
+	    bool result_get_bloques = false;
+	    bloques_locales[0] = bloque_inicio_local;              //le asigno el bloque de inicio y si hay mas bloques lo completo con los bloques que siguen.
+
+	    if(bloques_locales[0] == 0) {        //si el primer bloque del archivo es el 0, el bloque del fs sera el apuntado por el puntero directo del fcb
+	    	bloques_fs[0] = fcb->puntero_directo;
+	    	if(cant_bloques >1) {             //si hay mas de un bloque a obtener obtengo los bloques desde el bloque de punteros.
+	    		bloque_inicio_local ++;
+	    		for(int i = 1; i<cant_bloques; i++){    //como siempre el bloque 1 es el de punteros debo sumarle uno a todos los bloques para que no lo cuente
+	    			bloque_inicio_local ++;
+	    			bloques_locales[i] = bloque_inicio_local;
+	    		}
+	    		uint32_t bloques_indirectos_fs_a_leer[cant_bloques-1];
+	    		result_get_bloques = obtener_bloques_del_bloque_de_punteros(fcb,cant_bloques,bloques_indirectos_fs_a_leer,0,archivo_bloques);
+	            int j=0;
+	    	    for(int i=1;i<cant_bloques;i++){                          //Con los bloques indirectos que obtuve, los guardo en el vector de bloques del fs.
+	                bloques_fs[i] = bloques_indirectos_fs_a_leer[j];
+	                j++;
+	    	    }
+	    	    result_get_bloques = RESULT_OK;
+	       }
+	    }
+
+	    else {               //sino significa que voy a tener que obtener todos bloques indirectos
+	    	 uint32_t bloques_indirectos_fs_a_leer[cant_bloques];
+	    	 size_t bloque_donde_me_paro = bloques_locales[0]-2; ;
+	    	    for(int i = 1; i<cant_bloques; i++){           //debo sumarle 1 a los bloques menos al primero (ya se lo sume) para que no cuente el de punteros
+	    		    bloque_inicio_local ++;
+	    		    bloques_locales[i] = bloque_inicio_local;
+	            }
+
+	    	result_get_bloques = obtener_bloques_del_bloque_de_punteros(fcb,cant_bloques,bloques_indirectos_fs_a_leer,bloque_donde_me_paro,archivo_bloques);   // obtengo los bloques indirectos desde el bloque de punteros.
+	    	for(int i=0;i<cant_bloques;i++)                          //Con los bloques indirectos que obtuve, los guardo en el vector de bloques del fs.
+	    	    bloques_fs[i] = bloques_indirectos_fs_a_leer[i];
+
+	      }
+
+	return result_get_bloques;
+}
+
+
+bool escribir_dato_en_archivo_de_bloques(t_fcb*fcb,char*dato_a_escribir,uint32_t bloques_fs[],uint32_t bloques_locales[],int puntero,int cant_bytes,FILE*archivo_bloques){
+
+	bool result_escribir = false;
+ int result_f_seek, result_f_write;
+
+ 	long int offset = bloques_fs[0] * tamanio_bloque + puntero ;       //me paro donde voy a empezar a leer
+
+ 	result_f_seek = fseek(archivo_bloques,offset,SEEK_SET);            // cambio el puntero a donde voy a empezar a leer
+
+ 	if(result_f_seek == 0) {
+
+ 	   int cant_bytes_limite = tamanio_bloque - puntero;   // calculo la cantidad de bytes limite que me quedan para escribir del primer bloque
+
+ 	   if(cant_bytes <= cant_bytes_limite)  {    //si lo que hay que escribir es menor o igual al limite significa que solo voy a escribir en un bloque.
+ 		   log_info(logger,"Acceso Bloque - Archivo: %s - Bloque Archivo: %d - Bloque File System: %d",fcb->nombre,bloques_locales[0],bloques_fs[0]);
+ 		   sleep(retardo_acceso_bloque);
+ 		   result_f_write = fwrite(dato_a_escribir,1,cant_bytes,archivo_bloques);
+ 	       if (result_f_write == cant_bytes)  // si fwrite fue exitosa devuelvo OK
+ 	    	   result_escribir = RESULT_OK;
+ 	   }
+ 	    else {           //sino significa que voy a tener que escribir en mas de un bloque
+ 	 	         int cant_bytes_escritos = 0, i = 0;
+ 	 	         int cant_bytes_a_escribir = cant_bytes_limite;
+ 	 		     while(cant_bytes_escritos != cant_bytes) {
+ 	 		    	  if(cant_bytes_a_escribir > cant_bytes_limite)
+ 	 		    		  cant_bytes_a_escribir = cant_bytes_limite;
+
+ 	 		    	  log_info(logger,"Acceso Bloque - Archivo: %s - Bloque Archivo: %d - Bloque File System: %d",fcb->nombre,bloques_locales[i],bloques_fs[i]);
+ 	 		    	  sleep(retardo_acceso_bloque);
+ 	 		    	  result_f_write = fwrite(dato_a_escribir+cant_bytes_escritos,1,cant_bytes_a_escribir,archivo_bloques);
+ 	 		          if (result_f_write == cant_bytes_a_escribir)  {
+ 	 		  	         cant_bytes_escritos += cant_bytes_a_escribir;
+ 	 		             cant_bytes_a_escribir = cant_bytes - cant_bytes_escritos;
+ 	 		             cant_bytes_limite = minimo(tamanio_bloque,cant_bytes_a_escribir);
+ 	 		             i++;
+ 	 		             if(cant_bytes_a_escribir !=0){
+ 	 		                offset = bloques_fs[i] * tamanio_bloque;       //me paro en el bloque donde voy a empezar a leer
+ 	 		                fseek(archivo_bloques,offset,SEEK_SET);
+ 	 		             }
+ 	 		          }
+
+ 	 		      }
+ 	 		     result_escribir = RESULT_OK;
+ 	      }
+
+
+ 	}
+
+  return result_escribir;
+}
 
 
 

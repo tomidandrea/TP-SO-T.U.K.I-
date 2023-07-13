@@ -37,5 +37,7 @@ void clean_n_bits_bitarray(t_bitarray* bitarray,size_t cant_bits, uint32_t indic
 // conexiones, serializacion/deserializacion
 char* recibirNombreArchivo(void* buffer, int* desplazamiento);
 void recibirLeerOEscribir(void* buffer, int* desplazamiento, int* puntero, u_int32_t* direc_fisica, int* cant_bytes);
+bool enviar_dato_a_escribir_a_memoria(char*dato_leido,uint32_t direc_fisica);
+char*solicitar_leer_dato_a_memoria(uint32_t direc_fisica,int cant_bytes);
 
 #endif /* SRC_UTILSFILESYSTEM_H_ */

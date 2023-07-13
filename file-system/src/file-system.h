@@ -38,10 +38,18 @@ bool escribir_bloques_en_bloque_de_punteros(t_fcb*fcb, uint32_t[],size_t, size_t
 //truncado achicar
 bool liberar_bloques(t_fcb*, size_t, size_t, t_bitarray*, FILE*);
 void liberar_bloque_directo (t_fcb*fcb,t_bitarray*bitmap);
-bool leer_bloques_a_liberar(t_fcb*fcb, size_t, uint32_t[], size_t, FILE*);
-
+bool obtener_bloques_del_bloque_de_punteros(t_fcb*fcb, size_t, uint32_t[], size_t, FILE*);
 
 //leer Archivo
-bool leer_archivo(char* nombreArchivo,char*path_directorio,int puntero, uint32_t direc_fisica, int cant_bytes);
+bool leer_archivo(char*,char*,int, uint32_t, int, FILE*);
+char* leer_dato_en_archivo_de_bloques(t_fcb*fcb,uint32_t bloques_fs[],uint32_t bloques_locales[],int puntero,int cant_bytes,FILE*archivo_bloques);
+int minimo(int x,int y);
+
+//escribir archivo
+bool escribir_archivo(char* nombreArchivo,char*path_directorio,int puntero, uint32_t direc_fisica, int cant_bytes,FILE*archivo_bloques);
+bool escribir_dato_en_archivo_de_bloques(t_fcb*fcb,char*dato_a_escribir,uint32_t bloques_fs[],uint32_t bloques_locales[],int puntero,int cant_bytes,FILE*archivo_bloques);
+
+//para ambos (leer y escribir)
+bool obtener_bloques_del_fs_a_acceder(t_fcb*fcb,size_t cant_bloques,uint32_t bloques_locales[], uint32_t bloques_fs[],uint32_t bloque_inicio_local, FILE*archivo_bloques);
 
 #endif /* SRC_FILE_SYSTEM_H_ */

@@ -24,15 +24,16 @@ int main(int argc, char* argv[]) {
 	t_socket socket_cliente = esperar_cliente(server_fd, logger);
 	while(1){
 		if(socket_cliente != -1){
-			t_pcb* pcb = inicializar_pcb();
 			int cod_op = recibir_operacion(socket_cliente);
 			if(cod_op == PROCESO) {
-				pcb = recibir_proceso(socket_cliente);
+				t_pcb* pcb = recibir_proceso(socket_cliente);
 				t_instruccion* inst_privilegiada = realizar_ciclo_instruccion(pcb);
+
 				log_info(logger, "Enviando pcb a kernel");
 				actualizar_registros_pcb(pcb);
 				enviar_contexto(pcb,inst_privilegiada,socket_cliente);
-				//liberar_pcb(pcb);
+				liberar_proceso(pcb);
+
 			} else {
 				send(socket_cliente, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);
 				log_error(logger,"Se cerró la conexión");
@@ -71,16 +72,6 @@ void decode(char* instruccion) {
 		usleep(espera * 1000); // Recibe microsegundo, * 1000 -> pasamos a milisegundos
 	}
 }
-
-/*int requiere_memoria(char* instruccion) {
-
-	if (strcmp(instruccion,"MOV_IN") == 0 ||
-		strcmp(instruccion,"MOV_OUT")== 0 ||
-		strcmp(instruccion,"F_READ") == 0||
-		strcmp(instruccion,"F_WRITE")== 0 )
-			           return 1;
-     return 0;
-}*/
 
 estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb* pcb){
 
@@ -313,12 +304,11 @@ int tamanio_a_leer = tamanio_registro(registro);
 estado_ejec resultado = ejecutar_mov(pid, tamanio_a_leer,direcLogica,tabla_de_segmentos);
 
 if(resultado == CONTINUAR) {
-	char* valor;
 	u_int32_t direc_fisica = obtener_direc_fisica(direcLogica,tabla_de_segmentos);
-	valor = leer_memoria(pid, direc_fisica,tamanio_a_leer); //tiene el \0
+	char* valor = leer_memoria(pid, direc_fisica,tamanio_a_leer); //tiene el \0
 	set_registro(registro,valor);
 	log_info(logger, "PID: %d - Acción: LEER - Segmento: %d - Dirección Física: %d - Valor: %s", pid, direcLogica->numero_segmento, direc_fisica, valor);
-	//free(valor);
+	free(valor);
 }
 free(direcLogica);
 
@@ -339,8 +329,9 @@ if(resultado == CONTINUAR) {
 	 memcpy(valor_registro, valor, tamanio_a_escribir); //le saco el \0
 	 escribir_memoria(pid, direc_fisica,valor, tamanio_a_escribir);
 	 log_info(logger, "PID: %d - Acción: ESCRIBIR - Segmento: %d - Dirección Física: %d - Valor: %s", pid, direcLogica->numero_segmento, direc_fisica, valor);
-	 //free(valor);
+	 free(valor);
 }
+free(direcLogica);
 return resultado;
 
 }
