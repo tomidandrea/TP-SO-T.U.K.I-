@@ -168,12 +168,11 @@ bool enviar_dato_a_escribir_a_memoria(char*dato_leido, uint32_t direc_fisica) {
     int cod_op;
     	if(conexionMemoria!=-1){
     		cod_op = recibir_operacion(conexionMemoria);
-    		if(cod_op==0)
-    			log_debug(logger,"codOP: MENSAJE");
-
-          char* mensaje = recibir_mensaje(conexionMemoria,logger);
-          if(strcmp(mensaje,"OK")== 0)
-              result = true;
+    		if(cod_op==MENSAJE) {
+               char* mensaje = recibir_mensaje(conexionMemoria,logger);
+               if(strcmp(mensaje,"OK")== 0)
+                  result = true;
+    		}
        } else {
     	   log_error(logger,"No me llego el resultado de memoria");
        }
