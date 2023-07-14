@@ -8,7 +8,7 @@ extern t_socket conexionMemoria;
 
 extern pthread_mutex_t mutex_procesos_new;
 extern t_list* procesosNew;
-extern sem_t sem_new_a_ready, sem_grado_multiprogramacion;
+extern sem_t sem_new_a_ready;
 
 
 uint32_t RESULT_OK = 0;

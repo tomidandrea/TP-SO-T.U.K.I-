@@ -5,8 +5,6 @@ extern t_log* logger;
 
 extern t_list* procesosExecute;
 extern t_list* procesosReady;
-extern t_list* procesosNew;
-extern t_list* esperaDeFS;
 extern t_list* esperaDeIO;
 extern t_list* archivosAbiertosGlobal;
 extern t_socket conexionFileSystem;
@@ -159,7 +157,7 @@ void recibirDeCPU() {
 				log_info(logger, "Hubo un F_CLOSE de PID:%d\n", contexto->pid);
 				t_archivo_global* archivoAbiertoGlobal = archivoGlobalQueSeLlama(contexto->parametros[0]);
 				archivoProceso = archivoQueSeLlama(contexto->parametros[0], proceso->archivosAbiertos);
-
+				//todo: hacer if su archivo proceso es NULL?
 				log_info(logger, "PID: %d - Cerrar Archivo: %s", contexto->pid, archivoProceso->nombre);
 				// Si no hay nadie en la cola del archivo lo saco de la tabla global y del proceso
 				if(queue_is_empty(archivoAbiertoGlobal->cola)) {
@@ -175,10 +173,11 @@ void recibirDeCPU() {
 				sem_post(&sem_recibir_cpu);
 
 				break;
-			case F_SEEK: //TODO
+			case F_SEEK:
 				log_info(logger, "Hubo un F_SEEK de PID:%d\n", contexto->pid);
 				int nuevoPuntero = atoi(contexto->parametros[1]);
 				archivoProceso = archivoQueSeLlama(contexto->parametros[0], proceso->archivosAbiertos);
+				//todo: hacer if su archivo proceso es NULL?
 				log_debug(logger, "Valor del puntero antes de ejecutar fseek: %d", archivoProceso->puntero);
 				//Si saca de la lista al archivo pasado por parametro, actualizo el puntero y lo meto de nuevo
 				actualizar_puntero(proceso,archivoProceso, nuevoPuntero);
@@ -196,6 +195,7 @@ void recibirDeCPU() {
 			case F_READ:
 				log_info(logger, "Hubo un F_READ de PID:%d\n", contexto->pid);
 				archivoProceso = archivoQueSeLlama(contexto->parametros[0], proceso->archivosAbiertos);
+				//todo: hacer if su archivo proceso es NULL?
 				direc_fisica = contexto->direc_fisica;
 				cant_bytes = atoi(contexto->parametros[2]);
 			    leer_archivo(archivoProceso, direc_fisica, cant_bytes);
@@ -204,6 +204,7 @@ void recibirDeCPU() {
 			case F_WRITE:
 				log_info(logger, "Hubo un F_WRITE de PID:%d\n", contexto->pid);
 				archivoProceso = archivoQueSeLlama(contexto->parametros[0], proceso->archivosAbiertos);
+				//todo: hacer if su archivo proceso es NULL?
 				direc_fisica = contexto->direc_fisica;
 				cant_bytes = atoi(contexto->parametros[2]);
 				escribir_archivo(archivoProceso, direc_fisica, cant_bytes);
@@ -211,6 +212,7 @@ void recibirDeCPU() {
 				break;
 			default:
 				log_debug(logger, "No se implemento la instruccion");
+				finalizar_proceso("INSTRUCCION INVALIDA");
 				break;
 		}
 		liberar_contexto(contexto);

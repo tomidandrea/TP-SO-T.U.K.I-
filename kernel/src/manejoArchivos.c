@@ -137,7 +137,7 @@ void leer_archivo(t_archivo* archivo, u_int32_t direc_fisica, int cant_bytes) {
 	eliminar_paquete(paquete);
 
 	t_pcb* proceso = removerDeExecute();
-	log_info(logger,"PID: %d - Leer Archivo: %s - Puntero %d - Dirección Memoria %d - Tamaño %d", proceso->pid, archivo->nombre, archivo->puntero, cant_bytes);
+	log_info(logger,"PID: %d - Leer Archivo: %s - Puntero %d - Dirección Memoria %u - Tamaño %d", proceso->pid, archivo->nombre, archivo->puntero, direc_fisica, cant_bytes);
 	bloquearPorFS(proceso, "F_READ");
 	sem_wait(&sem_proceso_fs_rw);
 	sem_post(&sem_recibir_fs);
@@ -154,7 +154,7 @@ void escribir_archivo(t_archivo* archivo, u_int32_t direc_fisica, int cant_bytes
 	eliminar_paquete(paquete);
 
 	t_pcb* proceso = removerDeExecute();
-	log_info(logger,"PID: %d - Escribir Archivo: %s - Puntero %d - Dirección Memoria %d - Tamaño %d", proceso->pid, archivo->nombre, archivo->puntero, cant_bytes);
+	log_info(logger,"PID: %d - Escribir Archivo: %s - Puntero %d - Dirección Memoria %u - Tamaño %d", proceso->pid, archivo->nombre, archivo->puntero, direc_fisica, cant_bytes);
 	bloquearPorFS(proceso, "F_WRITE");
 	sem_wait(&sem_proceso_fs_rw);
 	sem_post(&sem_recibir_fs);

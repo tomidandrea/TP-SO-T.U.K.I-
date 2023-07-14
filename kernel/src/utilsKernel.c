@@ -176,17 +176,20 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 		// recibimos el segmento
 		int codigo_op = recibir_operacion(conexionMemoria);
 		if(codigo_op == CREACION_EXITOSA){
-		segmento = recibirSegmento(conexionMemoria);
-		list_add(proceso->tablaSegmentos, segmento);
+			segmento = recibirSegmento(conexionMemoria);
+			list_add(proceso->tablaSegmentos, segmento);
 
-		sem_post(&sem_proceso_fs_rw);
-		mandar_pcb_a_CPU(proceso);
-		sem_post(&sem_recibir_cpu);
+			sem_post(&sem_proceso_fs_rw);
+			mandar_pcb_a_CPU(proceso);
+			sem_post(&sem_recibir_cpu);
+		}else{
+			log_error(logger, "El cod_op:%d que me mandó Memoria despues de compactar es invalido", cod);
+			finalizar_proceso("ERROR AL COMPACTAR");
 		}
-		else log_error(logger, "El cod_op:%d que me mandó Memoria es invalido", cod);
 		break;
 	default:
 		log_error(logger, "El cod_op:%d que me mandó Memoria es invalido", cod);
+		finalizar_proceso("ERROR AL CREAR_SEG");
 	}
 }
 

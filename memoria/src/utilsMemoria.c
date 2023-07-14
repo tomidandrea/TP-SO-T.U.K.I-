@@ -237,7 +237,7 @@ op_code crearSegmento(t_pedido_segmento* pedido) {
 				nuevoSegmento = crear_t_segmento(pedido->id_segmento, hueco->base, limiteSegmento);
 				list_add(tabla_del_proceso, nuevoSegmento);
 
-				log_info(logger, "PID: %s - Crear Segmento: %d - Base: %d - TAMAÑO: %d", pid, nuevoSegmento->id, nuevoSegmento->base, nuevoSegmento->limite - nuevoSegmento->base);
+				log_info(logger, "PID: %s - Crear Segmento: %d - Base: %u - TAMAÑO: %u", pid, nuevoSegmento->id, nuevoSegmento->base, nuevoSegmento->limite - nuevoSegmento->base);
 
 				if(hueco->limite == nuevoSegmento->limite){
 					removerHuecoPorId(tabla_huecos, huecoDisponible);
@@ -373,10 +373,10 @@ void eliminarSegmento (t_pedido_segmento* pedido) {
 
 	agregarHueco(segmento);
 
-	log_info(logger, "PID: %s - Eliminar Segmento: %d - Base: %d - TAMAÑO: %d", pid, segmento->id, segmento->base, segmento->limite-segmento->base);
+	log_info(logger, "PID: %s - Eliminar Segmento: %d - Base: %u - TAMAÑO: %u", pid, segmento->id, segmento->base, segmento->limite - segmento->base);
 
-	//free(pid);
-	//free(segmento);
+	free(pid);
+	free(segmento);
 
 }
 

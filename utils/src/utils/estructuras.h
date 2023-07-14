@@ -40,14 +40,6 @@ typedef struct {
 	char RAX[16], RBX[16], RCX[16], RDX[16];
 } t_registros;
 
-// TODO: esto si no se usa volarlo, Aclaracion: Estaba en utils del kernel, lo movi a utils
-typedef enum {
-    NEW,
-    READY,
-    EXEC,
-    BLOCKED,
-    EXIT
-} Estado;
 
 typedef enum {
 	NUEVO,

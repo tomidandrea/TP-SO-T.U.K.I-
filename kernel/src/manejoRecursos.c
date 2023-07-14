@@ -91,7 +91,8 @@ void ejecutarSignal(t_pcb* proceso, char* recurso) {
     int instancias = cantInstancias(recurso);
 
     int index = indice(recurso);
-    (proceso->instanciasPorRecurso)[index] -= 1;
+    if((proceso->instanciasPorRecurso)[index]>0)
+    	(proceso->instanciasPorRecurso)[index] -= 1;
 
     log_info(logger, "PID: %d - Signal: %s - Instancias: %d", proceso->pid, recurso, instancias);
     if(instancias <= 0) {
@@ -220,7 +221,7 @@ void agregarProcesosDeIO(t_list* procesos){
 void liberar_recursos(t_pcb* proceso){
 	int cantidadAsignada;
 	int cantidadProcesosADesbloquear=0;
-	mostrarRecursos(recursos, instancias, proceso->instanciasPorRecurso, cantidad_recursos);
+	//mostrarRecursos(recursos, instancias, proceso->instanciasPorRecurso, cantidad_recursos);
 	for(int i=0;i<cantidad_recursos;i++){
 		cantidadAsignada = (proceso->instanciasPorRecurso)[i];
 		instancias[i] += cantidadAsignada;
@@ -234,8 +235,8 @@ void liberar_recursos(t_pcb* proceso){
 		}
 
 	}
-	printf("\n Procesos a desbloquear:%d despues:\n", cantidadProcesosADesbloquear);
-	mostrarRecursos(recursos, instancias, proceso->instanciasPorRecurso, cantidad_recursos);
+	printf("\n Procesos a desbloquear:%d\n", cantidadProcesosADesbloquear);
+	//mostrarRecursos(recursos, instancias, proceso->instanciasPorRecurso, cantidad_recursos);
 
 }
 

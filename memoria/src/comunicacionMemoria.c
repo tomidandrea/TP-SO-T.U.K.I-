@@ -12,7 +12,6 @@ extern int retardo_memoria;
 
 extern int cantidadMaxSegmentos;
 extern int retardoCompactacion;
-extern op_code estadoCreacion;
 uint32_t RESULT_ERROR = 1;
 uint32_t RESULT_OK = 0;
 
@@ -89,8 +88,6 @@ void escucharKernel(){
 				break;
 			case DELETE_SEGMENT_OP:
 				pedido = recibirPedidoDeleteSegment(socket_kernel);
-				log_debug(logger, "Delete segment: PID: %d - Id segmento: %d", pedido->pid, pedido->id_segmento);
-
 				pid = string_itoa(pedido->pid);
 				tablaSegmentos = dictionary_get(diccionarioTablas, pid);
 
@@ -287,7 +284,7 @@ void enviarDiccionarioTablas(t_socket socket_kernel){
 			agregar_valor_uint(paquete,&(segmento->limite));
 
 			// Muestro lo segmentos por proceso post-compactación (log obligatorio)
-			log_info(logger, "PID: %s - Segmento: %d - Base: %d - Tamaño %d", pid, segmento->id, segmento->base, segmento->limite - segmento->base);
+			log_info(logger, "PID: %s - Segmento: %d - Base: %u - Tamaño %u", pid, segmento->id, segmento->base, segmento->limite - segmento->base);
 		}
 		printf("\n");
 	}
