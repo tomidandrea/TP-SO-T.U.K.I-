@@ -207,6 +207,8 @@ void escucharFS(){
 			switch (cod_op) {
 			case LEER:
 				buffer = recibir_buffer(&size, socket_file_system);
+				memcpy(&pid, buffer + desplazamiento, sizeof(int));
+				desplazamiento += sizeof(int);
 				memcpy(&direc_fisica, buffer + desplazamiento, sizeof(u_int32_t));
 				desplazamiento += sizeof(u_int32_t);
 				memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
@@ -232,6 +234,8 @@ void escucharFS(){
 			case ESCRIBIR:
 				//recibo los datos para escritura
 				buffer = recibir_buffer(&size, socket_file_system);
+				memcpy(&pid, buffer + desplazamiento, sizeof(int));
+				desplazamiento += sizeof(int);
 				memcpy(&direc_fisica, buffer + desplazamiento, sizeof(u_int32_t));
 				desplazamiento += sizeof(u_int32_t);
 				memcpy(&tamanio, buffer + desplazamiento, sizeof(int));

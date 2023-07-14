@@ -158,10 +158,11 @@ void recibirLeerOEscribir(void* buffer, int* desplazamiento, int* puntero, u_int
 }
 
 
-bool enviar_dato_a_escribir_a_memoria(char*dato_leido, uint32_t direc_fisica) {
+bool enviar_dato_a_escribir_a_memoria(int pid, char*dato_leido, uint32_t direc_fisica) {
 	bool result = false;
 
     t_paquete*paquete=crear_paquete(ESCRIBIR);
+    agregar_valor_estatico(paquete, &(pid));
     agregar_valor_uint(paquete, &(direc_fisica));
     agregar_a_paquete(paquete,dato_leido,strlen(dato_leido)+1);
 
@@ -185,11 +186,12 @@ bool enviar_dato_a_escribir_a_memoria(char*dato_leido, uint32_t direc_fisica) {
 	return result;
 }
 
-char* solicitar_leer_dato_a_memoria(uint32_t direc_fisica,int cant_bytes) {
+char* solicitar_leer_dato_a_memoria(int pid, uint32_t direc_fisica,int cant_bytes) {
 
 	    t_paquete *paquete = crear_paquete(LEER);
 
 	    log_info(logger,"Enviando solicitud de lectura a memoria");
+	    agregar_valor_estatico(paquete, &(pid));
 		agregar_valor_uint(paquete, &(direc_fisica));
 		agregar_valor_estatico(paquete, &(cant_bytes));
 

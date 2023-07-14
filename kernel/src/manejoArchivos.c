@@ -124,9 +124,10 @@ void truncar_archivo(char* nombreArchivo, int tamanio) {
 	sem_post(&sem_recibir_fs);
 }
 
-void leer_archivo(t_archivo* archivo, u_int32_t direc_fisica, int cant_bytes) {
+void leer_archivo(int pid, t_archivo* archivo, u_int32_t direc_fisica, int cant_bytes) {
 
 	t_paquete *paquete = crear_paquete(F_READ);
+	agregar_valor_estatico(paquete, &(pid));
 	agregar_a_paquete(paquete, archivo->nombre, strlen(archivo->nombre) + 1);
 	agregar_valor_estatico(paquete, &(archivo->puntero));
 	agregar_valor_uint(paquete, &direc_fisica);
@@ -143,8 +144,9 @@ void leer_archivo(t_archivo* archivo, u_int32_t direc_fisica, int cant_bytes) {
 	sem_post(&sem_recibir_fs);
 }
 
-void escribir_archivo(t_archivo* archivo, u_int32_t direc_fisica, int cant_bytes) {
+void escribir_archivo(int pid, t_archivo* archivo, u_int32_t direc_fisica, int cant_bytes) {
 	t_paquete *paquete = crear_paquete(F_WRITE);
+	agregar_valor_estatico(paquete, &(pid));
 	agregar_a_paquete(paquete, archivo->nombre, strlen(archivo->nombre) + 1);
 	agregar_valor_estatico(paquete, &(archivo->puntero));
 	agregar_valor_uint(paquete, &direc_fisica);

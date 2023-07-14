@@ -190,6 +190,7 @@ void recibirDeCPU() {
 				char* nombreArchivo = copiar(contexto->parametros[0]);
 				int tamanioATruncar = atoi(contexto->parametros[1]);
 				truncar_archivo(nombreArchivo, tamanioATruncar);
+				log_info(logger, "PID: %d - Archivo: %s - Tamaño: %d", contexto->pid, nombreArchivo, tamanioATruncar);
 				free(nombreArchivo);
 				break;
 			case F_READ:
@@ -198,7 +199,7 @@ void recibirDeCPU() {
 				//todo: hacer if su archivo proceso es NULL?
 				direc_fisica = contexto->direc_fisica;
 				cant_bytes = atoi(contexto->parametros[2]);
-			    leer_archivo(archivoProceso, direc_fisica, cant_bytes);
+			    leer_archivo(contexto->pid, archivoProceso, direc_fisica, cant_bytes);
 			    //esto no se si hace o no, seria actualizar el puntero cada vez que escribe o lee: actualizar_puntero(proceso,archivoProceso, archivoProceso->puntero + cant_bytes);
 				break;
 			case F_WRITE:
@@ -207,7 +208,7 @@ void recibirDeCPU() {
 				//todo: hacer if su archivo proceso es NULL?
 				direc_fisica = contexto->direc_fisica;
 				cant_bytes = atoi(contexto->parametros[2]);
-				escribir_archivo(archivoProceso, direc_fisica, cant_bytes);
+				escribir_archivo(contexto->pid, archivoProceso, direc_fisica, cant_bytes);
 				//esto no se si hace o no: actualizar_puntero(proceso,archivoProceso, archivoProceso->puntero + cant_bytes);
 				break;
 			default:

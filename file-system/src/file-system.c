@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
 		if(socket_cliente != -1) {
 		int cod_op = recibir_operacion(socket_cliente);
 
-		int size,cant_bytes, puntero;
+		int size,cant_bytes, puntero, pid;
 		u_int32_t direc_fisica;
 		int desplazamiento = 0;
 		void * buffer;
@@ -102,18 +102,22 @@ int main(int argc, char* argv[]) {
 					break;
 
 				case F_READ:
+					memcpy(&pid, buffer + desplazamiento, sizeof(int));
+					desplazamiento +=sizeof(int);
 					nombreArchivo = recibirNombreArchivo(buffer, &desplazamiento);
 					recibirLeerOEscribir(buffer, &desplazamiento, &puntero, &direc_fisica, &cant_bytes);
 					log_info(logger, "Leer Archivo: %s - Puntero: %d - Memoria: %d - Tamaño: %d", nombreArchivo, puntero, direc_fisica, cant_bytes);
-				    result_operacion = leer_archivo(nombreArchivo,path_fcbs,puntero,direc_fisica,cant_bytes,archivo_bloques);
+				    result_operacion = leer_archivo(pid, nombreArchivo,path_fcbs,puntero,direc_fisica,cant_bytes,archivo_bloques);
 				    strcpy(mensaje, "OP_READ");
 				    break;
 
 				case F_WRITE:
+					memcpy(&pid, buffer + desplazamiento, sizeof(int));
+					desplazamiento +=sizeof(int);
 					nombreArchivo = recibirNombreArchivo(buffer, &desplazamiento);
 					recibirLeerOEscribir(buffer, &desplazamiento, &puntero, &direc_fisica, &cant_bytes);
 					log_info(logger, "Escribir Archivo: %s - Puntero: %d - Memoria: %d - Tamaño: %d", nombreArchivo, puntero, direc_fisica, cant_bytes);
-					result_operacion = escribir_archivo(nombreArchivo,path_fcbs,puntero,direc_fisica,cant_bytes,archivo_bloques);
+					result_operacion = escribir_archivo(pid, nombreArchivo,path_fcbs,puntero,direc_fisica,cant_bytes,archivo_bloques);
 					strcpy(mensaje, "OP_WRITE");
 					break;
 				default:
@@ -477,7 +481,7 @@ bool obtener_bloques_del_bloque_de_punteros(t_fcb*fcb, size_t cant_bloques, uint
 
 
 
-bool leer_archivo(char* nombreArchivo,char*path_directorio,int puntero, uint32_t direc_fisica, int cant_bytes,FILE*archivo_bloques) {
+bool leer_archivo(int pid, char* nombreArchivo,char*path_directorio,int puntero, uint32_t direc_fisica, int cant_bytes,FILE*archivo_bloques) {
 
 	bool result = false ;
     t_fcb*fcb = get_fcb(nombreArchivo,path_directorio);
@@ -508,7 +512,7 @@ bool leer_archivo(char* nombreArchivo,char*path_directorio,int puntero, uint32_t
        char* dato_leido = leer_dato_en_archivo_de_bloques(fcb,bloques_fs_a_leer,bloques_locales_a_leer,puntero_desde_bloque,cant_bytes,archivo_bloques);
        if(dato_leido !=NULL) {
     	  log_debug(logger,"El dato leido del archivo es %s: %s",nombreArchivo,dato_leido);
-    	  result = enviar_dato_a_escribir_a_memoria(dato_leido,direc_fisica);
+    	  result = enviar_dato_a_escribir_a_memoria(pid, dato_leido,direc_fisica);
        }
        free(dato_leido);
     }
@@ -586,11 +590,11 @@ int minimo(int x,int y) {
 
 
 
-bool escribir_archivo(char* nombreArchivo,char*path_directorio,int puntero, uint32_t direc_fisica, int cant_bytes,FILE*archivo_bloques){
+bool escribir_archivo(int pid, char* nombreArchivo,char*path_directorio,int puntero, uint32_t direc_fisica, int cant_bytes,FILE*archivo_bloques){
 
 	bool result = false;
 	//char*dato_a_escribir = "SonyPlaystation1SonyPlaystation2SonyPlaystation3SonyPlaystation4SonyPlaystation5";
-	char*dato_a_escribir = solicitar_leer_dato_a_memoria(direc_fisica,cant_bytes);
+	char*dato_a_escribir = solicitar_leer_dato_a_memoria(pid, direc_fisica,cant_bytes);
 	log_debug(logger,"Dato a escribir en archivo %s: %s\n", nombreArchivo,dato_a_escribir);
 	t_fcb*fcb = get_fcb(nombreArchivo,path_directorio);
 
