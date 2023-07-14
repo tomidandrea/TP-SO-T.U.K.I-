@@ -102,7 +102,7 @@ void recibirDeCPU() {
 				if(verificarRecursos(recurso)){
 					wait(proceso, recurso);
 				} else{
-					finalizar_proceso("RECURSO_INEXISTENTE");
+					finalizar_proceso("INVALID_RESOURCE");
 				}
 				break;
 			case SIGNAL:
@@ -113,7 +113,7 @@ void recibirDeCPU() {
 				if(verificarRecursos(recurso)){
 					ejecutarSignal(proceso, recurso);
 				} else{
-					finalizar_proceso("RECURSO_INEXISTENTE");
+					finalizar_proceso("INVALID_RESOURCE");
 				}
 				break;
 			case CREATE_SEGMENT:

@@ -162,13 +162,14 @@ void recibirCrearSegmento(int id, int tamanio, t_pcb* proceso) {
 		//liberar_pcb(proceso);
 		break;
 	case PEDIDO_COMPACTAR:
-		log_debug(logger,"Esperamos procesos de fs");
+		log_info(logger,"Compactación: Esperando Fin de Operaciones de FS");
 		sem_wait(&sem_proceso_fs_rw);
-		log_debug(logger,"Ya volvieron procesos de fs");
+		log_info(logger,"Compactación: Se solicitó compactación");
 		int codOp = COMPACTAR;
 		send(conexionMemoria, &codOp, sizeof(int), 0);
 
 		actualizarTablasDeSegmentos(conexionMemoria, proceso);
+		log_info(logger, "Se finalizó el proceso de compactación");
 
 		//Tenemos que mandar otra vez el pedido a memoria
 		solicitarCrearSegmento(id,tamanio, proceso); //mandamos a memoria
