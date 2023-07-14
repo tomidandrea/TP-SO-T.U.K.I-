@@ -192,6 +192,7 @@ void liberar_pcb(t_pcb* pcb){
 	temporal_destroy(pcb->tiempoEnReady);
 	temporal_stop(pcb->tiempoCPU);
 	temporal_destroy(pcb->tiempoCPU);
+
 	free(pcb);
 }
 

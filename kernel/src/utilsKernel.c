@@ -4,6 +4,7 @@
 
 int processID=0;
 uint32_t BLOQUEADO = 0;
+extern int cantidad_recursos;
 uint32_t CONTINUAR_EJECUTANDO = 1;
 extern t_config* config;
 extern t_log* logger;
@@ -30,6 +31,11 @@ t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola){
     pcb->tiempoCPU = iniciarTiempo();
     temporal_stop(pcb->tiempoCPU);
     pcb->archivosAbiertos = list_create();
+    pcb->instanciasPorRecurso = list_create();
+
+    for(int i=0;i<cantidad_recursos;i++){
+    	list_add(pcb->instanciasPorRecurso,0);
+    }
 
     strcpy(pcb->registros->AX, "0");
     strcpy(pcb->registros->BX, "0");

@@ -67,6 +67,11 @@ void wait(t_pcb* proceso, char* recurso) {
 
     disminuirInstancias(recurso);
     int instancias = cantInstancias(recurso);
+
+    int index = indice(recurso);
+    int cant_instancias_asignadas = list_get(proceso->instanciasPorRecurso, index);
+    list_replace(proceso->instanciasPorRecurso,index,cant_instancias_asignadas+1);
+
     log_info(logger, "PID: %d - Wait: %s - Instancias: %d", proceso->pid, recurso, instancias);
     if(instancias < 0) {
     	removerDeExecute();
@@ -82,6 +87,11 @@ void wait(t_pcb* proceso, char* recurso) {
 void ejecutarSignal(t_pcb* proceso, char* recurso) {
     aumentarInstancias(recurso);
     int instancias = cantInstancias(recurso);
+
+    int index = indice(recurso);
+    int cant_instancias_asignadas = list_get(proceso->instanciasPorRecurso, index);
+    list_replace(proceso->instanciasPorRecurso,index,cant_instancias_asignadas-1);
+
     log_info(logger, "PID: %d - Signal: %s - Instancias: %d", proceso->pid, recurso, instancias);
     if(instancias <= 0) {
          desbloquearPrimerProceso(recurso);

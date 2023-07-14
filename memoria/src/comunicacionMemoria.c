@@ -11,6 +11,7 @@ extern int retardo_memoria;
 
 
 extern int cantidadMaxSegmentos;
+extern int retardoCompactacion;
 extern op_code estadoCreacion;
 uint32_t RESULT_ERROR = 1;
 uint32_t RESULT_OK = 0;
@@ -67,6 +68,7 @@ void escucharKernel(){
 						int cod_op = recibir_operacion(socket_kernel);
 
 						if (cod_op == COMPACTAR){
+							usleep(retardoCompactacion * 1000);
 							log_info(logger, "Inicio compactación");
 							compactar(pedido);
 							enviarDiccionarioTablas(socket_kernel);

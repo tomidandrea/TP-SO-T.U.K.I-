@@ -13,6 +13,7 @@ t_segmento* segmento0;
 int huecoDisponible;
 int huecoId;
 char* algoritmoConfig;
+int retardoCompactacion;
 
 // ---- INICIO DE MEMORIA ----
 t_segmento* crear_t_segmento(int id, u_int32_t base, u_int32_t limite){
@@ -31,7 +32,7 @@ void inicializarEstructuras(){
 	tamanioMemoria = config_get_int_value(config,"TAM_MEMORIA");
 	int tamanioSegmento0 = config_get_int_value(config,"TAM_SEGMENTO_0");
 	cantidadMaxSegmentos = config_get_int_value(config,"CANT_SEGMENTOS");
-
+	retardoCompactacion = config_get_int_value(config,"RETARDO_COMPACTACION");
 	espacioMemoria = malloc(tamanioMemoria);
 
 	segmento0 = crear_t_segmento(0, 0, tamanioSegmento0);
