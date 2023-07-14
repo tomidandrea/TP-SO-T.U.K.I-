@@ -31,10 +31,10 @@ t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola){
     pcb->tiempoCPU = iniciarTiempo();
     temporal_stop(pcb->tiempoCPU);
     pcb->archivosAbiertos = list_create();
-    pcb->instanciasPorRecurso = list_create();
+    pcb->instanciasPorRecurso = malloc(sizeof(int)*cantidad_recursos);
 
     for(int i=0;i<cantidad_recursos;i++){
-    	list_add(pcb->instanciasPorRecurso,0);
+    	(pcb->instanciasPorRecurso)[i] = 0;
     }
 
     strcpy(pcb->registros->AX, "0");

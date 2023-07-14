@@ -18,7 +18,10 @@ extern pthread_mutex_t mutex_procesos_io;
 
 void inicializarRecursos(){
 	char* recursos_config =  config_get_string_value(config, "RECURSOS");
-	cantidad_recursos = contar(recursos_config, ',') + 1; //cuento las comas y le sumo uno para saber cantidad de recursos
+	if(hayRecursos()){
+		cantidad_recursos = contar(recursos_config, ',') + 1; //cuento las comas y le sumo uno para saber cantidad de recursos
+
+	}
 	//TODO: Falta un if para ver si no hay recursos!!
 
 	//log_info(logger, "Existen %d recursos: %s\n", cantidad_recursos, recursos_config);
@@ -69,8 +72,7 @@ void wait(t_pcb* proceso, char* recurso) {
     int instancias = cantInstancias(recurso);
 
     int index = indice(recurso);
-    int cant_instancias_asignadas = list_get(proceso->instanciasPorRecurso, index);
-    list_replace(proceso->instanciasPorRecurso,index,cant_instancias_asignadas+1);
+    (proceso->instanciasPorRecurso)[index] += 1;
 
     log_info(logger, "PID: %d - Wait: %s - Instancias: %d", proceso->pid, recurso, instancias);
     if(instancias < 0) {
@@ -89,8 +91,7 @@ void ejecutarSignal(t_pcb* proceso, char* recurso) {
     int instancias = cantInstancias(recurso);
 
     int index = indice(recurso);
-    int cant_instancias_asignadas = list_get(proceso->instanciasPorRecurso, index);
-    list_replace(proceso->instanciasPorRecurso,index,cant_instancias_asignadas-1);
+    (proceso->instanciasPorRecurso)[index] -= 1;
 
     log_info(logger, "PID: %d - Signal: %s - Instancias: %d", proceso->pid, recurso, instancias);
     if(instancias <= 0) {
@@ -216,4 +217,29 @@ void agregarProcesosDeIO(t_list* procesos){
 	pthread_mutex_unlock(&mutex_procesos_io);
 }
 
+void liberar_recursos(t_pcb* proceso){
+	int cantidadAsignada;
+	int cantidadProcesosADesbloquear=0;
+	mostrarRecursos(recursos, instancias, proceso->instanciasPorRecurso, cantidad_recursos);
+	for(int i=0;i<cantidad_recursos;i++){
+		cantidadAsignada = (proceso->instanciasPorRecurso)[i];
+		instancias[i] += cantidadAsignada;
+		if(instancias[i]>0 && instancias[i]<cantidadAsignada){
+			cantidadProcesosADesbloquear = cantidadAsignada-instancias[i];
+		}else if (instancias[i]<=0){
+			cantidadProcesosADesbloquear = cantidadAsignada;
+		}
+		for(int j=0;j<cantidadProcesosADesbloquear;j++){
+			desbloquearPrimerProceso(recursos[i]);
+		}
 
+	}
+	printf("\n Procesos a desbloquear:%d despues:\n", cantidadProcesosADesbloquear);
+	mostrarRecursos(recursos, instancias, proceso->instanciasPorRecurso, cantidad_recursos);
+
+}
+
+bool hayRecursos(){
+	char** recursos = config_get_array_value(config, "RECURSOS");
+	return !string_array_is_empty(recursos);
+}

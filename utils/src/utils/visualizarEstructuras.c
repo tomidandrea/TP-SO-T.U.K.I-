@@ -75,4 +75,32 @@ void mostrarTablaHuecos(tabla_segmentos tabla){
 	}
 }
 
+void mostrarRecursos(char** recursos, int* instanciasGlobales, int* instanciasProceso, int cantidad_recursos){
+	printf("\n Recursos: [");
+	for (int i = 0; i < cantidad_recursos; ++i) {
+		printf("%s", recursos[i]);
+		if(i<cantidad_recursos-1){
+			printf(", ");
+		}
+	}
+	printf("]\n");
+	printf("InstanciasGlobales: ");
+	for (int i = 0; i < cantidad_recursos; ++i) {
+		printf("%d", instanciasGlobales[i]);
+		if(i<cantidad_recursos-1){
+			printf(", ");
+		}else
+			printf("\n");
+	}
+	printf("InstanciasProceso: ");
+	for (int i = 0; i < cantidad_recursos; ++i) {
+		printf("%d", instanciasProceso[i]);
+		if(i<cantidad_recursos-1){
+			printf(", ");
+		}else
+			printf("\n");
+	}
+
+}
+
 

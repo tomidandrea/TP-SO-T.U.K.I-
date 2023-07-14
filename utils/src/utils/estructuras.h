@@ -115,7 +115,7 @@ typedef struct {
 	double estimadoAnterior;
 	double ratio;
 	t_socket socket_consola;
-	t_list* instanciasPorRecurso;
+	int* instanciasPorRecurso;
 } t_pcb;
 
 typedef struct {

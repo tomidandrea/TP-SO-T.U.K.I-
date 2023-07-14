@@ -253,8 +253,8 @@ void finalizar_proceso(char* motivo) {
 	log_info(logger, "=== Salimos como unos campeones!!!!, PID:%d finalizó ===\n", proceso->pid);
 	log_info(logger, "PID: %d - Estado Anterior: EXECUTE - Estado Actual: EXIT", proceso->pid);
 	log_info(logger, "Finaliza el proceso %d - Motivo: %s", proceso->pid, motivo);
-	// liberar_recursos();
-	// avisar_fin_a_memoria();
+	liberar_recursos(proceso);
+	avisar_fin_a_memoria(proceso->pid);
 	avisar_fin_a_consola(proceso->socket_consola);
 	liberar_pcb(proceso);
 	log_debug(logger, "Lista procesosReady:%d", list_size(procesosReady));

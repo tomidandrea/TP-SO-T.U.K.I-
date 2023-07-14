@@ -49,4 +49,7 @@ t_pcb* obtenerProcesoQueue(t_queue *self, int indice);
 void removerProcesoPorPID(int pid);
 void agregarProcesosDeIO(t_list* procesos);
 
+void liberar_recursos(t_pcb* proceso);
+bool hayRecursos();
+
 #endif /* SRC_MANEJORECURSOS_H_ */
