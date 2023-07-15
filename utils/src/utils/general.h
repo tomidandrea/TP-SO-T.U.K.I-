@@ -63,6 +63,7 @@ void liberar_contexto(t_contexto* contexto);
 
 void removerSegmento0(tabla_segmentos tabla_seg);
 void liberarTablaSegmentos(void* tablaProceso);
+void liberarArchivo(t_archivo* archivo);
 
 #endif
 

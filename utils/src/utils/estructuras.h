@@ -117,7 +117,7 @@ typedef struct {
     operacion motivo;
     char** parametros;
     int cantidadParametros;
-    tabla_segmentos tablaSegmentos;
+    //tabla_segmentos tablaSegmentos;
     u_int32_t direc_fisica;
 } t_contexto;
 

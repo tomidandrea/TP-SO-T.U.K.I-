@@ -1,4 +1,5 @@
 #include <kernel.h>
+#include <signal.h>
 
 
 t_log* logger;
@@ -17,11 +18,19 @@ char** recursos;
 char** instanciasRecursos;
 int* instancias;
 
-//todo: mallocs y free para todos los punteros
+sem_t sem_finalizar;
+extern sem_t sem_new_a_ready, sem_ready, sem_recibir_cpu, sem_recibir_fs;
+extern t_socket socket_cliente;
+
+t_list* listaProcesosGlobal;
+bool seguir_ejecucion = true;
 
 int main(int argc, char* argv[]) {
     logger = iniciar_logger("kernel.log", "KERNEL", true, LOG_LEVEL_DEBUG);
     config = iniciar_config(argv[1]);
+
+    listaProcesosGlobal = list_create();
+
     inicializarRecursos();
 
     colasDeBloqueados = list_create();
@@ -44,15 +53,36 @@ int main(int argc, char* argv[]) {
     conexionMemoria = iniciarConexion(config, logger, "IP_MEMORIA", "PUERTO_MEMORIA");
     conexionFileSystem = iniciarConexion(config, logger, "IP_FILESYSTEM", "PUERTO_FILESYSTEM");
 
-		crearEscucharConsolas();
-		crearAgregarReady();
-		crearPlanificar();
-		crearRecibirDeCPU();
-		crearRecibirDeFS();
-		while(1);
+    signal(SIGINT, cerrar);
 
-		return EXIT_SUCCESS;
+	crearEscucharConsolas();
+	crearAgregarReady();
+	crearPlanificar();
+	crearRecibirDeCPU();
+	crearRecibirDeFS();
+	while(seguir_ejecucion);
+	printf("\nHola termine\n");
+	return EXIT_SUCCESS;
 }
 
+void cerrar(int signal){
+	printf("\nHola te libero algunas estructuras\n");
+	seguir_ejecucion = false;
+	close(conexionCPU);
+	close(conexionFileSystem);
+	close(conexionMemoria);
+	close(socket_cliente);
+	list_destroy_and_destroy_elements(listaProcesosGlobal, liberar_pcb);
+
+	sem_post(&sem_new_a_ready);
+	sem_post(&sem_ready);
+	sem_post(&sem_recibir_cpu);
+	sem_post(&sem_recibir_fs);
+
+	sem_wait(&sem_finalizar);
+	liberarSemoforos();
+	usleep(10000000);
+	exit(1);
+}
 
 

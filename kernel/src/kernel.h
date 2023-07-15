@@ -20,6 +20,6 @@ typedef struct{
 
 
 t_pcb* recibir_proceso(t_socket);
-
+void cerrar(int signal);
 
 #endif

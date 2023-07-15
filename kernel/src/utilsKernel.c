@@ -16,6 +16,8 @@ extern sem_t sem_recibir_cpu, sem_proceso_fs_rw;
 extern t_list* procesosReady;
 extern pthread_mutex_t mutex_procesos_ready;
 
+extern t_list* listaProcesosGlobal;
+
 
 t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola){
 
@@ -55,6 +57,7 @@ t_pcb* crearPCB(t_list* listaInstrucciones, t_socket socket_consola){
 	if(cod_op == TABLA_SEGMENTOS){
 //		t_list* lista = recibirTablaSegmentos(conexionMemoria);
 //		pcb->tablaSegmentos = list_duplicate(lista);
+		//liberarTablaSegmentos(pcb->tablaSegmentos);
 		pcb->tablaSegmentos = recibirTablaSegmentos(conexionMemoria);
 
 	}else
@@ -245,11 +248,12 @@ void actualizarTablasDeSegmentos(int conexionMemoria, t_pcb* proceso){
 	switch(cod){
 	case COMPACTAR:
 		log_debug(logger, "Voy a actualizar tablas");
-		t_list* procesos = obtenerTodosProcesosBloqueados();
+		/*t_list* procesos = obtenerTodosProcesosBloqueados();
 		obtenerProcesosReady(procesos);
 		agregarProcesosDeIO(procesos);
 		list_add(procesos, proceso);
-		char* lista = lista_procesos_string(procesos);
+		char* lista = lista_procesos_string(procesos);*/
+		char* lista = lista_procesos_string(listaProcesosGlobal);
 		printf("Lista :[%s]\n", lista);
 
 
@@ -279,8 +283,8 @@ void actualizarTablasDeSegmentos(int conexionMemoria, t_pcb* proceso){
 				list_add(tabla, segmento);
 			}
 
-			actualizarTablaProceso(pid,tabla,procesos);
-			free(tabla);
+			actualizarTablaProceso(pid,tabla,listaProcesosGlobal);
+			list_destroy(tabla);
 			free(pid);
 		}
 		free(buffer);
@@ -302,6 +306,7 @@ void solicitarEliminarSegmento(int id, t_pcb* proceso) {
 void recibirEliminarsegmento(t_pcb* proceso){
 	int cod = recibir_operacion(conexionMemoria);
 	if (cod == TABLA_SEGMENTOS){
+		liberarTablaSegmentos(proceso->tablaSegmentos);
 		proceso->tablaSegmentos = recibirTablaSegmentos(conexionMemoria);
 		log_debug(logger, "Tabla de segmentos actualizada - Se eliminó el segmento");
 	}

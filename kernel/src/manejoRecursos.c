@@ -22,7 +22,6 @@ void inicializarRecursos(){
 		cantidad_recursos = contar(recursos_config, ',') + 1; //cuento las comas y le sumo uno para saber cantidad de recursos
 
 	}
-	//TODO: Falta un if para ver si no hay recursos!!
 
 	//log_info(logger, "Existen %d recursos: %s\n", cantidad_recursos, recursos_config);
 	recursos = inicializar_parametros(cantidad_recursos);
@@ -127,7 +126,7 @@ void bloquearYPasarAReady(io_contexto* contexto) {
 	log_info(logger, "PID: %d - Estado Anterior: BLOCKED - Estado Actual: READY", contexto->proceso->pid);
 	pasarAReady(contexto->proceso);
 	pthread_mutex_lock(&mutex_procesos_io);
-	removerProcesoPorPID(contexto->proceso->pid);
+	removerProcesoPorPID(esperaDeIO, contexto->proceso->pid);
 	pthread_mutex_unlock(&mutex_procesos_io);
 	//sem_post(&sem_ready);
 }
@@ -192,14 +191,14 @@ t_pcb* obtenerProcesoQueue(t_queue *self, int indice) {
 	return list_get(self->elements, indice);
 }
 
-void removerProcesoPorPID(int pid){
+void removerProcesoPorPID(t_list* lista, int pid){
 	t_pcb* proceso;
-	int tamanio = list_size(esperaDeIO);
+	int tamanio = list_size(lista);
 	for(int i=0; i<tamanio;i++){
-		proceso = list_get(esperaDeIO, i);
+		proceso = list_get(lista, i);
 		if(proceso->pid == pid){
-			log_debug(logger, "Proceso pid:%d, sale de IO", pid);
-			proceso = list_remove(esperaDeIO,i);
+			//log_debug(logger, "Proceso pid:%d, sale de IO", pid);
+			proceso = list_remove(lista,i);
 			break;
 		}
 	}

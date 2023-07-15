@@ -61,11 +61,6 @@ void liberarArchivoGlobal(t_archivo_global* archivo) {
 	free(archivo);
 }
 
-void liberarArchivo(t_archivo* archivo) {
-	free(archivo->nombre);
-	free(archivo);
-}
-
 void abrirArchivoEnFS(char* nombre) {
 
 	t_paquete *paquete = crear_paquete(F_OPEN);
@@ -105,6 +100,7 @@ void crearArchivoEnFS(char* nombre) {
 		if(strcmp(mensaje, "OP_OK") == 0) {
 			log_debug(logger,"El archivo %s se creó exitosamente!!", nombre);
 		} else log_error(logger,"Me llego cualquier cosa");
+		//free(mensaje);
 	} else {
 		log_error(logger,"No me llego el resultado de FS");
 	}

@@ -124,7 +124,7 @@ estado_ejec execute(t_instruccion* instruccion_ejecutar,t_pcb* pcb){
 			log_info(logger,"PID: %d - Ejecutando: %s - %s %s ", pcb->pid, instruccion_ejecutar-> instruccion, instruccion_ejecutar-> parametros[0],instruccion_ejecutar-> parametros[1]);
 			estado_ejec estado_mov_in = ejecutar_mov_in(pcb->pid, instruccion_ejecutar->parametros[0],instruccion_ejecutar->parametros[1], pcb->tablaSegmentos);
 			if(estado_mov_in == ERROR)
-				pcb->motivo = EXT;
+				pcb->motivo = SEG_FAULT;
 			return estado_mov_in;
 
 		case MOV_OUT:

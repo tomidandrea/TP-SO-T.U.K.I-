@@ -33,6 +33,6 @@ void bloquearEnColaDeArchivo(t_archivo_global* archivo, t_pcb* proceso);
 void desbloquearDeColaDeArchivo(t_archivo_global* archivo);
 void desbloquearDeEsperaDeFS();
 void liberarArchivoGlobal(t_archivo_global* archivo);
-void liberarArchivo(t_archivo* archivo);
+
 
 #endif /* SRC_MANEJOARCHIVOS_H_ */

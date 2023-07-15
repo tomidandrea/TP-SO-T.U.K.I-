@@ -167,14 +167,14 @@ void enviar_contexto(t_pcb* proceso, t_instruccion* inst, int conexion){
 	agregar_a_paquete(paquete, proceso -> registros->RCX, 16);
 	agregar_a_paquete(paquete, proceso -> registros->RDX, 16);
 
-	int cantidad = list_size(proceso->tablaSegmentos);
+	/*int cantidad = list_size(proceso->tablaSegmentos);
 		agregar_valor_estatico(paquete,&cantidad);
 		for (int i = 0; i<cantidad; i++){
 			segmento = list_get(proceso->tablaSegmentos, i);
 			agregar_valor_estatico(paquete,&(segmento->id));
 			agregar_valor_uint(paquete,&(segmento->base));
 			agregar_valor_uint(paquete,&(segmento->limite));
-	}
+	}*/
 
 	enviar_paquete(paquete,conexion);                // serializa el paquete y lo envia
 
@@ -198,9 +198,9 @@ void escribir_memoria(int pid, u_int32_t direc_fisica,char* valor, int tamanio_v
 		 mensaje=recibir_mensaje(conexionMemoria, logger);
 			log_debug(logger,"Me llego de memoria el resultado: %s",mensaje);
 		} else {
-			log_error(logger,"No me llego el resultado de memoria");
+			log_error(logger,"No me llego el resultado de memoria al escribir");
 		}
-	free(mensaje);
+	//free(mensaje);
 }
 
 //solo para mov_in
@@ -225,7 +225,7 @@ char* leer_memoria(int pid, u_int32_t direc_fisica, int tamanio_a_leer) {
 		valor_leido = recibir_mensaje(conexionMemoria, logger); //tiene el \0
 
 	} else {
-		log_error(logger,"No me llego el resultado de memoria");
+		log_error(logger,"No me llego el resultado de memoria al leer");
 	}
 	return valor_leido;
 }

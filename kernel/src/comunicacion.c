@@ -8,12 +8,16 @@ extern t_socket conexionMemoria;
 
 extern pthread_mutex_t mutex_procesos_new;
 extern t_list* procesosNew;
-extern sem_t sem_new_a_ready;
+extern sem_t sem_new_a_ready, sem_finalizar;
 
 
 uint32_t RESULT_OK = 0;
 uint32_t RESULT_ERROR = 1;
 
+extern t_list* listaProcesosGlobal;
+extern bool seguir_ejecucion;
+
+t_socket socket_cliente;
 
 int escucharConsolas(){
 	t_list* lista;
@@ -21,47 +25,52 @@ int escucharConsolas(){
 	t_socket server_fd = iniciar_servidor(puerto, logger);
 	//printf("\nSocket conexion:%d \n",server_fd);
 	free(puerto);
-	t_socket socket_cliente;
 
-	while(1){
+	while(seguir_ejecucion){
 	socket_cliente = esperar_cliente(server_fd, logger); //Hace el accept
     //printf("\nsocket cliente:%d \n",socket_cliente);
-		if(socket_cliente != -1){
-				int cod_op = recibir_operacion(socket_cliente);
-				switch (cod_op) {
-						case PROGRAMA:
-							t_list* buffer = recibir_paquete(socket_cliente);
-							lista = listaAInstrucciones(buffer);
-							list_destroy_and_destroy_elements(buffer, free);
-							//send(socket_cliente, &RESULT_OK, sizeof(int), NULL);
+	int cod_op = recibir_operacion(socket_cliente);
+		if(seguir_ejecucion==0){
+			log_debug(logger, "Salgo del hilo consolas");
+			sem_post(&sem_finalizar);
+		}else{
+			if(socket_cliente != -1){
+					switch (cod_op) {
+							case PROGRAMA:
+								t_list* buffer = recibir_paquete(socket_cliente);
+								lista = listaAInstrucciones(buffer);
+								list_destroy_and_destroy_elements(buffer, free);
+								//send(socket_cliente, &RESULT_OK, sizeof(int), NULL);
 
-							log_info(logger, "Me llego un paquete\n");
+								log_info(logger, "Me llego un paquete\n");
 
-							t_pcb* pcb = crearPCB(lista, socket_cliente);
+								t_pcb* pcb = crearPCB(lista, socket_cliente);
+								list_add(listaProcesosGlobal, pcb);
+								t_segmento* segmento_0 = list_get(pcb->tablaSegmentos,0);
+								log_debug(logger, "El segmento 0: Id: %d | Base: %d| Limite: %d",segmento_0->id, segmento_0->base, segmento_0->limite);
+								list_destroy(lista);
+								pthread_mutex_lock(&mutex_procesos_new);
+								list_add(procesosNew, pcb);
+								pthread_mutex_unlock(&mutex_procesos_new);
 
-							t_segmento* segmento_0 = list_get(pcb->tablaSegmentos,0);
-							log_debug(logger, "El segmento 0: Id: %d | Base: %d| Limite: %d",segmento_0->id, segmento_0->base, segmento_0->limite);
-							list_destroy(lista);
-							pthread_mutex_lock(&mutex_procesos_new);
-							list_add(procesosNew, pcb);
-							pthread_mutex_unlock(&mutex_procesos_new);
+								log_info(logger, "Se crea el proceso %d en NEW", pcb->pid);
+								sem_post(&sem_new_a_ready);
 
-							log_info(logger, "Se crea el proceso %d en NEW", pcb->pid);
-							sem_post(&sem_new_a_ready);
+								break;
+							case -1:
+								send(socket_cliente, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);
+								log_error(logger, "el cliente se desconecto. Terminando servidor");
+								//return EXIT_FAILURE;
+								break;
 
-							break;
-						case -1:
-							send(socket_cliente, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);
-							log_error(logger, "el cliente se desconecto. Terminando servidor");
-							//return EXIT_FAILURE;
-							break;
-
-						default:
-							log_warning(logger,"Operacion desconocida. No quieras meter la pata");
-							break;
-						}
+							default:
+								log_warning(logger,"Operacion desconocida. No quieras meter la pata");
+								break;
+							}
+			}
 		}
 	}
+		log_debug(logger, "Sali while de escucharConsolas");
 	return 0;
 }
 

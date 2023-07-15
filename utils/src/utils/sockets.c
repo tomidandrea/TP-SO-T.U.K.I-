@@ -195,7 +195,7 @@ t_contexto* recibir_contexto(int socket_cliente) {
 		t_list* valores = list_create();
 		int tamanio;
 		int tamanio_tabla;
-		t_segmento* segmento = malloc(sizeof(t_segmento));
+		//t_segmento* segmento = malloc(sizeof(t_segmento));
         t_contexto* contexto = inicializar_contexto();
 
 		buffer = recibir_buffer(&size, socket_cliente);
@@ -224,6 +224,7 @@ t_contexto* recibir_contexto(int socket_cliente) {
 			memcpy(valor, buffer+desplazamiento, tamanio);
 			desplazamiento+=tamanio;
 			contexto->parametros[i] = copiar(valor);
+			free(valor);
 		 }
 
 
@@ -251,7 +252,7 @@ t_contexto* recibir_contexto(int socket_cliente) {
 		strncpy(contexto->registros->RCX, list_get(valores,10), 16);
 		strncpy(contexto->registros->RDX, list_get(valores,11), 16);
 
-		memcpy(&(tamanio_tabla), buffer + desplazamiento, sizeof(int));
+		/*memcpy(&(tamanio_tabla), buffer + desplazamiento, sizeof(int));
 			desplazamiento+=sizeof(int);
 
 			for(int i=0; i<tamanio_tabla;i++){
@@ -262,7 +263,7 @@ t_contexto* recibir_contexto(int socket_cliente) {
 				memcpy(&(segmento->limite), buffer + desplazamiento, sizeof(u_int32_t));
 				desplazamiento+=sizeof(u_int32_t);
 				list_add(contexto->tablaSegmentos, segmento);
-			}
+			}*/
 
 		free(buffer);
 		list_destroy_and_destroy_elements(valores, free);

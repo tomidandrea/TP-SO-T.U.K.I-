@@ -107,8 +107,9 @@ void escucharKernel(){
 			}
 			//free(pedido);
 		}else{
-			liberar_memoria();
 			log_error(logger,"Se cerró la conexión");
+			liberar_memoria();
+			break;
 		}
 
 		sem_post(&ejecutando);

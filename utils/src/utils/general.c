@@ -120,6 +120,7 @@ void liberar_instrucciones(t_list* instrucciones) {
 	for (i = 0; i < cantInstrucciones; ++i) {
 		liberar_instruccion(list_get(instrucciones, i));
 	}
+	//list_destroy(instrucciones);
 }
 
 void liberar_instruccion(t_instruccion* inst){
@@ -187,19 +188,27 @@ t_pcb* inicializar_pcb(){
 
 void liberar_pcb(t_pcb* pcb){
 	liberar_instrucciones(pcb->instrucciones);
+	list_destroy(pcb->instrucciones);
 	free(pcb->registros);
 	temporal_stop(pcb->tiempoEnReady);
 	temporal_destroy(pcb->tiempoEnReady);
 	temporal_stop(pcb->tiempoCPU);
 	temporal_destroy(pcb->tiempoCPU);
-
+	liberarTablaSegmentos(pcb->tablaSegmentos);
+	list_destroy_and_destroy_elements(pcb->archivosAbiertos, liberarArchivo);
+	free(pcb->instanciasPorRecurso);
 	free(pcb);
+}
+
+void liberarArchivo(t_archivo* archivo) {
+	free(archivo->nombre);
+	free(archivo);
 }
 
 t_contexto* inicializar_contexto(){
 	t_contexto* contexto = malloc(sizeof(t_contexto));
 	contexto->registros = inicializarRegistros();
-	contexto->tablaSegmentos = list_create();
+	//contexto->tablaSegmentos = list_create();
 	//contexto->parametros = malloc(sizeof(char*));
 	return contexto;
 }
@@ -208,6 +217,7 @@ t_contexto* inicializar_contexto(){
 void liberar_contexto(t_contexto* contexto){ //por ahora contexto seria lo que nos devuelve cpu
 	free(contexto->registros);
 	liberar_parametros(contexto->parametros, contexto->cantidadParametros);
+	//liberarTablaSegmentos(contexto->tablaSegmentos);
 	free(contexto);
 }
 
@@ -225,7 +235,7 @@ void removerSegmento0(tabla_segmentos tabla_seg){
 }
 
 void liberarTablaSegmentos(void* tablaProceso){
-	removerSegmento0((tabla_segmentos)tablaProceso);
+	//removerSegmento0((tabla_segmentos)tablaProceso);
 	list_destroy_and_destroy_elements((tabla_segmentos)tablaProceso, free);
 }
 

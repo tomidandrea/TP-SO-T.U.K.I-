@@ -422,6 +422,7 @@ void liberarEstructurasProceso(char* pid){
 
 
 void liberar_memoria(){
+	log_debug(logger, "Libero espacio de memoria");
 	log_destroy(logger);
 	config_destroy(config);
 	dictionary_clean_and_destroy_elements(diccionarioTablas, liberarTablaSegmentos);
