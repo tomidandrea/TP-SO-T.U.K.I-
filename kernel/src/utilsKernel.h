@@ -37,4 +37,6 @@ void obtenerProcesosReady(t_list* procesos);
 void actualizarTablaProceso(char* pidString, tabla_segmentos tabla, t_list* procesos);
 void actualizarTablasDeSegmentos(int conexionMemoria, t_pcb*);
 
+void liberar_pcb(t_pcb* pcb);
+
 #endif

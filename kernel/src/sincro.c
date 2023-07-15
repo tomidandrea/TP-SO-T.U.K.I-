@@ -7,7 +7,7 @@ extern t_list* procesosExecute;
 extern t_list* procesosReady;
 extern t_list* procesosNew;
 
-extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir_cpu, sem_recibir_fs, sem_execute, sem_proceso_fs_rw, sem_finalizar;
+extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir_cpu, sem_recibir_fs, sem_execute, sem_proceso_fs_rw, sem_finalizar, sem_finalizar_hilo_principal;
 extern pthread_mutex_t mutex_procesos_new;
 extern pthread_mutex_t mutex_procesos_ready;
 extern pthread_mutex_t mutex_procesos_execute;
@@ -16,67 +16,54 @@ extern pthread_mutex_t mutex_procesos_io;
 // creamos los hilos
 
 void crearEscucharConsolas(){
-	sem_wait(&sem_finalizar);
 	pthread_t hilo_consolas;
 	pthread_create(&hilo_consolas,
 					NULL,
 					(void*) escucharConsolas,
 					NULL);
 	pthread_detach(hilo_consolas);
-
-	log_debug(logger, "detach consolas");
 	//sem_post(&sem_finalizar);
 }
 void crearAgregarReady(){
-	sem_wait(&sem_finalizar);
 	pthread_t hilo_ready;
 	pthread_create(&hilo_ready,
 					NULL,
 					(void*) agregarReady,
 					NULL);
 	pthread_detach(hilo_ready);
-
-	log_debug(logger, "detach ready");
 	//sem_post(&sem_finalizar);
 }
 void crearPlanificar(){
-	sem_wait(&sem_finalizar);
 	pthread_t hilo_planificador;
 	pthread_create(&hilo_planificador,
 					NULL,
 					(void*) planificar,
 					NULL);
 	pthread_detach(hilo_planificador);
-	log_debug(logger, "detach plani");
 	//sem_post(&sem_finalizar);
 
 	//while(1);
 }
 
 void crearRecibirDeCPU(){
-	sem_wait(&sem_finalizar);
 	pthread_t hilo_recibir_cpu;
 	pthread_create(&hilo_recibir_cpu,
 					NULL,
 					(void*) recibirDeCPU,
 					NULL);
 	pthread_detach(hilo_recibir_cpu);
-	log_debug(logger, "detach cpu");
 	//sem_post(&sem_finalizar);
 
 	//while(1);
 }
 
 void crearRecibirDeFS(){
-	sem_wait(&sem_finalizar);
 	pthread_t hilo_recibir_fs;
 	pthread_create(&hilo_recibir_fs,
 					NULL,
 					(void*) recibirDeFS,
 					NULL);
 	pthread_detach(hilo_recibir_fs);
-
-	log_debug(logger, "detach fs");
 	//sem_post(&sem_finalizar);
 	//while(1);
 }
@@ -88,7 +75,8 @@ void inicializarSemoforos(){
 	sem_init(&sem_recibir_cpu, 0, 0);
 	sem_init(&sem_recibir_fs, 0, 0);
 	sem_init(&sem_proceso_fs_rw, 0, 1);
-	sem_init(&sem_finalizar, 0, 5); //por la cantidad de hilos en kernel
+	sem_init(&sem_finalizar, 0, 0); //por la cantidad de hilos en kernel
+	sem_init(&sem_finalizar_hilo_principal, 0, 0);
 }
 
 
@@ -101,6 +89,7 @@ void liberarSemoforos(){
 	sem_destroy(&sem_recibir_fs);
 	sem_destroy(&sem_proceso_fs_rw);
 	sem_destroy(&sem_finalizar);
+	sem_destroy(&sem_finalizar_hilo_principal);
 	liberarMutex();
 	log_debug(logger, "libero semaforos");
 }

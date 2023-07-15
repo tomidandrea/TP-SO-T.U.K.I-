@@ -11,7 +11,7 @@ extern t_log* logger;
 extern t_socket conexionCPU;
 extern t_socket conexionMemoria;
 
-extern sem_t sem_recibir_cpu, sem_proceso_fs_rw;
+extern sem_t sem_recibir_cpu, sem_proceso_fs_rw, sem_grado_multiprogramacion;
 
 extern t_list* procesosReady;
 extern pthread_mutex_t mutex_procesos_ready;
@@ -313,4 +313,19 @@ void recibirEliminarsegmento(t_pcb* proceso){
 	mandar_pcb_a_CPU(proceso);
 	sem_post(&sem_recibir_cpu);
 
+}
+
+void liberar_pcb(t_pcb* pcb){
+	liberar_instrucciones(pcb->instrucciones);
+	list_destroy(pcb->instrucciones);
+	free(pcb->registros);
+	temporal_stop(pcb->tiempoEnReady);
+	temporal_destroy(pcb->tiempoEnReady);
+	temporal_stop(pcb->tiempoCPU);
+	temporal_destroy(pcb->tiempoCPU);
+	liberarTablaSegmentos(pcb->tablaSegmentos);
+	list_destroy_and_destroy_elements(pcb->archivosAbiertos, liberarArchivo);
+	free(pcb->instanciasPorRecurso);
+	free(pcb);
+	sem_post(&sem_grado_multiprogramacion);
 }

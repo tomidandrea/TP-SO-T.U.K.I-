@@ -14,6 +14,8 @@ int huecoDisponible;
 int huecoId;
 char* algoritmoConfig;
 int retardoCompactacion;
+extern sem_t sem_finalizar_hilo_main;
+extern bool seguir_ejecutando_memoria;
 
 // ---- INICIO DE MEMORIA ----
 t_segmento* crear_t_segmento(int id, u_int32_t base, u_int32_t limite){
@@ -424,9 +426,11 @@ void liberarEstructurasProceso(char* pid){
 void liberar_memoria(){
 	log_debug(logger, "Libero espacio de memoria");
 	log_destroy(logger);
-	config_destroy(config);
+	//config_destroy(config);
 	dictionary_clean_and_destroy_elements(diccionarioTablas, liberarTablaSegmentos);
 	list_destroy_and_destroy_elements(tabla_huecos, free);
 	free(segmento0);
 	free(espacioMemoria);
+	seguir_ejecutando_memoria = false;
+	sem_post(&sem_finalizar_hilo_main);
 }

@@ -14,7 +14,6 @@
 #define CANT_IDENTIFICADORES (sizeof(tablaIdentificadores)/sizeof(t_identificador))
 
 t_pcb* inicializar_pcb();
-void liberar_pcb(t_pcb* pcb);
 t_contexto* inicializar_contexto();
 
 t_registros* inicializarRegistros();
