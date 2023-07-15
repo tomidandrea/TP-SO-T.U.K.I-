@@ -1,3 +1,3 @@
 #!/bin/bash
-cd bin
+cd ../file-system/bin
 ./file-system.out ../../testsFinal/filesystem_configs/base.config

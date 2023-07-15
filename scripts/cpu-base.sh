@@ -1,3 +1,3 @@
 #!/bin/bash
-cd bin
-./cpu.out ../../testsFinal/filesystem_configs/base.config
+cd ../cpu/bin
+./cpu.out ../../testsFinal/cpu_configs/base.config

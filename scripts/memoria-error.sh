@@ -1,3 +1,3 @@
 #!/bin/bash
-cd bin
+cd ../memoria/bin
 ./memoria.out ../../testsFinal/memoria_configs/error.config
