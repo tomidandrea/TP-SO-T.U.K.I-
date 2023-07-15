@@ -7,57 +7,88 @@ extern t_list* procesosExecute;
 extern t_list* procesosReady;
 extern t_list* procesosNew;
 
-extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir,sem_execute;
+extern sem_t sem_new_a_ready, sem_ready, sem_grado_multiprogramacion, sem_recibir_cpu, sem_recibir_fs, sem_execute, sem_proceso_fs_rw, sem_finalizar;
 extern pthread_mutex_t mutex_procesos_new;
 extern pthread_mutex_t mutex_procesos_ready;
 extern pthread_mutex_t mutex_procesos_execute;
+extern pthread_mutex_t mutex_procesos_io;
 
 // creamos los hilos
 
 void crearEscucharConsolas(){
+	sem_wait(&sem_finalizar);
 	pthread_t hilo_consolas;
 	pthread_create(&hilo_consolas,
 					NULL,
 					(void*) escucharConsolas,
 					NULL);
 	pthread_detach(hilo_consolas);
+
+	log_debug(logger, "detach consolas");
+	//sem_post(&sem_finalizar);
 }
 void crearAgregarReady(){
+	sem_wait(&sem_finalizar);
 	pthread_t hilo_ready;
 	pthread_create(&hilo_ready,
 					NULL,
 					(void*) agregarReady,
 					NULL);
 	pthread_detach(hilo_ready);
+
+	log_debug(logger, "detach ready");
+	//sem_post(&sem_finalizar);
 }
 void crearPlanificar(){
+	sem_wait(&sem_finalizar);
 	pthread_t hilo_planificador;
 	pthread_create(&hilo_planificador,
 					NULL,
 					(void*) planificar,
 					NULL);
 	pthread_detach(hilo_planificador);
+	log_debug(logger, "detach plani");
+	//sem_post(&sem_finalizar);
 
 	//while(1);
 }
 
 void crearRecibirDeCPU(){
+	sem_wait(&sem_finalizar);
 	pthread_t hilo_recibir_cpu;
 	pthread_create(&hilo_recibir_cpu,
 					NULL,
 					(void*) recibirDeCPU,
 					NULL);
 	pthread_detach(hilo_recibir_cpu);
+	log_debug(logger, "detach cpu");
+	//sem_post(&sem_finalizar);
 
 	//while(1);
 }
 
+void crearRecibirDeFS(){
+	sem_wait(&sem_finalizar);
+	pthread_t hilo_recibir_fs;
+	pthread_create(&hilo_recibir_fs,
+					NULL,
+					(void*) recibirDeFS,
+					NULL);
+	pthread_detach(hilo_recibir_fs);
+
+	log_debug(logger, "detach fs");
+	//sem_post(&sem_finalizar);
+	//while(1);
+}
 void inicializarSemoforos(){
 	sem_init(&sem_new_a_ready, 0, 0); //Binario, iniciado en 0 para que solo agregue a ready si hay procesos en new
 	sem_init(&sem_ready, 0, 0); //Binario, solo pase a CPU si hay en ready
 	sem_init(&sem_grado_multiprogramacion, 0, config_get_int_value(config,"GRADO_MAX_MULTIPROGRAMACION"));
 	sem_init(&sem_execute, 0, 1);
-	sem_init(&sem_recibir, 0, 0);
+	sem_init(&sem_recibir_cpu, 0, 0);
+	sem_init(&sem_recibir_fs, 0, 0);
+	sem_init(&sem_proceso_fs_rw, 0, 1);
+	sem_init(&sem_finalizar, 0, 5); //por la cantidad de hilos en kernel
 }
 
 
@@ -66,14 +97,19 @@ void liberarSemoforos(){
 	sem_destroy(&sem_ready);
 	sem_destroy(&sem_grado_multiprogramacion);
 	sem_destroy(&sem_execute);
-	sem_destroy(&sem_recibir);
+	sem_destroy(&sem_recibir_cpu);
+	sem_destroy(&sem_recibir_fs);
+	sem_destroy(&sem_proceso_fs_rw);
+	sem_destroy(&sem_finalizar);
 	liberarMutex();
+	log_debug(logger, "libero semaforos");
 }
 
 void liberarMutex(){ //Semaforos mutex para acceder a las listas de procesos
 	pthread_mutex_destroy(&mutex_procesos_ready);
 	pthread_mutex_destroy(&mutex_procesos_new);
 	pthread_mutex_destroy(&mutex_procesos_execute);
+	pthread_mutex_destroy(&mutex_procesos_io);
 }
 
 void pasarNewAReady(){
@@ -130,6 +166,13 @@ t_pcb* removerDeExecute() {
 	log_debug(logger, "Proceso que sacamos de execute:%d\n", proceso->pid);
 	sem_post(&sem_execute);
 	return proceso;
+}
+
+bool compararProcesoDeExecute(int pid) {
+    pthread_mutex_lock(&mutex_procesos_execute);
+	t_pcb* proceso = list_get(procesosExecute, 0);
+	pthread_mutex_unlock(&mutex_procesos_execute);
+	return proceso->pid==pid;
 }
 
 

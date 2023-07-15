@@ -50,17 +50,30 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 	paquete->codigo_operacion = MENSAJE;
 	paquete->buffer = malloc(sizeof(t_buffer));
 	paquete->buffer->size = strlen(mensaje) + 1;
+	//printf("size de mensaje a enviar: %d\n", paquete->buffer->size);
 	paquete->buffer->stream = malloc(paquete->buffer->size);
 	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
+	printf("mensaje a enviar: %s\n", (char*)paquete->buffer->stream);
 
 	int bytes = paquete->buffer->size + 2*sizeof(int);
 
 	void* a_enviar = serializar_paquete(paquete, bytes);
 
+	//imprimirContenido(a_enviar);
+
 	send(socket_cliente, a_enviar, bytes, 0);
 
 	free(a_enviar);
 	eliminar_paquete(paquete);
+}
+
+char* recibir_mensaje(int socket_cliente, t_log* logger) //agrego que mande logger como parametro
+{
+	int size;
+	char* buffer = recibir_buffer(&size, socket_cliente);
+	printf("size del mensaje:%d\n", size);
+	log_debug(logger, "Me llego el mensaje %s", buffer);
+	return buffer;
 }
 
 void enviar_paquete(t_paquete* paquete, int socket_cliente)
@@ -83,11 +96,8 @@ void liberar_conexion(int socket_cliente)
  * Aca empieza utils de servidor
  */
 
-t_socket iniciar_servidor(char* puerto, t_log* logger) //agrego que mande logger como parametro
+t_socket iniciar_servidor(char* puerto, t_log* logger)
 {
-	// Quitar esta línea cuando hayamos terminado de implementar la funcion
-	//assert(!"no implementado!");
-
 	int socket_servidor;
 
 	struct addrinfo hints, *servinfo;//, *p;
@@ -119,11 +129,8 @@ t_socket iniciar_servidor(char* puerto, t_log* logger) //agrego que mande logger
 	return socket_servidor;
 }
 
-t_socket esperar_cliente(int socket_servidor, t_log* logger) //agrego que mande logger como parametro
+t_socket esperar_cliente(int socket_servidor, t_log* logger)
 {
-	// Quitar esta línea cuando hayamos terminado de implementar la funcion
-	//assert(!"no implementado!");
-
 	// Aceptamos un nuevo cliente
 	int socket_cliente = accept(socket_servidor, NULL, NULL);
 	log_info(logger, "Se conecto un cliente!");
@@ -131,7 +138,7 @@ t_socket esperar_cliente(int socket_servidor, t_log* logger) //agrego que mande 
 	return socket_cliente;
 }
 
-int recibir_operacion(int socket_cliente)
+int recibir_operacion(t_socket socket_cliente)
 {
 	int cod_op;
 	if(recv(socket_cliente, &cod_op, sizeof(int), MSG_WAITALL) > 0)
@@ -152,14 +159,6 @@ void* recibir_buffer(int* size, int socket_cliente)
 		recv(socket_cliente, buffer, *size, MSG_WAITALL);
 
 	return buffer;
-}
-
-void recibir_mensaje(int socket_cliente, t_log* logger) //agrego que mande logger como parametro
-{
-	int size;
-	char* buffer = recibir_buffer(&size, socket_cliente);
-	log_info(logger, "Me llego el mensaje %s", buffer);
-	free(buffer);
 }
 
 t_list* recibir_paquete(int socket_cliente)
@@ -195,6 +194,8 @@ t_contexto* recibir_contexto(int socket_cliente) {
 		void * buffer;
 		t_list* valores = list_create();
 		int tamanio;
+		int tamanio_tabla;
+		//t_segmento* segmento = malloc(sizeof(t_segmento));
         t_contexto* contexto = inicializar_contexto();
 
 		buffer = recibir_buffer(&size, socket_cliente);
@@ -209,6 +210,9 @@ t_contexto* recibir_contexto(int socket_cliente) {
 		memcpy(&(contexto->motivo), buffer + desplazamiento, sizeof(int));
 		desplazamiento+=sizeof(int);
 
+		memcpy(&(contexto->direc_fisica), buffer + desplazamiento, sizeof(u_int32_t));
+		desplazamiento+=sizeof(u_int32_t);
+
 		memcpy(&(contexto->cantidadParametros), buffer + desplazamiento, sizeof(int));
 		desplazamiento+=sizeof(int);
 		int cantParametros = contexto->cantidadParametros;
@@ -220,10 +224,12 @@ t_contexto* recibir_contexto(int socket_cliente) {
 			memcpy(valor, buffer+desplazamiento, tamanio);
 			desplazamiento+=tamanio;
 			contexto->parametros[i] = copiar(valor);
+			free(valor);
 		 }
 
 
-		while(desplazamiento < size)
+		//while(desplazamiento < size)
+		for(int i=0; i< 12;i++)
 		{
 			memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
 			desplazamiento+=sizeof(int);
@@ -246,11 +252,131 @@ t_contexto* recibir_contexto(int socket_cliente) {
 		strncpy(contexto->registros->RCX, list_get(valores,10), 16);
 		strncpy(contexto->registros->RDX, list_get(valores,11), 16);
 
+		/*memcpy(&(tamanio_tabla), buffer + desplazamiento, sizeof(int));
+			desplazamiento+=sizeof(int);
+
+			for(int i=0; i<tamanio_tabla;i++){
+				memcpy(&(segmento->id), buffer + desplazamiento, sizeof(int));
+				desplazamiento+=sizeof(int);
+				memcpy(&(segmento->base), buffer + desplazamiento, sizeof(u_int32_t));
+				desplazamiento+=sizeof(u_int32_t);
+				memcpy(&(segmento->limite), buffer + desplazamiento, sizeof(u_int32_t));
+				desplazamiento+=sizeof(u_int32_t);
+				list_add(contexto->tablaSegmentos, segmento);
+			}*/
+
 		free(buffer);
 		list_destroy_and_destroy_elements(valores, free);
 
 	    return contexto;
 }
+
+t_list* recibirTablaSegmentos(t_socket socket_memoria){
+	void * buffer;
+	int size;
+	int tamanio_tabla;
+	int desplazamiento = 0;
+	t_list* tabla = list_create();
+
+	buffer = recibir_buffer(&size, socket_memoria);
+	memcpy(&(tamanio_tabla), buffer + desplazamiento, sizeof(int));
+	desplazamiento+=sizeof(int);
+
+	for(int i=0; i<tamanio_tabla;i++){
+		t_segmento* segmento = malloc(sizeof(t_segmento));
+		memcpy(&(segmento->id), buffer + desplazamiento, sizeof(int));
+		desplazamiento+=sizeof(int);
+		memcpy(&(segmento->base), buffer + desplazamiento, sizeof(u_int32_t));
+		desplazamiento+=sizeof(int);
+		memcpy(&(segmento->limite), buffer + desplazamiento, sizeof(u_int32_t));
+		desplazamiento+=sizeof(int);
+		list_add(tabla, segmento);
+	}
+	/*for(int i=0; i<list_size(tabla);i++){
+		t_segmento* seg = list_get(tabla, i);
+		printf("Segmento %d\n", seg->id);
+	}*/
+
+	//printf("\ndespla: %d - size: %d\n", desplazamiento, size);
+
+	free(buffer);
+	return tabla;
+
+}
+
+t_segmento* recibirSegmento(t_socket socket_memoria){
+	void * buffer;
+	int size;
+	int desplazamiento = 0;
+	t_segmento* segmento = malloc(sizeof(t_segmento));
+
+	buffer = recibir_buffer(&size, socket_memoria);
+
+	memcpy(&(segmento->id), buffer + desplazamiento, sizeof(int));
+	desplazamiento+=sizeof(int);
+	memcpy(&(segmento->base), buffer + desplazamiento, sizeof(u_int32_t));
+	desplazamiento+=sizeof(int);
+	memcpy(&(segmento->limite), buffer + desplazamiento, sizeof(u_int32_t));
+	desplazamiento+=sizeof(int);
+	free(buffer);
+	return segmento;
+}
+
+t_pedido_segmento* recibirPedidoSegmento(t_socket socket_kernel){
+	void * buffer;
+	int size;
+	int desplazamiento = 0;
+	t_pedido_segmento* pedido = malloc(sizeof(t_pedido_segmento));
+	buffer = recibir_buffer(&size, socket_kernel);
+	memcpy(&(pedido->pid), buffer + desplazamiento, sizeof(int));
+	desplazamiento+=sizeof(int);
+
+	memcpy(&(pedido->id_segmento), buffer + desplazamiento, sizeof(int));
+	desplazamiento+=sizeof(int);
+
+	memcpy(&(pedido->tamanio), buffer + desplazamiento, sizeof(u_int32_t));
+	desplazamiento+=sizeof(u_int32_t);
+
+	free(buffer);
+
+	return pedido;
+}
+
+t_pedido_segmento* recibirPedidoDeleteSegment(t_socket socket_kernel){
+	void * buffer;
+	int size;
+	int desplazamiento = 0;
+	t_pedido_segmento* pedido = malloc(sizeof(t_pedido_segmento));
+	buffer = recibir_buffer(&size, socket_kernel);
+	memcpy(&(pedido->pid), buffer + desplazamiento, sizeof(int));
+	desplazamiento+=sizeof(int);
+
+	memcpy(&(pedido->id_segmento), buffer + desplazamiento, sizeof(int));
+	desplazamiento+=sizeof(int);
+
+	free(buffer);
+
+	return pedido;
+}
+
+char* recibirPID(t_socket socket){
+	void * buffer;
+	int size;
+	int desplazamiento = 0;
+	int pid_int;
+	char* pid;
+
+	buffer = recibir_buffer(&size, socket);
+
+	memcpy(&(pid_int), buffer + desplazamiento, sizeof(int));
+	desplazamiento+=sizeof(int);
+
+	pid = string_itoa(pid_int);
+
+	free(buffer);
+	return pid;
+}
+
 
 
 

@@ -21,7 +21,7 @@ void mostrarListaProcesos(t_list* lista){
 	int tamanio = list_size(lista);
 	for(int i=0; i<tamanio; i++){
 		t_pcb* proceso = list_get(lista, i);
-		log_info(logger,"Proceso %d\n", proceso->pid);
+		log_info(logger,"Proceso %d", proceso->pid);
 	}
 }
 
@@ -38,6 +38,69 @@ char* lista_procesos_string(t_list* lista){
 			}
 		}
 	return mensaje;
+}
+
+void logearInstrucciones(t_list* instrucciones, t_log* logger){
+	int cant = list_size(instrucciones);
+		for(int i = 0;i<cant;i++) {
+	    	t_instruccion* inst = list_get(instrucciones,i);
+
+	        log_info(logger, "Instruccion: %s", inst->instruccion);
+
+	        int cant_parametros = cantParametros(inst->instruccion);
+
+	    	for(int i=0; i<cant_parametros; i++) {
+	    		log_info(logger, "Parametro %d: %s", i, inst->parametros[i]);
+	    	}
+	        printf("------------\n");
+	    }
+}
+
+void mostrarListaSegmentos(tabla_segmentos tabla, t_log* logger){
+	int cantidad = list_size(tabla);
+	for (int i = 0; i < cantidad; ++i) {
+		t_segmento* seg = list_get(tabla, i);
+		log_debug(logger, "Segmento %d: - Base %d - Límite %d", seg->id, seg->base, seg->limite);
+	}
+}
+
+void mostrarTablaHuecos(tabla_segmentos tabla){
+	int cantidad = list_size(tabla);
+	int tamanio;
+	printf("  -- Tabla de huecos - cantidad huecos: %d --  \n", cantidad);
+	for (int i = 0; i < cantidad; ++i) {
+		t_segmento* seg = list_get(tabla, i);
+		tamanio = seg->limite - seg->base;
+		printf("Hueco %d: base %d - limite %d - tamaño %d\n", seg->id, seg->base, seg->limite, tamanio);
+	}
+}
+
+void mostrarRecursos(char** recursos, int* instanciasGlobales, int* instanciasProceso, int cantidad_recursos){
+	printf("\n Recursos: [");
+	for (int i = 0; i < cantidad_recursos; ++i) {
+		printf("%s", recursos[i]);
+		if(i<cantidad_recursos-1){
+			printf(", ");
+		}
+	}
+	printf("]\n");
+	printf("InstanciasGlobales: ");
+	for (int i = 0; i < cantidad_recursos; ++i) {
+		printf("%d", instanciasGlobales[i]);
+		if(i<cantidad_recursos-1){
+			printf(", ");
+		}else
+			printf("\n");
+	}
+	printf("InstanciasProceso: ");
+	for (int i = 0; i < cantidad_recursos; ++i) {
+		printf("%d", instanciasProceso[i]);
+		if(i<cantidad_recursos-1){
+			printf(", ");
+		}else
+			printf("\n");
+	}
+
 }
 
 

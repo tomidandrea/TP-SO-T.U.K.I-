@@ -9,7 +9,9 @@
 #define SRC_MEMORIA_H_
 
 #include <utils/general.h>
+#include <sincro.h>
 #include <utils/sockets.h>
 
+void iniciarConexionMemoria(char* path);
 
 #endif /* SRC_MEMORIA_H_ */

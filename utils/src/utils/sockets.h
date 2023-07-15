@@ -15,7 +15,10 @@
 // Utils cliente
 t_socket iniciarConexion(t_config*, t_log*, char*, char*);
 t_socket crear_conexion(char*, char*, t_log*);
-void enviar_mensaje(char*, int);
+
+void enviar_mensaje(char* mensaje, int socket_cliente);
+char* recibir_mensaje(int socket_cliente, t_log* logger);
+
 void enviar_paquete(t_paquete*, int);
 void liberar_conexion(int);
 
@@ -23,11 +26,15 @@ void liberar_conexion(int);
 t_socket iniciarServidor(t_config*, t_log*, char*);
 t_socket iniciar_servidor(char* , t_log*);
 t_socket esperar_cliente(int, t_log*);
-int recibir_operacion(int);
+int recibir_operacion(t_socket);
 void* recibir_buffer(int*, int);
-void recibir_mensaje(int, t_log*);
 t_list* recibir_paquete(int);
 t_pcb* inicializar_pcb();
 t_contexto* recibir_contexto(int);
+t_list* recibirTablaSegmentos(t_socket);
+char* recibirPID(t_socket);
+t_segmento* recibirSegmento(t_socket);
+t_pedido_segmento* recibirPedidoSegmento(t_socket);
+t_pedido_segmento* recibirPedidoDeleteSegment(t_socket);
 
 #endif
