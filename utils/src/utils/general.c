@@ -186,19 +186,7 @@ t_pcb* inicializar_pcb(){
 	return pcb;
 }
 
-void liberar_pcb(t_pcb* pcb){
-	liberar_instrucciones(pcb->instrucciones);
-	list_destroy(pcb->instrucciones);
-	free(pcb->registros);
-	temporal_stop(pcb->tiempoEnReady);
-	temporal_destroy(pcb->tiempoEnReady);
-	temporal_stop(pcb->tiempoCPU);
-	temporal_destroy(pcb->tiempoCPU);
-	liberarTablaSegmentos(pcb->tablaSegmentos);
-	list_destroy_and_destroy_elements(pcb->archivosAbiertos, liberarArchivo);
-	free(pcb->instanciasPorRecurso);
-	free(pcb);
-}
+
 
 void liberarArchivo(t_archivo* archivo) {
 	free(archivo->nombre);

@@ -293,11 +293,11 @@ void agregarReady(){
 	while (seguir_ejecucion)
 	{
 		sem_wait(&sem_new_a_ready);
+		sem_wait(&sem_grado_multiprogramacion);
 		if(seguir_ejecucion==0){
 			log_debug(logger, "Salgo del hilo ready");
 			sem_post(&sem_finalizar);
 		}else{
-			sem_wait(&sem_grado_multiprogramacion);
 			log_info(logger, "Permite agregar proceso a ready por grado de multiprogramacion\n");
 			pasarNewAReady();
 		}

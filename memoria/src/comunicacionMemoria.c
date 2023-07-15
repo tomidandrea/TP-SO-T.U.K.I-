@@ -16,6 +16,8 @@ uint32_t RESULT_ERROR = 1;
 uint32_t RESULT_OK = 0;
 
 // Hilo que atiende peticiones de kernel
+bool seguir_ejecutando_memoria = true;
+extern sem_t sem_finalizar_hilo_main;
 
 void escucharKernel(){
 	log_debug(logger, "Entro hilo para escuchar kernel");
@@ -23,8 +25,7 @@ void escucharKernel(){
 	t_socket socket_kernel = esperar_cliente(server_fd, logger);
 	char* pid;
 	t_pedido_segmento* pedido;
-
-	while(1){
+	while(seguir_ejecutando_memoria){
 	tabla_segmentos tablaSegmentos;
 		if(socket_kernel != -1){
 			int cod_op = recibir_operacion(socket_kernel);
@@ -100,10 +101,9 @@ void escucharKernel(){
 				log_info(logger, "Eliminación de Proceso PID: %s", pid);
 				break;
 			default:
-				send(socket_kernel, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);
+				//send(socket_kernel, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);
 				log_error(logger,"Se cerró la conexión / Cod op invalido");
 				liberar_memoria();
-				exit(1);
 			}
 			//free(pedido);
 		}else{
@@ -122,7 +122,7 @@ void escucharCPU(){
 	log_debug(logger, "Entro hilo para escuchar CPU");
 	t_socket socket_cpu = esperar_cliente(server_fd, logger);
 	sem_post(&sem_cpu);
-	while(1){
+	while(seguir_ejecutando_memoria){
 		if(socket_cpu != -1){
 			int cod_op = recibir_operacion(socket_cpu);
 			sem_wait(&ejecutando);
@@ -185,18 +185,21 @@ void escucharCPU(){
 				free(valor);
 				free(buffer);
 				break;
+			default:
+				break;
 			}
 
 		}
 		sem_post(&ejecutando);
 	}
+	sem_post(&sem_finalizar_hilo_main);
 }
 
 
 void escucharFS(){
 	log_debug(logger, "Entro hilo para escuchar FS");
 	t_socket socket_file_system = esperar_cliente(server_fd, logger);
-	while(1){
+	while(seguir_ejecutando_memoria){
 		if(socket_file_system != -1){
 			int cod_op = recibir_operacion(socket_file_system);
 			sem_wait(&ejecutando);
@@ -259,11 +262,14 @@ void escucharFS(){
 				free(para_guardar);
 				free(buffer);
 				break;
+			default:
+				break;
 			}
 			// cosas q pide cpu xd
 		}
 		sem_post(&ejecutando);
 	}
+	sem_post(&sem_finalizar_hilo_main);
 }
 
 void enviarDiccionarioTablas(t_socket socket_kernel){

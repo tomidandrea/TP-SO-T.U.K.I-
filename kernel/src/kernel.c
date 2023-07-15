@@ -18,7 +18,7 @@ char** recursos;
 char** instanciasRecursos;
 int* instancias;
 
-sem_t sem_finalizar;
+sem_t sem_finalizar, sem_finalizar_hilo_principal;
 extern sem_t sem_new_a_ready, sem_ready, sem_recibir_cpu, sem_recibir_fs;
 extern t_socket socket_cliente;
 
@@ -60,8 +60,9 @@ int main(int argc, char* argv[]) {
 	crearPlanificar();
 	crearRecibirDeCPU();
 	crearRecibirDeFS();
-	while(seguir_ejecucion);
-	printf("\nHola termine\n");
+
+	sem_wait(&sem_finalizar_hilo_principal);
+	printf("\nChau termine\n");
 	return EXIT_SUCCESS;
 }
 
@@ -80,9 +81,11 @@ void cerrar(int signal){
 	sem_post(&sem_recibir_fs);
 
 	sem_wait(&sem_finalizar);
+	sem_wait(&sem_finalizar);
+	sem_wait(&sem_finalizar);
+	sem_wait(&sem_finalizar);
 	liberarSemoforos();
-	usleep(10000000);
-	exit(1);
+	sem_post(&sem_finalizar_hilo_principal);
 }
 
 

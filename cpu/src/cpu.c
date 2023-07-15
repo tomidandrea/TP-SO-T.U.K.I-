@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
 			} else {
 				send(socket_cliente, (void *)(intptr_t)RESULT_ERROR, sizeof(uint32_t), (intptr_t)NULL);
 				log_error(logger,"Se cerró la conexión");
-				exit(1);
+				break;
 			}
 		}
 	}
