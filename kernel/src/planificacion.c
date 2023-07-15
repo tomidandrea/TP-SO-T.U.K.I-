@@ -286,7 +286,7 @@ void finalizar_proceso(char* motivo) {
 	liberar_pcb(proceso);
 	log_debug(logger, "Lista procesosReady:%d", list_size(procesosReady));
 	log_debug(logger, "POST grado multi");
-	sem_post(&sem_grado_multiprogramacion);
+	//sem_post(&sem_grado_multiprogramacion);
 }
 void agregarReady(){
 	
